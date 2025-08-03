@@ -43,7 +43,7 @@ class Model {
     constructor() {
         this.maxTokens = 1024;
         this.model = 'claude-sonnet-4-20250514';
-        this.apiKey = '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';
+        this.apiKey = require('app_config.json').anthropic_api_key;
     }
 
     async generateResponse(tools: Tool[],prompt: string) {
