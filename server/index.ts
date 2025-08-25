@@ -137,8 +137,7 @@ class FlowGraphGenerator {
         "",
       );
       for (const block of response) {
-        if(block.type == "tool_use" {
-
+        if (block.type == "tool_use") {
         }
       }
     }
