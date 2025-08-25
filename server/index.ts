@@ -1,6 +1,10 @@
 import express from "express";
 import Anthropic, { BaseAnthropic } from "@anthropic-ai/sdk";
-import { Tool, ToolUseBlock, ContentBlock } from "@anthropic-ai/sdk/resources";
+import {
+  Tool as AnthTool,
+  ToolUseBlock,
+  ContentBlock,
+} from "@anthropic-ai/sdk/resources";
 import { exec } from "child_process";
 import { BlockList } from "net";
 // const { exec } = require('node:child_process');
@@ -13,7 +17,7 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/generate_flow_graph", (_req, res) => {
-  let gphgen = new FlowGraphGenerator();
+  let gphgen = new FlowGraphGenerator("");
   gphgen.generateFlowGraph();
 });
 
@@ -33,14 +37,14 @@ class Model {
   }
 
   async generateResponse(
-    tools: Tool[],
+    tools: AnthTool[],
     prompt: string,
   ): Promise<Array<ContentBlock>> {
     const client = new Anthropic({
       apiKey: process.env[this.apiKey],
     });
-    let acc: Tool[] = [];
-    let serialisedTools: Tool[] = tools.reduce(
+    let acc: AnthTool[] = [];
+    let serialisedTools: AnthTool[] = tools.reduce(
       (prevTool, curTool, index, acc) => {
         // acc.push(curTool.serialise());
         return acc;
@@ -57,14 +61,16 @@ class Model {
     return message.content;
   }
 
-  addTools(): Tool[] {
+  addTools(): AnthTool[] {
     return [new ComputerTool()];
   }
 }
 
-class ComputerTool implements Tool {
+interface Tool {}
+
+class ComputerTool implements AnthTool {
   name: string;
-  input_schema: Tool.InputSchema;
+  input_schema: AnthTool.InputSchema;
   type: "custom";
   display_width_px: number;
   display_height_px: number;
@@ -81,7 +87,7 @@ class ComputerTool implements Tool {
     };
   }
 
-  async getScreenshot(): string {
+  async getScreenshot(): Promise<string> {
     let cmd: string = "scrot";
     return new Promise((res, rej) => {
       exec("scrot", (error, stdout, stderr) => {
@@ -116,14 +122,12 @@ class ComputerTool implements Tool {
 class FlowGraphGenerator {
   iterationCap: number;
   basePrompt: string;
-  specificPrompt: string;
   tools: Tool[];
   model: Model;
 
-  constructor() {
+  constructor(basePrompt: string) {
     this.iterationCap = 20;
-    this.basePrompt = "";
-    this.specificPrompt = "";
+    this.basePrompt = basePrompt;
     this.tools = [];
     this.model = new Model();
   }
