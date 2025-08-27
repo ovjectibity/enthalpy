@@ -18,6 +18,9 @@ app.get("/", (_req, res) => {
 app.get("/generate_flow_graph", (_req, res) => {
   let gphgen = new FlowGraphGenerator("");
   gphgen.generateFlowGraph();
+  res.send({
+    response: "doing something",
+  });
 });
 
 app.listen(port, () => {
@@ -27,7 +30,7 @@ app.listen(port, () => {
 class Model {
   maxTokens: number;
   model: string;
-  apiKey: string;
+  apiKey: "ANTHROPIC_KEY";
 
   constructor() {
     this.maxTokens = 1024;
@@ -35,7 +38,7 @@ class Model {
     if (process.env.ANTHROPIC_KEY === undefined) {
       console.log("Set the env variable ANTHROPIC_KEY");
     }
-    this.apiKey = process.env.ANTHROPIC_KEY || "";
+    this.apiKey = "ANTHROPIC_KEY";
   }
 
   async generateResponse(
@@ -45,13 +48,21 @@ class Model {
     const client = new Anthropic({
       apiKey: process.env[this.apiKey],
     });
-    const message = await client.messages.create({
-      max_tokens: this.maxTokens,
-      messages: [{ role: "user", content: prompt }],
-      model: this.model,
-      tools: tools,
-    });
-    return message.content;
+    const message = await client.messages
+      .create({
+        max_tokens: this.maxTokens,
+        messages: [{ role: "user", content: prompt }],
+        model: this.model,
+        tools: tools,
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    if (message === undefined || message === null) {
+      return Promise.resolve(new Array<ContentBlock>());
+    } else {
+      return message.content;
+    }
   }
 
   addTools(): AnthTool[] {
@@ -157,7 +168,7 @@ class FlowGraphGenerator {
   model: Model;
 
   constructor(basePrompt: string) {
-    this.iterationCap = 20;
+    this.iterationCap = 1;
     this.basePrompt = basePrompt;
     this.tools = new Map<string, Tool>();
     this.model = new Model();
