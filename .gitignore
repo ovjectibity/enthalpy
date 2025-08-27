@@ -1,3 +1,7 @@
 anthropic-quickstarts/
 client/node_modules/
 server/node_modules/
+server/app_config.json
+server/package-lock.json
+server/dist
+client/dist

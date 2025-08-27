@@ -1,12 +1,11 @@
 import express from "express";
-import Anthropic, { BaseAnthropic } from "@anthropic-ai/sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import {
   Tool as AnthTool,
   ToolUseBlock,
   ContentBlock,
 } from "@anthropic-ai/sdk/resources";
 import { exec } from "child_process";
-import { BlockList } from "net";
 // const { exec } = require('node:child_process');
 
 const app = express();
@@ -33,7 +32,10 @@ class Model {
   constructor() {
     this.maxTokens = 1024;
     this.model = "claude-sonnet-4-20250514";
-    this.apiKey = require("app_config.json").anthropic_api_key;
+    if (process.env.ANTHROPIC_KEY === undefined) {
+      console.log("Set the env variable ANTHROPIC_KEY");
+    }
+    this.apiKey = process.env.ANTHROPIC_KEY || "";
   }
 
   async generateResponse(
@@ -43,20 +45,11 @@ class Model {
     const client = new Anthropic({
       apiKey: process.env[this.apiKey],
     });
-    let acc: AnthTool[] = [];
-    let serialisedTools: AnthTool[] = tools.reduce(
-      (prevTool, curTool, index, acc) => {
-        // acc.push(curTool.serialise());
-        return acc;
-      },
-      acc,
-    );
-
     const message = await client.messages.create({
       max_tokens: this.maxTokens,
       messages: [{ role: "user", content: prompt }],
       model: this.model,
-      tools: serialisedTools,
+      tools: tools,
     });
     return message.content;
   }
@@ -66,9 +59,12 @@ class Model {
   }
 }
 
-interface Tool {}
+interface Tool {
+  act: (action: string) => string;
+  getProviderTool: () => AnthTool;
+}
 
-class ComputerTool implements AnthTool {
+class ComputerTool implements AnthTool, Tool {
   name: string;
   input_schema: AnthTool.InputSchema;
   type: "custom";
@@ -84,6 +80,36 @@ class ComputerTool implements AnthTool {
     this.display_number = 1;
     this.input_schema = {
       type: "object",
+      description:
+        "Use this tool to use & navigate the local computer instance. " +
+        "You can use the tool to perform specific actions such as" +
+        " taking a screenshot of the current view," +
+        "scrolling up or down or left-clicking or right-clicking on a particular coordinate (x,y).",
+      properties: {
+        action: {
+          type: "string",
+          description:
+            "Possible actions: screenshot, left_click, right_click, scroll-down, scroll-up",
+        },
+        coordinates: {
+          type: "object",
+          description:
+            "X & Y screen coordinates over which the click needs to be made.",
+          properties: {
+            x: {
+              type: "number",
+              description:
+                "The X coordinate over which a click needs to be made.",
+            },
+            y: {
+              type: "number",
+              description:
+                "The Y coordinate over which a click needs to be made.",
+            },
+          },
+        },
+      },
+      required: ["action"],
     };
   }
 
@@ -97,9 +123,13 @@ class ComputerTool implements AnthTool {
     });
   }
 
-  act(action: Object): string {
+  getProviderTool(): AnthTool {
+    return this;
+  }
+
+  act(action: string): string {
     if (action == "screenshot") {
-      return this.getScreenshot();
+      // return this.getScreenshot();
     } else if ((action = "left_click")) {
     } else if ((action = "type")) {
     } else if ((action = "key")) {
@@ -116,32 +146,50 @@ class ComputerTool implements AnthTool {
     } else if ((action = "wait")) {
     } else if ((action = "terminal")) {
     }
+    return "";
   }
 }
 
 class FlowGraphGenerator {
   iterationCap: number;
   basePrompt: string;
-  tools: Tool[];
+  tools: Map<string, Tool>;
   model: Model;
 
   constructor(basePrompt: string) {
     this.iterationCap = 20;
     this.basePrompt = basePrompt;
-    this.tools = [];
+    this.tools = new Map<string, Tool>();
     this.model = new Model();
+  }
+
+  getSerialisedTools(): AnthTool[] {
+    let serialisedTools: AnthTool[] = [];
+    this.tools.forEach((value, key, map) => {
+      serialisedTools.push(value.getProviderTool());
+    });
+    return serialisedTools;
   }
 
   async generateFlowGraph(): Promise<FlowGraph> {
     let graph = new FlowGraph();
     //agent loop to generate the flow graph
+    console.log("Generating flow graph: ");
     for (let i = 0; i < this.iterationCap; i++) {
       let response: Array<ContentBlock> = await this.model.generateResponse(
-        this.tools,
+        this.getSerialisedTools(),
         "",
       );
+      console.log("got response:", response);
       for (const block of response) {
         if (block.type == "tool_use") {
+          switch (block.name) {
+            case "computer": {
+              this.tools.get("computer")?.act("");
+            }
+            case "text": {
+            }
+          }
         }
       }
     }
@@ -149,25 +197,25 @@ class FlowGraphGenerator {
   }
 }
 
-class FlowNode {
-  screengrabs: Number[][];
-  //event-based, user-based
-  analytics: Object; //Refine this?
+// class FlowNode {
+//   screengrabs: Number[][];
+//   //event-based, user-based
+//   analytics: Object; //Refine this?
 
-  constructor() {
-    this.screengrabs = [];
-    this.analytics = {};
-  }
-}
+//   constructor() {
+//     this.screengrabs = [];
+//     this.analytics = {};
+//   }
+// }
 
 //Handles construction of the actions taken by the comp agent;
 class FlowGraph {
   systemContext: String;
-  nodeChain: Node[];
+  // nodeChain: Node[];
 
   constructor() {
     this.systemContext = "";
-    this.nodeChain = [];
+    // this.nodeChain = [];
   }
 
   addNode(node: Node) {}
