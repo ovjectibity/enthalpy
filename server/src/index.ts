@@ -16,7 +16,7 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/generate_flow_graph", (_req, res) => {
-  let gphgen = new FlowGraphGenerator("");
+  let gphgen = new FlowGraphGenerator();
   gphgen.generateFlowGraph();
   res.send({
     response: "doing something",
@@ -48,6 +48,7 @@ class Model {
     const client = new Anthropic({
       apiKey: process.env[this.apiKey],
     });
+    console.log("Got this prompt: ", prompt);
     const message = await client.messages
       .create({
         max_tokens: this.maxTokens,
@@ -58,6 +59,7 @@ class Model {
       .catch((error) => {
         console.log(error);
       });
+    console.log("Got this message from the model", message);
     if (message === undefined || message === null) {
       return Promise.resolve(new Array<ContentBlock>());
     } else {
@@ -167,9 +169,10 @@ class FlowGraphGenerator {
   tools: Map<string, Tool>;
   model: Model;
 
-  constructor(basePrompt: string) {
+  constructor() {
     this.iterationCap = 1;
-    this.basePrompt = basePrompt;
+    this.basePrompt =
+      "You're an agent responsible for generating a user journey map for any given website or webapp. The user journey map is a detailed graph (in the sense of a graph with nodes & edges) which maps out the user’s experience with the product. The nodes are particular states of the digital product which is relatively stable (i.e. not changing much). The nodes also capture various other forms of information including screenshot(s) of the state, metrics or absolute numbers on how many users land at this state, observations on issues faced with usability/UI/UX/functionality & observations on any UX/UI opportunities. The edges are basically the distinct pathways the user can take between two different states either automatically triggered upon the user or due to the users own choice (by clicking on any intractable UI). The edges capture these information items: action taken by the user or automated reason for the edge being triggered. Now your job is to build this graph out, for now by only capturing the screenshots info for the nodes & the action / reason info for the edges. You would be doing this by using a sandboxed computer environment where you’d be able to use the browser. I will provide you with the URL of the product for which this needs to be done, any credentials that are needed to access any UX behind logins & the scope of this journey map in the sense of the URL to start from & what should be your terminating condition. I will also give you a scope in sense of particular functionality within the product that you need to follow in order to build out the graph. ";
     this.tools = new Map<string, Tool>();
     this.model = new Model();
   }
@@ -189,7 +192,7 @@ class FlowGraphGenerator {
     for (let i = 0; i < this.iterationCap; i++) {
       let response: Array<ContentBlock> = await this.model.generateResponse(
         this.getSerialisedTools(),
-        "",
+        this.basePrompt,
       );
       console.log("got response:", response);
       for (const block of response) {
