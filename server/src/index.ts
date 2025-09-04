@@ -48,7 +48,7 @@ class Model {
     const client = new Anthropic({
       apiKey: process.env[this.apiKey],
     });
-    console.log("Got this prompt: ", prompt);
+    console.log("Got this prompt & tools: ", prompt, tools);
     const message = await client.messages
       .create({
         max_tokens: this.maxTokens,
@@ -81,23 +81,24 @@ class ComputerTool implements AnthTool, Tool {
   name: string;
   input_schema: AnthTool.InputSchema;
   type: "custom";
-  display_width_px: number;
-  display_height_px: number;
-  display_number: number;
+  // display_width_px: number;
+  // display_height_px: number;
+  // display_number: number;
+  description: string;
 
   constructor() {
     this.name = "computer";
     this.type = "custom";
-    this.display_width_px = 1024;
-    this.display_height_px = 768;
-    this.display_number = 1;
+    // this.display_width_px = 1024;
+    // this.display_height_px = 768;
+    // this.display_number = 1;
+    this.description =
+      "Use this tool to use & navigate the local computer instance. " +
+      "You can use the tool to perform specific actions such as" +
+      " taking a screenshot of the current view," +
+      "scrolling up or down or left-clicking or right-clicking on a particular coordinate (x,y).";
     this.input_schema = {
       type: "object",
-      description:
-        "Use this tool to use & navigate the local computer instance. " +
-        "You can use the tool to perform specific actions such as" +
-        " taking a screenshot of the current view," +
-        "scrolling up or down or left-clicking or right-clicking on a particular coordinate (x,y).",
       properties: {
         action: {
           type: "string",
@@ -172,8 +173,9 @@ class FlowGraphGenerator {
   constructor() {
     this.iterationCap = 1;
     this.basePrompt =
-      "You're an agent responsible for generating a user journey map for any given website or webapp. The user journey map is a detailed graph (in the sense of a graph with nodes & edges) which maps out the user’s experience with the product. The nodes are particular states of the digital product which is relatively stable (i.e. not changing much). The nodes also capture various other forms of information including screenshot(s) of the state, metrics or absolute numbers on how many users land at this state, observations on issues faced with usability/UI/UX/functionality & observations on any UX/UI opportunities. The edges are basically the distinct pathways the user can take between two different states either automatically triggered upon the user or due to the users own choice (by clicking on any intractable UI). The edges capture these information items: action taken by the user or automated reason for the edge being triggered. Now your job is to build this graph out, for now by only capturing the screenshots info for the nodes & the action / reason info for the edges. You would be doing this by using a sandboxed computer environment where you’d be able to use the browser. I will provide you with the URL of the product for which this needs to be done, any credentials that are needed to access any UX behind logins & the scope of this journey map in the sense of the URL to start from & what should be your terminating condition. I will also give you a scope in sense of particular functionality within the product that you need to follow in order to build out the graph. ";
+      "You're an agent responsible for generating a user journey map for any given website or webapp. The user journey map is a detailed graph (in the sense of a graph with nodes & edges) which maps out the user’s experience with the product. The nodes are particular states of the digital product which is relatively stable (i.e. not changing much). The nodes also capture various other forms of information including screenshot(s) of the state, metrics or absolute numbers on how many users land at this state, observations on issues faced with usability/UI/UX/functionality & observations on any UX/UI opportunities. The edges are basically the distinct pathways the user can take between two different states either automatically triggered upon the user or due to the users own choice (by clicking on any intractable UI). The edges capture these information items: action taken by the user or automated reason for the edge being triggered. Now your job is to build this graph out, for now by only capturing the screenshots info for the nodes & the action / reason info for the edges. You would be doing this by using a sandboxed computer environment where you’d be able to use the browser. I want you to use the tools that are provided to you to do this. The main tool is the computer tool with which you should have the ability to take the screenshot of the current screen, perform left- or right-click with the mouse, scroll up or down by a certain amount, input keys. I will provide you with the URL of the product for which this needs to be done, any credentials that are needed to access any UX behind logins & the scope of this journey map in the sense of the URL to start from & what should be your terminating condition. I will also give you a scope in sense of particular functionality within the product that you need to follow in order to build out the graph. ";
     this.tools = new Map<string, Tool>();
+    this.tools.set("computer", new ComputerTool());
     this.model = new Model();
   }
 
