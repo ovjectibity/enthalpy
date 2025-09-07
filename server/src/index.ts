@@ -75,7 +75,7 @@ class Model {
 }
 
 interface Tool {
-  act: (action: unknown) => ToolResultBlockParam;
+  act: (action: unknown, id: string) => Promise<ToolResultBlockParam>;
   getProviderTool: () => AnthTool;
 }
 
@@ -129,24 +129,30 @@ class ComputerTool implements AnthTool, Tool {
     };
   }
 
-  async getScreenshot(): Promise<NonSharedBuffer> {
-    let cmd: string = "scrot";
+  async getScreenshot(): Promise<string> {
+    // let cmd: string = "scrot";
+    // Impl for mac
+    let cmd: string =
+      'screencapture "/Users/khushi/Documents/projects/enthalpy/server/tmp/abc.png"';
     return new Promise((res, rej) => {
-      exec('screenshotcapture "abc.png"', (error, stdout, stderr) => {
+      exec(cmd, (error, stdout, stderr) => {
         //Pass it along to the agent
+        console.log("Running screencapture", error, stdout, stderr);
         if (error) {
           rej();
         } else {
           fs.readFile(
-            "path/to/your/file.txt",
+            "/Users/khushi/Documents/projects/enthalpy/server/tmp/abc.png",
             "utf8",
             (err: any, data: any) => {
               if (err) {
+                console.log("Running screencapture");
                 console.error("Error reading file:", err);
                 rej();
               }
-              console.log("File content:", data);
-              res(data);
+              let base64encoded = data.toString("base64");
+              // console.log("File content:", base64encoded);
+              res(base64encoded);
             },
           );
         }
@@ -158,27 +164,42 @@ class ComputerTool implements AnthTool, Tool {
     return this;
   }
 
-  act(action: unknown): ToolResultBlockParam {
-    if (action == "screenshot") {
-      let ss = this.getScreenshot();
-      return {};
-    } else if ((action = "left_click")) {
-    } else if ((action = "type")) {
-    } else if ((action = "key")) {
-    } else if ((action = "mouse_move")) {
-    } else if ((action = "scroll")) {
-    } else if ((action = "left_click_drag")) {
-    } else if ((action = "right_click")) {
-    } else if ((action = "middle_click")) {
-    } else if ((action = "double_click")) {
-    } else if ((action = "triple_click")) {
-    } else if ((action = "left_mouse_down")) {
-    } else if ((action = "left_mouse_up")) {
-    } else if ((action = "hold_key")) {
-    } else if ((action = "wait")) {
-    } else if ((action = "terminal")) {
+  async act(input: unknown, id: string): Promise<ToolResultBlockParam> {
+    let action = (input as { action: string })?.action;
+    if (action === "screenshot") {
+      console.log("Printing screenshot");
+      let ss = await this.getScreenshot();
+      return {
+        tool_use_id: id,
+        type: "tool_result",
+        content: [
+          {
+            type: "image",
+            source: {
+              data: ss,
+              media_type: "image/png",
+              type: "base64",
+            },
+          },
+        ],
+      };
+    } else if (action === "left_click") {
+    } else if (action === "type") {
+    } else if (action === "key") {
+    } else if (action === "mouse_move") {
+    } else if (action === "scroll") {
+    } else if (action === "left_click_drag") {
+    } else if (action === "right_click") {
+    } else if (action === "middle_click") {
+    } else if (action === "double_click") {
+    } else if (action === "triple_click") {
+    } else if (action === "left_mouse_down") {
+    } else if (action === "left_mouse_up") {
+    } else if (action === "hold_key") {
+    } else if (action === "wait") {
+    } else if (action === "terminal") {
     }
-    return "";
+    return Promise.reject();
   }
 }
 
@@ -220,7 +241,13 @@ class FlowGraphGenerator {
           let toolblock = block as ToolUseBlock;
           switch (block.name) {
             case "computer": {
-              this.tools.get("computer")?.act(toolblock.input);
+              let toolresponse = await this.tools
+                .get("computer")
+                ?.act(toolblock.input, toolblock.id)
+                .catch((e) => {
+                  console.log(e);
+                });
+              console.log(toolresponse);
             }
             case "text": {
             }
