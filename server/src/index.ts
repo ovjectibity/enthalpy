@@ -4,9 +4,11 @@ import {
   Tool as AnthTool,
   ToolUseBlock,
   ContentBlock,
+  MessageParam,
+  ToolResultBlockParam,
 } from "@anthropic-ai/sdk/resources";
 import { exec } from "child_process";
-// const { exec } = require('node:child_process');
+import * as fs from "fs";
 
 const app = express();
 const port = 3001;
@@ -73,7 +75,7 @@ class Model {
 }
 
 interface Tool {
-  act: (action: string) => string;
+  act: (action: unknown) => ToolResultBlockParam;
   getProviderTool: () => AnthTool;
 }
 
@@ -127,12 +129,27 @@ class ComputerTool implements AnthTool, Tool {
     };
   }
 
-  async getScreenshot(): Promise<string> {
+  async getScreenshot(): Promise<NonSharedBuffer> {
     let cmd: string = "scrot";
     return new Promise((res, rej) => {
-      exec("scrot", (error, stdout, stderr) => {
+      exec('screenshotcapture "abc.png"', (error, stdout, stderr) => {
         //Pass it along to the agent
-        res(stdout);
+        if (error) {
+          rej();
+        } else {
+          fs.readFile(
+            "path/to/your/file.txt",
+            "utf8",
+            (err: any, data: any) => {
+              if (err) {
+                console.error("Error reading file:", err);
+                rej();
+              }
+              console.log("File content:", data);
+              res(data);
+            },
+          );
+        }
       });
     });
   }
@@ -141,9 +158,10 @@ class ComputerTool implements AnthTool, Tool {
     return this;
   }
 
-  act(action: string): string {
+  act(action: unknown): ToolResultBlockParam {
     if (action == "screenshot") {
-      // return this.getScreenshot();
+      let ss = this.getScreenshot();
+      return {};
     } else if ((action = "left_click")) {
     } else if ((action = "type")) {
     } else if ((action = "key")) {
@@ -199,9 +217,10 @@ class FlowGraphGenerator {
       console.log("got response:", response);
       for (const block of response) {
         if (block.type == "tool_use") {
+          let toolblock = block as ToolUseBlock;
           switch (block.name) {
             case "computer": {
-              this.tools.get("computer")?.act("");
+              this.tools.get("computer")?.act(toolblock.input);
             }
             case "text": {
             }
@@ -244,3 +263,15 @@ class FlowGraph {
 // The action graph to be used for any agent's active
 // work,
 class AgentActionGraph {}
+
+class ContextManager {
+  context_chain: Array<MessageParam>;
+
+  constructor() {
+    this.context_chain = [];
+  }
+
+  addToChain(message: MessageParam) {
+    this.context_chain.push(message);
+  }
+}
