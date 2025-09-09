@@ -5,3 +5,4 @@ server/app_config.json
 server/package-lock.json
 server/dist
 client/dist
+server/tmp
