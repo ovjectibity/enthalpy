@@ -131,33 +131,44 @@ class ComputerTool implements AnthTool, Tool {
   }
 
   async getScreenshot(): Promise<string> {
-    // let cmd: string = "scrot";
-    // Impl for mac
+    const platform = process.env.PLATFORM || "macos";
     let file = "./tmp/abc.png";
     let file2 = "./tmp/abc2.png";
-    let cmd: string = 'screencapture -tpng "' + file + '"';
+    let cmd: string;
+
+    if (platform === "linux") {
+      // Linux implementation using scrot
+      cmd = `scrot "${file}"`;
+    } else {
+      // macOS implementation using screencapture
+      cmd = `screencapture -tpng "${file}"`;
+    }
+
     return new Promise((res, rej) => {
       exec(cmd, (error, stdout, stderr) => {
-        //Pass it along to the agent
-        console.log("Running screencapture", error, stdout, stderr);
+        console.log(`Running screenshot on ${platform}`, error, stdout, stderr);
         if (error) {
-          rej();
+          rej(`Error taking screenshot on ${platform}: ${error.message}`);
         } else {
           sharp(file)
             .resize({ width: 1200 }) // adjust dimensions as needed
-            .png() // convert to JPEG and compress
+            .png() // convert to PNG and compress
             .toFile(file2)
             .then(() => {
               fs.readFile(file2, (err: any, data: any) => {
                 if (err) {
-                  console.log("Running screencapture");
+                  console.log("Error reading screenshot file");
                   console.error("Error reading file:", err);
-                  rej();
+                  rej(`Error reading screenshot file: ${err.message}`);
+                } else {
+                  let base64encoded = Buffer.from(data).toString("base64");
+                  res(base64encoded);
                 }
-                let base64encoded = Buffer.from(data).toString("base64");
-                // console.log("File content:", base64encoded);
-                res(base64encoded);
               });
+            })
+            .catch((sharpError) => {
+              console.error("Error processing image with Sharp:", sharpError);
+              rej(`Error processing screenshot: ${sharpError.message}`);
             });
         }
       });
@@ -169,14 +180,23 @@ class ComputerTool implements AnthTool, Tool {
     y: number,
     clickType: "left" | "right" = "left",
   ): Promise<string> {
-    // macOS implementation using osascript
-    let clickCommand = clickType === "right" ? "right click" : "click";
-    let cmd = `osascript -e "tell application \"System Events\" to ${clickCommand} at {${x}, ${y}}"`;
+    const platform = process.env.PLATFORM || "macos";
+    let cmd: string;
+
+    if (platform === "linux") {
+      // Linux implementation using xdotool
+      const button = clickType === "right" ? "3" : "1";
+      cmd = `xdotool mousemove ${x} ${y} click ${button}`;
+    } else {
+      // macOS implementation using osascript
+      const clickCommand = clickType === "right" ? "right click" : "click";
+      cmd = `osascript -e "tell application \"System Events\" to ${clickCommand} at {${x}, ${y}}"`;
+    }
 
     return new Promise((resolve, reject) => {
       exec(cmd, (error, stdout, stderr) => {
         console.log(
-          `Executing ${clickType} click at (${x}, ${y})`,
+          `Executing ${clickType} click at (${x}, ${y}) on ${platform}`,
           error,
           stdout,
           stderr,
@@ -185,7 +205,7 @@ class ComputerTool implements AnthTool, Tool {
           resolve(`Error executing ${clickType} click: ${error.message}`);
         } else {
           resolve(
-            `Successfully ${clickType} clicked at coordinates (${x}, ${y})`,
+            `Successfully ${clickType} clicked at coordinates (${x}, ${y}) on ${platform}`,
           );
         }
       });

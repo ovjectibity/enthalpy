@@ -47,6 +47,9 @@ RUN npm run build
 # Set up X11 virtual display for headless screenshot functionality
 ENV DISPLAY=:99
 
+# Set platform environment variable for cross-platform compatibility
+ENV PLATFORM=linux
+
 # Create startup script for X11 virtual display
 RUN echo '#!/bin/bash\n\
 Xvfb :99 -screen 0 1024x768x24 &\n\
