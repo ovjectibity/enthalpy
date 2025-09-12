@@ -303,8 +303,8 @@ class FlowGraphGenerator {
   ctxManager: ContextManager;
 
   constructor() {
-    const prompts = require("prompts/prompts.json");
-    const config = require("prompts/fg-config.json");
+    const prompts = require("./prompts/prompts.json");
+    const config = require("./prompts/fg-config.json");
     this.iterationCap = 2;
     this.basePrompt =
       prompts.basePrompt + " " + prompts.productName + config.productName + " ";
