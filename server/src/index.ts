@@ -307,10 +307,19 @@ class FlowGraphGenerator {
     const config = require("./prompts/fg-config.json");
     this.iterationCap = 2;
     this.basePrompt =
-      prompts.basePrompt + " " + prompts.productName + config.productName + " ";
-    prompts.productURL + config.productURL + " ";
-    prompts.loginUsername + config.loginUsername + " ";
-    prompts.loginPassword + config.loginPassword;
+      prompts.basePrompt +
+      " " +
+      prompts.productName +
+      config.productName +
+      " " +
+      prompts.productURL +
+      config.productURL +
+      " " +
+      prompts.loginUsername +
+      config.loginUsername +
+      " " +
+      prompts.loginPassword +
+      config.loginPassword;
 
     this.tools = new Map<string, Tool>();
     this.tools.set("computer", new ComputerTool());
