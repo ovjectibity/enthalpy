@@ -7,7 +7,7 @@ import {
   MessageParam,
   ToolResultBlockParam,
 } from "@anthropic-ai/sdk/resources";
-import { exec } from "child_process";
+import { exec, execSync } from "child_process";
 import * as fs from "fs";
 const sharp = require("sharp");
 
@@ -84,22 +84,27 @@ class ComputerTool implements AnthTool, Tool {
   name: string;
   input_schema: AnthTool.InputSchema;
   type: "custom";
-  // display_width_px: number;
-  // display_height_px: number;
-  // display_number: number;
+  private display_width_px: number;
+  private display_height_px: number;
+  private display_number: number;
   description: string;
 
   constructor() {
     this.name = "computer";
     this.type = "custom";
-    // this.display_width_px = 1024;
-    // this.display_height_px = 768;
-    // this.display_number = 1;
+    this.display_number = 1;
+
+    // Get screen dimensions
+    const dimensions = this.getScreenDimensions();
+    this.display_width_px = dimensions.width;
+    this.display_height_px = dimensions.height;
     this.description =
-      "Use this tool to use & navigate the local computer instance. " +
-      "You can use the tool to perform specific actions such as" +
-      " taking a screenshot of the current view," +
-      "scrolling up or down or left-clicking or right-clicking on a particular coordinate (x,y).";
+      `Use this tool to use & navigate the local computer instance. ` +
+      `Screen dimensions: ${this.display_width_px}x${this.display_height_px} pixels. ` +
+      `You can use the tool to perform specific actions such as ` +
+      `taking a screenshot of the current view, ` +
+      `scrolling up or down or left-clicking or right-clicking on a particular coordinate (x,y). ` +
+      `All coordinates should be within the screen bounds (0,0) to (${this.display_width_px},${this.display_height_px}).`;
     this.input_schema = {
       type: "object",
       properties: {
@@ -130,10 +135,42 @@ class ComputerTool implements AnthTool, Tool {
     };
   }
 
+  getScreenDimensions(): { width: number; height: number } {
+    const platform = process.env.PLATFORM || "macos";
+    let cmd: string;
+
+    if (platform === "linux") {
+      // Linux implementation using xdpyinfo
+      cmd = "xdpyinfo | grep dimensions | awk '{print $2}'";
+    } else {
+      // macOS implementation using system_profiler
+      cmd =
+        "system_profiler SPDisplaysDataType | grep Resolution | awk '{print $2, $4}' | head -1";
+    }
+
+    try {
+      const output = execSync(cmd, { encoding: "utf8" }).trim();
+
+      if (platform === "linux") {
+        // Output format: "1920x1080"
+        const [width, height] = output.split("x").map(Number);
+        return { width, height };
+      } else {
+        // macOS output format: "1920 1080" (space separated)
+        const [width, height] = output.split(" ").map(Number);
+        return { width, height };
+      }
+    } catch (error) {
+      console.warn(`Failed to get screen dimensions: ${error}`);
+      // Fallback to common defaults
+      return { width: 1920, height: 1080 };
+    }
+  }
+
   async getScreenshot(): Promise<string> {
     const platform = process.env.PLATFORM || "macos";
     let file = "./tmp/abc.png";
-    let file2 = "./tmp/abc2.png";
+    let file2 = "./tmp/abc2.jpg";
     let cmd: string;
 
     if (platform === "linux") {
@@ -150,29 +187,90 @@ class ComputerTool implements AnthTool, Tool {
         if (error) {
           rej(`Error taking screenshot on ${platform}: ${error.message}`);
         } else {
-          sharp(file)
-            .resize({ width: 1200 }) // adjust dimensions as needed
-            .png() // convert to PNG and compress
-            .toFile(file2)
-            .then(() => {
-              fs.readFile(file2, (err: any, data: any) => {
-                if (err) {
-                  console.log("Error reading screenshot file");
-                  console.error("Error reading file:", err);
-                  rej(`Error reading screenshot file: ${err.message}`);
-                } else {
-                  let base64encoded = Buffer.from(data).toString("base64");
-                  res(base64encoded);
-                }
-              });
+          this.optimizeScreenshot(file, file2)
+            .then((base64encoded) => {
+              res(base64encoded);
             })
-            .catch((sharpError: any) => {
-              console.error("Error processing image with Sharp:", sharpError);
-              rej(`Error processing screenshot: ${sharpError.message}`);
+            .catch((optimizeError: any) => {
+              console.error("Error optimizing screenshot:", optimizeError);
+              rej(`Error optimizing screenshot: ${optimizeError.message}`);
             });
         }
       });
     });
+  }
+
+  private async optimizeScreenshot(
+    inputFile: string,
+    outputFile: string,
+  ): Promise<string> {
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+    const MAX_SIZE_BASE64 = Math.floor(MAX_SIZE_BYTES * 0.75); // Account for base64 encoding overhead
+
+    // Calculate optimal dimensions maintaining aspect ratio
+    const aspectRatio = this.display_width_px / this.display_height_px;
+    let targetWidth = 1920; // Start with a high quality target
+    let targetHeight = Math.round(targetWidth / aspectRatio);
+
+    // Ensure we don't exceed original dimensions
+    if (targetWidth > this.display_width_px) {
+      targetWidth = this.display_width_px;
+      targetHeight = this.display_height_px;
+    }
+
+    let quality = 95; // Start with high quality for JPG
+    let attempt = 0;
+    const maxAttempts = 10;
+
+    while (attempt < maxAttempts) {
+      try {
+        let sharpInstance = sharp(inputFile).resize({
+          width: targetWidth,
+          height: targetHeight,
+          fit: "contain",
+          background: { r: 0, g: 0, b: 0, alpha: 1 },
+        });
+
+        // Always use JPEG for consistent output and better compression
+        sharpInstance = sharpInstance.jpeg({ quality, mozjpeg: true });
+
+        await sharpInstance.toFile(outputFile);
+
+        // Check file size
+        const fileStats = fs.statSync(outputFile);
+        const base64Size = Math.ceil((fileStats.size * 4) / 3); // Estimate base64 size
+
+        console.log(
+          `Screenshot attempt ${attempt + 1}: ${fileStats.size} bytes (base64: ~${base64Size}), quality: ${quality}, dimensions: ${targetWidth}x${targetHeight}`,
+        );
+
+        if (base64Size <= MAX_SIZE_BASE64) {
+          // Success! Read and return base64
+          const data = fs.readFileSync(outputFile);
+          return Buffer.from(data).toString("base64");
+        }
+
+        // File too large, reduce quality or dimensions
+        if (quality > 60) {
+          quality -= 10;
+        } else {
+          // Reduce dimensions by 20%
+          targetWidth = Math.round(targetWidth * 0.8);
+          targetHeight = Math.round(targetHeight * 0.8);
+          quality = 85; // Reset quality when reducing dimensions
+        }
+
+        attempt++;
+      } catch (error) {
+        throw new Error(
+          `Sharp processing failed on attempt ${attempt + 1}: ${error}`,
+        );
+      }
+    }
+
+    throw new Error(
+      `Could not optimize screenshot under 5MB after ${maxAttempts} attempts`,
+    );
   }
 
   async executeClick(
@@ -213,7 +311,12 @@ class ComputerTool implements AnthTool, Tool {
   }
 
   getProviderTool(): AnthTool {
-    return this;
+    return {
+      name: this.name,
+      input_schema: this.input_schema,
+      type: this.type,
+      description: this.description,
+    };
   }
 
   async act(input: unknown, id: string): Promise<ToolResultBlockParam> {
@@ -229,7 +332,7 @@ class ComputerTool implements AnthTool, Tool {
             type: "image",
             source: {
               data: ss,
-              media_type: "image/png",
+              media_type: "image/jpeg",
               type: "base64",
             },
           },
