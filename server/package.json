@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "tsc && node dist/index.js"
+    "build": "tsc && cp -r src/prompts dist/",
+    "start": "tsc && cp -r src/prompts dist/ && node dist/index.js"
   },
   "keywords": [],
   "author": "",
