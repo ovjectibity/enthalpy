@@ -319,7 +319,10 @@ class FlowGraphGenerator {
       config.loginUsername +
       " " +
       prompts.loginPassword +
-      config.loginPassword;
+      config.loginPassword +
+      " " +
+      prompts.productScope +
+      config.productScope;
 
     this.tools = new Map<string, Tool>();
     this.tools.set("computer", new ComputerTool());
