@@ -54,11 +54,11 @@ ENV PLATFORM=linux
 
 # Create startup script for X11 virtual display
 RUN echo '#!/bin/bash\n\
-Xvfb :99 -screen 0 1024x768x24 &\n\
-fluxbox -display :99 &\n\
-sleep 2\n\
-x11vnc -display :99 -forever -nopw -listen localhost -xkb &\n\
-cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh
+    Xvfb :99 -screen 0 1024x768x24 &\n\
+    fluxbox -display :99 &\n\
+    sleep 2\n\
+    x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -verbose &\n\
+    cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose the server port
 EXPOSE 3001
