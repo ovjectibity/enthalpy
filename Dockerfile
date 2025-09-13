@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     # Additional desktop utilities
     firefox-esr \
-    file-manager \
+    thunar \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
