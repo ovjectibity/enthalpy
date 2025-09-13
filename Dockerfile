@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y \
     xfce4 \
     xfce4-terminal \
     xfce4-goodies \
+    # D-Bus for desktop functionality
+    dbus-x11 \
+    dbus \
     # For Sharp image processing
     libc6-dev \
     # For system automation (alternative to macOS osascript)
@@ -62,6 +65,7 @@ ENV PLATFORM=linux
 RUN echo '#!/bin/bash\n\
     Xvfb :99 -screen 0 1024x768x24 &\n\
     sleep 3\n\
+    dbus-launch --exit-with-session &\n\
     DISPLAY=:99 startxfce4 &\n\
     sleep 5\n\
     x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -verbose &\n\
