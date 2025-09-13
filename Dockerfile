@@ -3,6 +3,8 @@ FROM node:18-slim
 
 # Install system dependencies required for the application
 RUN apt-get update && apt-get install -y \
+    # For debugging, to check processes
+    procps \
     # For screenshot functionality (alternative to macOS screencapture)
     scrot \
     xvfb \
@@ -55,10 +57,13 @@ RUN echo '#!/bin/bash\n\
 Xvfb :99 -screen 0 1024x768x24 &\n\
 fluxbox -display :99 &\n\
 sleep 2\n\
+x11vnc -display :99 -forever -nopw -listen localhost -xkb &\n\
 cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose the server port
 EXPOSE 3001
+# Expose VNC port for x11vnc
+EXPOSE 5900
 
 # Set working directory back to server for startup
 WORKDIR /app/server
