@@ -9,13 +9,19 @@ RUN apt-get update && apt-get install -y \
     scrot \
     xvfb \
     x11vnc \
-    fluxbox \
+    # XFCE desktop environment
+    xfce4 \
+    xfce4-terminal \
+    xfce4-goodies \
     # For Sharp image processing
     libc6-dev \
     # For system automation (alternative to macOS osascript)
     xdotool \
     # General utilities
     curl \
+    # Additional desktop utilities
+    firefox-esr \
+    file-manager \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -55,8 +61,9 @@ ENV PLATFORM=linux
 # Create startup script for X11 virtual display
 RUN echo '#!/bin/bash\n\
     Xvfb :99 -screen 0 1024x768x24 &\n\
-    fluxbox -display :99 &\n\
-    sleep 2\n\
+    sleep 3\n\
+    DISPLAY=:99 startxfce4 &\n\
+    sleep 5\n\
     x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -verbose &\n\
     cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh
 
