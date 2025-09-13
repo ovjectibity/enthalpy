@@ -10,12 +10,17 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     x11vnc \
     # XFCE desktop environment
-    xfce4 \
+    xfce4-session \
+    xfce4-panel \
     xfce4-terminal \
-    xfce4-goodies \
-    # D-Bus for desktop functionality
-    dbus-x11 \
+    xfwm4 \
+    xfdesktop4 \
+    xfce4-settings \
+    # D-Bus system and session
     dbus \
+    dbus-x11 \
+    # Minimal system services
+    systemd \
     # For Sharp image processing
     libc6-dev \
     # For system automation (alternative to macOS osascript)
@@ -61,14 +66,41 @@ ENV DISPLAY=:99
 # Set platform environment variable for cross-platform compatibility
 ENV PLATFORM=linux
 
+# Create minimal XFCE configuration to disable unnecessary services
+RUN mkdir -p /etc/xdg/autostart && \
+    # Disable power manager
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xfce4-power-manager.desktop && \
+    # Disable light locker
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/light-locker.desktop && \
+    # Disable polkit agent
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/polkit-gnome-authentication-agent-1.desktop && \
+    # Disable color daemon
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xiccd.desktop
+
 # Create startup script for X11 virtual display
 RUN echo '#!/bin/bash\n\
-    Xvfb :99 -screen 0 1024x768x24 &\n\
+    # Start system D-Bus daemon\n\
+    mkdir -p /var/run/dbus\n\
+    dbus-daemon --system --fork\n\
+    \n\
+    # Start X virtual framebuffer\n\
+    Xvfb :99 -screen 0 1024x768x24 -ac &\n\
+    export DISPLAY=:99\n\
     sleep 3\n\
-    dbus-launch --exit-with-session &\n\
-    DISPLAY=:99 startxfce4 &\n\
-    sleep 5\n\
+    \n\
+    # Start session D-Bus\n\
+    eval $(dbus-launch --sh-syntax)\n\
+    export DBUS_SESSION_BUS_ADDRESS\n\
+    export DBUS_SESSION_BUS_PID\n\
+    \n\
+    # Start minimal XFCE components\n\
+    xfce4-session --disable-tcp &\n\
+    sleep 8\n\
+    \n\
+    # Start VNC server\n\
     x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -verbose &\n\
+    \n\
+    # Start the application\n\
     cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose the server port
