@@ -1,13 +1,235 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;500;600&display=swap");
+
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "SF Pro Display",
+        "Roboto",
+        "Oxygen",
+        "Ubuntu",
+        "Cantarell",
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(
+        135deg,
+        #0f0f23 0%,
+        #1a1a2e 25%,
+        #16213e 75%,
+        #0f1419 100%
+    );
+    color: #e8e8e8;
+    height: 100vh;
+    overflow: hidden;
+    font-weight: 400;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+    font-family:
+        "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Consolas", monospace;
+}
+
+#root {
+    height: 100vh;
+}
+
+* {
+    box-sizing: border-box;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset default browser styles */
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Selection color */
+::selection {
+    background-color: rgba(102, 126, 234, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+::-moz-selection {
+    background-color: rgba(102, 126, 234, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Disable text selection on UI elements */
+button,
+.tab,
+.nav-item,
+.dropdown,
+.agent-selector,
+.logo,
+.resizer {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Allow text selection in content areas */
+.terminal-content,
+.input-field,
+.canvas-area {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Global resizing cursor */
+body.resizing,
+body.resizing * {
+    cursor: ew-resize !important;
+    user-select: none !important;
+}
+
+/* Focus styles */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid rgba(102, 126, 234, 0.6);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* Smooth animations for all interactive elements */
+button,
+select,
+input,
+.tab,
+.nav-item,
+.resizer {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glass morphism base */
+.glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Typography scale */
+.text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+.text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+.text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+.text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}
+.text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+}
+.text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+}
+
+/* Font weights */
+.font-light {
+    font-weight: 300;
+}
+.font-normal {
+    font-weight: 400;
+}
+.font-medium {
+    font-weight: 500;
+}
+.font-semibold {
+    font-weight: 600;
+}
+.font-bold {
+    font-weight: 700;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    body {
+        background: #000000;
+        color: #ffffff;
+    }
+
+    .top-header {
+        background: #ffffff;
+        color: #000000;
+        border-bottom: 2px solid #000000;
+    }
+
+    .tab.active {
+        background: #000000;
+        color: #ffffff;
+        border: 2px solid #ffffff;
+    }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(
+            135deg,
+            #0f0f23 0%,
+            #1a1a2e 25%,
+            #16213e 75%,
+            #0f1419 100%
+        );
+    }
 }
