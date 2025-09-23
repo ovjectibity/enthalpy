@@ -42,7 +42,7 @@ export class ComputerTool implements AnthTool, Tool {
         action: {
           type: "string",
           description:
-            "Possible actions: screenshot, left_click, right_click, scroll-down, scroll-up",
+            "Possible actions: screenshot, left_click, right_click, scroll, type",
         },
         coordinates: {
           type: "object",
@@ -60,6 +60,27 @@ export class ComputerTool implements AnthTool, Tool {
                 "The Y coordinate over which a click needs to be made.",
             },
           },
+        },
+        scroll_distance: {
+          type: "object",
+          description:
+            "dX & dY distances in screen coordinates over which the scroll needs to be made.",
+          properties: {
+            dx: {
+              type: "number",
+              description:
+                "The dX distance in the horizontal axis over which scroll needs to be made. While this can be any real value, but it is strongly suggested to not use values whose absolute figures are larger than the X screen dimension.",
+            },
+            dy: {
+              type: "number",
+              description:
+                "The dY distance in the vertical axis over which scroll needs to be made. While this can be any real value, but it is strongly suggested to not use values whose absolute figures are larger than the Y screen dimension.",
+            },
+          },
+        },
+        key_input: {
+          type: "string",
+          description: "The Unicode string that needs to be typed.",
         },
       },
       required: ["action"],
@@ -241,6 +262,97 @@ export class ComputerTool implements AnthTool, Tool {
     });
   }
 
+  async executeType(text: string): Promise<string> {
+    const platform = process.env.PLATFORM || "macos";
+    let cmd: string;
+
+    if (platform === "linux") {
+      // Linux implementation using xdotool
+      // Escape special characters for shell
+      const escapedText = text.replace(/'/g, "'\"'\"'");
+      cmd = `xdotool type '${escapedText}'`;
+    } else {
+      // macOS implementation using osascript
+      // Escape special characters for AppleScript
+      const escapedText = text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+      cmd = `osascript -e 'tell application "System Events" to keystroke "${escapedText}"'`;
+    }
+
+    return new Promise((resolve, reject) => {
+      exec(cmd, (error, stdout, stderr) => {
+        console.log(
+          `Executing type: "${text}" on ${platform}`,
+          error,
+          stdout,
+          stderr,
+        );
+        if (error) {
+          resolve(`Error executing type: ${error.message}`);
+        } else {
+          resolve(`Successfully typed: "${text}" on ${platform}`);
+        }
+      });
+    });
+  }
+
+  async executeScroll(dx: number, dy: number): Promise<string> {
+    const platform = process.env.PLATFORM || "macos";
+    let cmd: string;
+
+    if (platform === "linux") {
+      // Linux implementation using xdotool
+      // xdotool uses button 4/5 for vertical scroll (up/down) and 6/7 for horizontal
+      // Positive dy means scroll down, negative means scroll up
+      // Positive dx means scroll right, negative means scroll left
+      const scrollCommands: string[] = [];
+
+      // Handle vertical scrolling
+      if (dy !== 0) {
+        const scrollButton = dy > 0 ? "5" : "4"; // 5 = down, 4 = up
+        const scrollCount = Math.abs(Math.round(dy / 100)); // Convert pixels to scroll steps
+        for (let i = 0; i < scrollCount; i++) {
+          scrollCommands.push(`xdotool click ${scrollButton}`);
+        }
+      }
+
+      // Handle horizontal scrolling
+      if (dx !== 0) {
+        const scrollButton = dx > 0 ? "7" : "6"; // 7 = right, 6 = left
+        const scrollCount = Math.abs(Math.round(dx / 100)); // Convert pixels to scroll steps
+        for (let i = 0; i < scrollCount; i++) {
+          scrollCommands.push(`xdotool click ${scrollButton}`);
+        }
+      }
+
+      cmd = scrollCommands.join(" && ");
+    } else {
+      // macOS implementation using osascript
+      // macOS uses negative values for up/left scrolling
+      cmd = `osascript -e 'tell application "System Events" to scroll {${-dx}, ${-dy}}'`;
+    }
+
+    return new Promise((resolve, reject) => {
+      if (!cmd) {
+        resolve("No scroll action needed (dx=0, dy=0)");
+        return;
+      }
+
+      exec(cmd, (error, stdout, stderr) => {
+        console.log(
+          `Executing scroll: dx=${dx}, dy=${dy} on ${platform}`,
+          error,
+          stdout,
+          stderr,
+        );
+        if (error) {
+          resolve(`Error executing scroll: ${error.message}`);
+        } else {
+          resolve(`Successfully scrolled: dx=${dx}, dy=${dy} on ${platform}`);
+        }
+      });
+    });
+  }
+
   getProviderTool(): AnthTool {
     return {
       name: this.name,
@@ -291,9 +403,45 @@ export class ComputerTool implements AnthTool, Tool {
         };
       }
     } else if (action === "type") {
+      let keyInput = (input as { key_input: string })?.key_input;
+      if (keyInput) {
+        let result = await this.executeType(keyInput);
+        return {
+          tool_use_id: id,
+          type: "tool_result",
+          content: result,
+        };
+      } else {
+        return {
+          tool_use_id: id,
+          type: "tool_result",
+          content: "Error: key_input required for type action",
+        };
+      }
     } else if (action === "key") {
     } else if (action === "mouse_move") {
     } else if (action === "scroll") {
+      let scrollDistance = (
+        input as { scroll_distance: { dx: number; dy: number } }
+      )?.scroll_distance;
+      if (scrollDistance) {
+        let result = await this.executeScroll(
+          scrollDistance.dx,
+          scrollDistance.dy,
+        );
+        return {
+          tool_use_id: id,
+          type: "tool_result",
+          content: result,
+        };
+      } else {
+        return {
+          tool_use_id: id,
+          type: "tool_result",
+          content:
+            "Error: scroll_distance with dx and dy properties required for scroll action",
+        };
+      }
     } else if (action === "left_click_drag") {
     } else if (action === "right_click") {
       let coordinates = (input as { coordinates: { x: number; y: number } })

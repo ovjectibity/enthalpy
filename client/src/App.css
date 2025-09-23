@@ -406,12 +406,8 @@ body {
 .right-panel {
     min-width: 320px;
     max-width: calc(100vw - 200px);
-    background: linear-gradient(135deg, #1e1e3f 0%, #2a2a5a 100%);
     display: flex;
     flex-direction: column;
-    border-radius: 12px 0 0 0;
-    overflow: hidden;
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
 }
 
 /* Chat Header */
@@ -421,7 +417,8 @@ body {
     -webkit-backdrop-filter: blur(20px);
     padding: 8px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px 0 0 0;
+    border-radius: 0;
+    margin: 20px 20px 0 20px;
 }
 
 .agent-selector {
@@ -509,6 +506,10 @@ body {
     flex-direction: column;
     background: linear-gradient(135deg, #1e1e3f 0%, #2a2a5a 100%);
     position: relative;
+    border-radius: 12px;
+    margin: 20px;
+    overflow: hidden;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
 }
 
 .terminal::before {
