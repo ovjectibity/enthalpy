@@ -17,7 +17,7 @@ export class FlowGraphGenerator {
   constructor(tools: Map<string, Tool>) {
     const prompts = require("./prompts/prompts.json");
     const config = require("./prompts/fg-config.json");
-    this.iterationCap = 2;
+    this.iterationCap = 15;
     this.basePrompt =
       prompts.basePrompt +
       " " +
@@ -74,11 +74,17 @@ export class FlowGraphGenerator {
             case "computer": {
               let toolresponse = await this.tools
                 .get("computer")
-                ?.act(toolblock.input, toolblock.id)
+                ?.act(
+                  toolblock.input,
+                  toolblock.id,
+                  (action: string, ss: string) => {
+                    graph.addNode(new FlowNode([ss], "", action));
+                  },
+                )
                 .catch((e) => {
                   console.log(e);
                 });
-              console.log(toolresponse);
+              console.log("Action response: " + toolresponse);
               if (toolresponse !== undefined) {
                 this.ctxManager.addToChain({
                   role: "user",
@@ -96,17 +102,19 @@ export class FlowGraphGenerator {
   }
 }
 
-class FlowNode {
-  screengrabs: string[][];
+export class FlowNode {
+  screengrabs: string[];
   description: string;
   inAction: string;
+  parent: null | FlowNode[];
   nextNode: null | FlowNode[];
 
-  constructor() {
-    this.screengrabs = [];
-    this.description = "";
+  constructor(ss: string[], des: string, action: string) {
+    this.screengrabs = ss;
+    this.description = des;
     this.nextNode = null;
-    this.inAction = "";
+    this.inAction = action;
+    this.parent = null;
   }
 }
 
@@ -118,11 +126,9 @@ export class FlowGraph {
     this.nodeChain = [];
   }
 
-  addNode(node: FlowNode) {}
-
-  executeAction() {}
-
-  genAction() {}
+  addNode(node: FlowNode) {
+    this.nodeChain.push(node);
+  }
 }
 
 // The action graph to be used for any agent's active

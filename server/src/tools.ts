@@ -4,10 +4,15 @@ import {
 } from "@anthropic-ai/sdk/resources";
 import { exec, execSync } from "child_process";
 import * as fs from "fs";
+import { FlowGraph, FlowNode } from "./flowgraph";
 const sharp = require("sharp");
 
 export interface Tool {
-  act: (action: unknown, id: string) => Promise<ToolResultBlockParam>;
+  act: (
+    action: unknown,
+    id: string,
+    callback: (action: string, ss: string) => void,
+  ) => Promise<ToolResultBlockParam>;
   getProviderTool: () => AnthTool;
 }
 
@@ -362,7 +367,11 @@ export class ComputerTool implements AnthTool, Tool {
     };
   }
 
-  async act(input: unknown, id: string): Promise<ToolResultBlockParam> {
+  async act(
+    input: unknown,
+    id: string,
+    state_save: (action: string, ss: string) => void,
+  ): Promise<ToolResultBlockParam> {
     let action = (input as { action: string })?.action;
     if (action === "screenshot") {
       console.log("Printing screenshot");
@@ -390,6 +399,8 @@ export class ComputerTool implements AnthTool, Tool {
           coordinates.y,
           "left",
         );
+        let ss = await this.getScreenshot();
+        state_save("left_click", ss);
         return {
           tool_use_id: id,
           type: "tool_result",
@@ -406,6 +417,8 @@ export class ComputerTool implements AnthTool, Tool {
       let keyInput = (input as { key_input: string })?.key_input;
       if (keyInput) {
         let result = await this.executeType(keyInput);
+        let ss = await this.getScreenshot();
+        state_save("left_click", ss);
         return {
           tool_use_id: id,
           type: "tool_result",
@@ -429,6 +442,8 @@ export class ComputerTool implements AnthTool, Tool {
           scrollDistance.dx,
           scrollDistance.dy,
         );
+        let ss = await this.getScreenshot();
+        state_save("left_click", ss);
         return {
           tool_use_id: id,
           type: "tool_result",
@@ -452,6 +467,8 @@ export class ComputerTool implements AnthTool, Tool {
           coordinates.y,
           "right",
         );
+        let ss = await this.getScreenshot();
+        state_save("left_click", ss);
         return {
           tool_use_id: id,
           type: "tool_result",
