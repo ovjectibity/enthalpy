@@ -98,6 +98,10 @@ export class FlowGraphGenerator {
         }
       }
     }
+    console.log(
+      "The entire context chain is this: ",
+      this.ctxManager.context_chain,
+    );
     return graph;
   }
 }
@@ -106,7 +110,6 @@ export class FlowNode {
   screengrabs: string[];
   description: string;
   inAction: string;
-  parent: null | FlowNode[];
   nextNode: null | FlowNode[];
 
   constructor(ss: string[], des: string, action: string) {
@@ -114,7 +117,6 @@ export class FlowNode {
     this.description = des;
     this.nextNode = null;
     this.inAction = action;
-    this.parent = null;
   }
 }
 
@@ -127,6 +129,7 @@ export class FlowGraph {
   }
 
   addNode(node: FlowNode) {
+    this.nodeChain[this.nodeChain.length - 1].nextNode?.push(node);
     this.nodeChain.push(node);
   }
 }
