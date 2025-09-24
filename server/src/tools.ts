@@ -4,7 +4,6 @@ import {
 } from "@anthropic-ai/sdk/resources";
 import { exec, execSync } from "child_process";
 import * as fs from "fs";
-import { FlowGraph, FlowNode } from "./flowgraph";
 const sharp = require("sharp");
 
 export interface Tool {

@@ -129,7 +129,7 @@ export class FlowGraph {
   }
 
   addNode(node: FlowNode) {
-    this.nodeChain[this.nodeChain.length - 1].nextNode?.push(node);
+    this.nodeChain[this.nodeChain.length - 1]?.nextNode?.push(node);
     this.nodeChain.push(node);
   }
 }
