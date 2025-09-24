@@ -26,7 +26,7 @@ export class Model {
     const client = new Anthropic({
       apiKey: process.env[this.apiKey],
     });
-    console.log("Got this prompt & tools: ", messages, tools);
+    // console.log("Got this prompt & tools: ", messages, tools);
     const message = await client.messages
       .create({
         max_tokens: this.maxTokens,
@@ -37,7 +37,7 @@ export class Model {
       .catch((error) => {
         console.log(error);
       });
-    console.log("Got this message from the model", message);
+    // console.log("Got this message from the model", message);
     if (message === undefined || message === null) {
       return Promise.resolve(new Array<ContentBlock>());
     } else {

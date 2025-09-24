@@ -17,7 +17,7 @@ export class FlowGraphGenerator {
   constructor(tools: Map<string, Tool>) {
     const prompts = require("./prompts/prompts.json");
     const config = require("./prompts/fg-config.json");
-    this.iterationCap = 15;
+    this.iterationCap = 8;
     this.basePrompt =
       prompts.basePrompt +
       " " +
@@ -92,8 +92,6 @@ export class FlowGraphGenerator {
                 });
               }
             }
-            case "text": {
-            }
           }
         }
       }
@@ -129,7 +127,9 @@ export class FlowGraph {
   }
 
   addNode(node: FlowNode) {
-    this.nodeChain[this.nodeChain.length - 1]?.nextNode?.push(node);
+    if (this.nodeChain.length > 0) {
+      this.nodeChain[this.nodeChain.length - 1]?.nextNode?.push(node);
+    }
     this.nodeChain.push(node);
   }
 }
