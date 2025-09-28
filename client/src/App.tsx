@@ -1,11 +1,17 @@
 import React, { useState } from "react";
 import "./App.css";
+import ContextIcon from "./assets/context-icon.svg";
+import HypothesesIcon from "./assets/hypotheses-icon.svg";
+import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
+import MetricsIcon from "./assets/metrics-icon.svg";
+import ObjectivesIcon from "./assets/objectives-icon.svg";
+import SettingsIcon from "./assets/settings-icon.svg";
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
-  const [selectedArtefact, setSelectedArtefact] = useState("Artefacts");
+
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
-  const [activeContext, setActiveContext] = useState("Flow");
+  const [activeContext, setActiveContext] = useState("Context");
   const [messages, setMessages] = useState([
     { type: "prompt", text: "> Tell me more about your objective." },
     { type: "response", text: "> Here's your objective _" },
@@ -15,10 +21,12 @@ const App: React.FC = () => {
 
   const tabs = ["Design", "Impl", "Execution"];
   const contextMenuItems = [
-    { id: "Flow", label: "Flow", icon: "📊" },
-    { id: "Components", label: "Components", icon: "🔧" },
-    { id: "Data", label: "Data", icon: "📋" },
-    { id: "Settings", label: "Settings", icon: "⚙️" },
+    { id: "Journey Maps", label: "Journey Maps", icon: JourneyMapsIcon },
+    { id: "Context", label: "Context", icon: ContextIcon },
+    { id: "Hypotheses", label: "Hypotheses", icon: HypothesesIcon },
+    { id: "Metrics", label: "Metrics", icon: MetricsIcon },
+    { id: "Objectives", label: "Objectives", icon: ObjectivesIcon },
+    { id: "Settings", label: "Settings", icon: SettingsIcon },
   ];
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -69,15 +77,6 @@ const App: React.FC = () => {
           <span className="project-name">&lt;project name&gt;</span>
         </div>
         <div className="header-right">
-          <select
-            className="artefacts-dropdown"
-            value={selectedArtefact}
-            onChange={(e) => setSelectedArtefact(e.target.value)}
-          >
-            <option>Artefacts</option>
-            <option>Components</option>
-            <option>Services</option>
-          </select>
           <div className="tabs-wrapper">
             {tabs.map((tab) => (
               <button
@@ -105,8 +104,12 @@ const App: React.FC = () => {
                 onClick={() => setActiveContext(item.id)}
                 title={item.label}
               >
-                <span className="sidebar-icon">{item.icon}</span>
-                <span className="sidebar-label">{item.label}</span>
+                <img
+                  src={item.icon}
+                  alt={item.label}
+                  className="sidebar-icon"
+                />
+                {/*<span className="sidebar-label">{item.label}</span>*/}
               </button>
             ))}
           </div>
