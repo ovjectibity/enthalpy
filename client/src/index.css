@@ -91,7 +91,6 @@ textarea {
 /* Disable text selection on UI elements */
 button,
 .tab,
-.nav-item,
 .dropdown,
 .agent-selector,
 .logo,
@@ -135,7 +134,6 @@ button,
 select,
 input,
 .tab,
-.nav-item,
 .resizer {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }

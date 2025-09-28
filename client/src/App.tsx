@@ -5,6 +5,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
   const [selectedArtefact, setSelectedArtefact] = useState("Artefacts");
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
+  const [activeContext, setActiveContext] = useState("Flow");
   const [messages, setMessages] = useState([
     { type: "prompt", text: "> Tell me more about your objective." },
     { type: "response", text: "> Here's your objective _" },
@@ -13,6 +14,12 @@ const App: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const tabs = ["Design", "Impl", "Execution"];
+  const contextMenuItems = [
+    { id: "Flow", label: "Flow", icon: "📊" },
+    { id: "Components", label: "Components", icon: "🔧" },
+    { id: "Data", label: "Data", icon: "📋" },
+    { id: "Settings", label: "Settings", icon: "⚙️" },
+  ];
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -60,10 +67,6 @@ const App: React.FC = () => {
             <span className="logo-text">ΔH</span>
           </div>
           <span className="project-name">&lt;project name&gt;</span>
-          <nav className="main-nav">
-            <button className="nav-item">File</button>
-            <button className="nav-item">Edit</button>
-          </nav>
         </div>
         <div className="header-right">
           <select
@@ -93,9 +96,24 @@ const App: React.FC = () => {
       <div className="main-content">
         {/* Left Panel */}
         <div className="left-panel">
+          {/* Sidebar Menu */}
+          <div className="sidebar">
+            {contextMenuItems.map((item) => (
+              <button
+                key={item.id}
+                className={`sidebar-item ${activeContext === item.id ? "active" : ""}`}
+                onClick={() => setActiveContext(item.id)}
+                title={item.label}
+              >
+                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="canvas-area">
             {/* This would be where the visual canvas/diagram goes */}
-            <div className="placeholder-text">Canvas Area</div>
+            <div className="placeholder-text">{activeContext} Canvas</div>
           </div>
         </div>
 
