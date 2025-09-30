@@ -13,8 +13,18 @@ const App: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
   const [activeContext, setActiveContext] = useState("Context");
   const [messages, setMessages] = useState([
-    { type: "prompt", text: "> Tell me more about your objective." },
-    { type: "response", text: "> Here's your objective _" },
+    {
+      id: 1,
+      owner: "agent",
+      text: "Tell me more about your objective.",
+      isFinished: true,
+    },
+    {
+      id: 2,
+      owner: "agent",
+      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
+      isFinished: false,
+    },
   ]);
   const [chatWidth, setChatWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
@@ -134,37 +144,54 @@ const App: React.FC = () => {
               value={selectedAgent}
               onChange={(e) => setSelectedAgent(e.target.value)}
             >
+              <option>Master agent</option>
               <option>Flow graph agent</option>
-              <option>Code agent</option>
               <option>UI agent</option>
             </select>
           </div>
           <div className="terminal">
             <div className="terminal-content">
-              {messages.map((message, index) => (
-                <div key={index} className={`message ${message.type}`}>
-                  <span className="message-text">{message.text}</span>
-                  {message.type === "response" &&
-                    index === messages.length - 1 && (
-                      <span className="cursor">|</span>
-                    )}
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`message-container ${message.owner}`}
+                >
+                  <div
+                    className={`message ${message.owner} ${message.isFinished ? "finished" : "in-progress"}`}
+                  >
+                    <div className="message-text">
+                      {message.text}
+                      {!message.isFinished && <span className="cursor">|</span>}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
             <div className="terminal-input">
-              <span className="prompt-symbol">&gt;</span>
               <input
                 type="text"
                 className="input-field"
-                placeholder="Type your message..."
+                placeholder="Prompt the enthalpy agent — @ to include context"
                 onKeyPress={(e) => {
                   if (e.key === "Enter") {
                     const input = e.currentTarget;
                     if (input.value.trim()) {
+                      const newUserMessage = {
+                        id: Date.now(),
+                        owner: "user",
+                        text: input.value,
+                        isFinished: true,
+                      };
+                      const newAgentMessage = {
+                        id: Date.now() + 1,
+                        owner: "agent",
+                        text: "Processing your request...",
+                        isFinished: false,
+                      };
                       setMessages([
                         ...messages,
-                        { type: "user", text: `> ${input.value}` },
-                        { type: "response", text: "> Processing..." },
+                        newUserMessage,
+                        newAgentMessage,
                       ]);
                       input.value = "";
                     }
