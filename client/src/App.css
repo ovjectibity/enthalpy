@@ -345,7 +345,7 @@ body {
 .canvas-area {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: top;
     justify-content: center;
     position: relative;
     margin: 16px;
@@ -359,6 +359,22 @@ body {
     font-size: 14px;
     font-weight: 500;
     font-style: italic;
+}
+
+.table-container {
+    color: black;
+    width: 100%;
+    font-size: 13px;
+}
+
+.data-table {
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.data-table-cell {
+    padding: 10px;
 }
 
 /* Resizable Divider */
@@ -630,11 +646,12 @@ body {
 
 .message-text {
     /*font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;*/
-    font-family: "Roboto", sans-serif;
+    /*font-family: "Roboto", sans-serif;*/
+    font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
     font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.6;
     color: #e2e8f0;
     white-space: pre-wrap;
@@ -702,7 +719,7 @@ body {
     border: none;
     color: #e2e8f0;
     font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
-    font-size: 13px;
+    font-size: 12px;
     outline: none;
     padding: 8px 0;
 }

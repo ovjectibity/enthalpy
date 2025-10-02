@@ -7,6 +7,41 @@ import MetricsIcon from "./assets/metrics-icon.svg";
 import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
 
+const TableView = (arg: { data: Array<any>; columns: Array<any> }) => {
+  if (!arg.data || arg.data.length === 0) {
+    return <div>No data available</div>;
+  }
+
+  return (
+    <div className="table-container">
+      <table className="data-table">
+        <thead>
+          <tr>
+            {arg.columns.map((column, index) => (
+              <th key={index} className="data-table-cell">
+                {column.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {arg.data.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {arg.columns.map((column, colIndex) => (
+                <td key={colIndex} className="data-table-cell">
+                  {column.accessor ? row[column.accessor] : ""}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const hypothesesCard = () => {};
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
 
@@ -37,6 +72,22 @@ const App: React.FC = () => {
     { id: "Metrics", label: "Metrics", icon: MetricsIcon },
     { id: "Objectives", label: "Objectives", icon: ObjectivesIcon },
     { id: "Settings", label: "Settings", icon: SettingsIcon },
+  ];
+
+  const tableData = [
+    { id: 1, name: "John Doe", email: "john@example.com", role: "Developer" },
+    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Designer" },
+    { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "Manager" },
+  ];
+
+  // Column configuration
+  const columns = [
+    { header: "ID", accessor: "action" },
+    { header: "Proposed change", accessor: "action" },
+    { header: "Expected outcome", accessor: "expected-outcome" },
+    { header: "Rationale", accessor: "reasoning" },
+    { header: "Mapped objectives", accessor: "objectives" },
+    { header: "Test Experiments", accessor: "experiments" },
   ];
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -126,7 +177,8 @@ const App: React.FC = () => {
 
           <div className="canvas-area">
             {/* This would be where the visual canvas/diagram goes */}
-            <div className="placeholder-text">{activeContext} Canvas</div>
+            {/*<div className="placeholder-text">{activeContext} Canvas</div>*/}
+            <TableView data={tableData} columns={columns} />
           </div>
         </div>
 
