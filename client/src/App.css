@@ -33,7 +33,7 @@ body {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 8px 16px;
+    padding: 8px 8px;
     height: 48px;
     min-height: 48px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
@@ -46,23 +46,24 @@ body {
 }
 
 .logo {
-    background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #8e44ad 100%);
+    background: linear-gradient(#ea2264, #141a96);
     color: white;
     font-weight: 400;
-    font-size: 24px;
+    font-size: 20px;
     width: 38px;
     height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px;
-    font-family: "EB Garamond", "Garamond", "Times New Roman", serif;
+    border-radius: 2px;
     box-shadow: 0 4px 12px rgba(196, 69, 105, 0.3);
+    padding: 10px 12px 10px 12px;
 }
 
 .logo-text {
     font-weight: 700;
-    font-style: italic;
+    font-family: "EB Garamond", "Garamond", "Times New Roman", serif;
+    font-style: bold;
 }
 
 .project-name {
