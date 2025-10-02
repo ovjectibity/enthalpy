@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
+import { Input } from "@base-ui-components/react/input";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
@@ -40,7 +41,22 @@ const TableView = (arg: { data: Array<any>; columns: Array<any> }) => {
   );
 };
 
-const hypothesesCard = () => {};
+const HypothesesCard = (arg: {
+  action: string;
+  rationale: string;
+  expected_outcome: string;
+}) => {
+  return (
+    <div className="hypothesis-card">
+      <Input className="hypotheses-attribute" placeholder={arg.action} />
+      <Input
+        className="hypotheses-attribute"
+        placeholder={arg.expected_outcome}
+      />
+      <Input className="hypotheses-attribute" placeholder={arg.rationale} />
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
@@ -178,7 +194,8 @@ const App: React.FC = () => {
           <div className="canvas-area">
             {/* This would be where the visual canvas/diagram goes */}
             {/*<div className="placeholder-text">{activeContext} Canvas</div>*/}
-            <TableView data={tableData} columns={columns} />
+            {/*<TableView data={tableData} columns={columns} />*/}
+            <HypothesesCard action="" rationale="" expected_outcome="" />
           </div>
         </div>
 
