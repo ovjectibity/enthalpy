@@ -6,9 +6,10 @@
     viewBox="0 0 700 700"
     width="700"
     height="700"
-><defs><radialGradient id="gggrain-gradient" r="0.9">
+><defs><radialGradient id="gggrain-gradient" r="0.999">
       <stop offset="0%" stop-color="#640D5F" />
       <stop offset="50%" stop-color="#432880ff" />
+      <stop offset="80%" stop-color="#EA2264" />
       <stop offset="100%" stop-color="#EA2264" />
     </radialGradient><filter
             id="gggrain-filter"

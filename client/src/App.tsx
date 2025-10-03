@@ -8,6 +8,38 @@ import MetricsIcon from "./assets/metrics-icon.svg";
 import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
 
+const MasterDetail = (arg: {
+  items: any;
+  renderMasterItem: any;
+  renderDetail: any;
+}) => {
+  const [selectedId, setSelectedId] = useState(
+    arg.items.length ? arg.items[0].id : null,
+  );
+
+  return (
+    <div className="master-detail-root">
+      <div className="master-list">
+        {arg.items.map((item: any) => (
+          <button
+            key={item.id}
+            className={`master-item${selectedId === item.id ? " selected" : ""}`}
+            onClick={() => setSelectedId(item.id)}
+          >
+            {arg.renderMasterItem(item)}
+          </button>
+        ))}
+      </div>
+      <div className="detail-pane">
+        {selectedId &&
+          arg.renderDetail(
+            arg.items.find((item: any) => item.id === selectedId),
+          )}
+      </div>
+    </div>
+  );
+};
+
 const TableView = (arg: { data: Array<any>; columns: Array<any> }) => {
   if (!arg.data || arg.data.length === 0) {
     return <div>No data available</div>;
