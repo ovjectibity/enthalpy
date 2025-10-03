@@ -207,18 +207,18 @@ const App: React.FC = () => {
 
         {/* Right Panel - Terminal Interface */}
         <div className="right-panel" style={{ width: chatWidth }}>
-          <div className="chat-header">
-            <select
-              className="agent-selector"
-              value={selectedAgent}
-              onChange={(e) => setSelectedAgent(e.target.value)}
-            >
-              <option>Master agent</option>
-              <option>Flow graph agent</option>
-              <option>UI agent</option>
-            </select>
-          </div>
           <div className="terminal">
+            <div className="chat-header">
+              <select
+                className="agent-selector"
+                value={selectedAgent}
+                onChange={(e) => setSelectedAgent(e.target.value)}
+              >
+                <option>Master agent</option>
+                <option>Flow graph agent</option>
+                <option>UI agent</option>
+              </select>
+            </div>
             <div className="terminal-content">
               {messages.map((message) => (
                 <div
