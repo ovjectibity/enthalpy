@@ -140,13 +140,6 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
                 </button>
               </div>
 
-              <div className="feedback-tooltip">
-                <p>
-                  Provided feedback will be added to this {assetType}'s context
-                  & can be used if regenerated
-                </p>
-              </div>
-
               <div className="feedback-rating">
                 <button
                   className={`rating-button positive ${rating === "positive" ? "selected" : ""}`}
@@ -175,6 +168,13 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
                   />
                   Not helpful
                 </button>
+              </div>
+
+              <div className="feedback-tooltip-compact">
+                <p>
+                  Feedback will be added to this {assetType}'s context & can be
+                  used to regenerate it.
+                </p>
               </div>
 
               {rating && (
