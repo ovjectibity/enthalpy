@@ -2,6 +2,7 @@ import React from "react";
 import { Input } from "@base-ui-components/react/input";
 import MasterDetail from "./MasterDetail";
 import HyperlistView from "./HyperlistView";
+const FeedbackComponent = require("./FeedbackComponent").default;
 
 const HypothesesView: React.FC = () => {
   const hypothesesList = [
@@ -11,6 +12,40 @@ const HypothesesView: React.FC = () => {
       action: "Implement user onboarding flow",
       rationale: "New users are dropping off during signup process",
       expected_outcome: "Increase user conversion rate by 25%",
+      metrics: [
+        {
+          id: "met_1",
+          name: "User Conversion Rate",
+          formula: "(Converted Users / Total Signups) * 100",
+          category: "Activation",
+        },
+        {
+          id: "met_2",
+          name: "Time to First Value",
+          formula: "Average(Time from Signup to First Key Action)",
+          category: "Activation",
+        },
+        {
+          id: "met_3",
+          name: "Signup Completion Rate",
+          formula: "(Completed Signups / Started Signups) * 100",
+          category: "Acquisition",
+        },
+      ],
+      objectives: [
+        {
+          id: "obj_1",
+          title: "Improve User Acquisition",
+        },
+        {
+          id: "obj_2",
+          title: "Reduce Signup Friction",
+        },
+        {
+          id: "obj_3",
+          title: "Increase Trial-to-Paid Conversion",
+        },
+      ],
       experiments: [
         {
           name: "A/B Test Welcome Screen",
@@ -35,6 +70,30 @@ const HypothesesView: React.FC = () => {
       action: "Reduce checkout steps from 5 to 3",
       rationale: "Cart abandonment is high at payment stage",
       expected_outcome: "Decrease cart abandonment by 15%",
+      metrics: [
+        {
+          id: "met_4",
+          name: "Cart Abandonment Rate",
+          formula: "1 - (Purchases / Cart Additions)",
+          category: "Revenue",
+        },
+        {
+          id: "met_5",
+          name: "Average Order Value",
+          formula: "Total Revenue / Number of Orders",
+          category: "Revenue",
+        },
+      ],
+      objectives: [
+        {
+          id: "obj_4",
+          title: "Optimize Revenue Per User",
+        },
+        {
+          id: "obj_5",
+          title: "Streamline Purchase Experience",
+        },
+      ],
       experiments: [
         {
           name: "Single Page Checkout",
@@ -54,6 +113,40 @@ const HypothesesView: React.FC = () => {
       action: "Redesign mobile interface for key actions",
       rationale: "Mobile users report difficulty completing tasks",
       expected_outcome: "Improve mobile task completion rate by 30%",
+      metrics: [
+        {
+          id: "met_6",
+          name: "Mobile Task Completion Rate",
+          formula: "(Completed Tasks / Started Tasks) * 100",
+          category: "Retention",
+        },
+        {
+          id: "met_7",
+          name: "Mobile Session Duration",
+          formula: "Average(Session End Time - Session Start Time)",
+          category: "Retention",
+        },
+        {
+          id: "met_8",
+          name: "Cross-Device Consistency Score",
+          formula: "1 - (Mobile Errors / Desktop Errors)",
+          category: "Activation",
+        },
+      ],
+      objectives: [
+        {
+          id: "obj_6",
+          title: "Enhance Mobile User Experience",
+        },
+        {
+          id: "obj_7",
+          title: "Increase Mobile Engagement",
+        },
+        {
+          id: "obj_8",
+          title: "Improve Cross-Device Consistency",
+        },
+      ],
       experiments: [
         {
           name: "Touch-Friendly Button Sizing",
@@ -120,10 +213,41 @@ const HypothesesView: React.FC = () => {
 
             <div className="detail-section">
               <HyperlistView
-                experiments={item.experiments}
-                title="Attached Experiments"
+                items={item.objectives}
+                title="Target Objectives"
+                showDescription={false}
+                showStatus={false}
+                linkTooltip="Goto Objectives View"
               />
             </div>
+
+            <div className="detail-section">
+              <HyperlistView
+                items={item.experiments}
+                title="Attached Experiments"
+                showDescription={true}
+                showStatus={true}
+                linkTooltip="View experiment details"
+              />
+            </div>
+
+            <div className="detail-section">
+              <HyperlistView
+                items={item.metrics}
+                title="Target Metrics"
+                showDescription={true}
+                showStatus={true}
+                linkTooltip="Goto Metrics View"
+              />
+            </div>
+
+            <FeedbackComponent
+              assetType="hypothesis"
+              assetId={item.id.toString()}
+              onFeedbackSubmit={(feedback: any) =>
+                console.log("Feedback submitted:", feedback)
+              }
+            />
           </div>
         )}
       />
