@@ -1,6 +1,7 @@
 import React from "react";
 import { Input } from "@base-ui-components/react/input";
 import MasterDetail from "./MasterDetail";
+import HyperlistView from "./HyperlistView";
 
 const HypothesesView: React.FC = () => {
   const hypothesesList = [
@@ -10,6 +11,23 @@ const HypothesesView: React.FC = () => {
       action: "Implement user onboarding flow",
       rationale: "New users are dropping off during signup process",
       expected_outcome: "Increase user conversion rate by 25%",
+      experiments: [
+        {
+          name: "A/B Test Welcome Screen",
+          key: "onboarding_welcome_ab",
+          status: "PENDING DESIGN",
+        },
+        {
+          name: "Progressive Disclosure Test",
+          key: "onboarding_progressive_disclosure",
+          status: "PENDING DESIGN",
+        },
+        {
+          name: "Social Proof Integration",
+          key: "onboarding_social_proof",
+          status: "PENDING DESIGN",
+        },
+      ],
     },
     {
       id: 2,
@@ -17,6 +35,18 @@ const HypothesesView: React.FC = () => {
       action: "Reduce checkout steps from 5 to 3",
       rationale: "Cart abandonment is high at payment stage",
       expected_outcome: "Decrease cart abandonment by 15%",
+      experiments: [
+        {
+          name: "Single Page Checkout",
+          key: "payment_single_page",
+          status: "PENDING DESIGN",
+        },
+        {
+          name: "Guest Checkout Option",
+          key: "payment_guest_checkout",
+          status: "PENDING DESIGN",
+        },
+      ],
     },
     {
       id: 3,
@@ -24,6 +54,23 @@ const HypothesesView: React.FC = () => {
       action: "Redesign mobile interface for key actions",
       rationale: "Mobile users report difficulty completing tasks",
       expected_outcome: "Improve mobile task completion rate by 30%",
+      experiments: [
+        {
+          name: "Touch-Friendly Button Sizing",
+          key: "mobile_button_sizing",
+          status: "PENDING DESIGN",
+        },
+        {
+          name: "Gesture Navigation Test",
+          key: "mobile_gesture_nav",
+          status: "PENDING DESIGN",
+        },
+        {
+          name: "Voice Input Integration",
+          key: "mobile_voice_input",
+          status: "PENDING DESIGN",
+        },
+      ],
     },
   ];
 
@@ -68,6 +115,13 @@ const HypothesesView: React.FC = () => {
                 value={item.rationale}
                 placeholder="Why do you believe this will work?"
                 readOnly
+              />
+            </div>
+
+            <div className="detail-section">
+              <HyperlistView
+                experiments={item.experiments}
+                title="Attached Experiments"
               />
             </div>
           </div>

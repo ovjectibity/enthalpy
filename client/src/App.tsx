@@ -7,6 +7,7 @@ import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
 import MetricsIcon from "./assets/metrics-icon.svg";
 import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
+import ExperimentsIcon from "./assets/experiments-icon.svg";
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
@@ -35,6 +36,7 @@ const App: React.FC = () => {
     { id: "Journey Maps", label: "Journey Maps", icon: JourneyMapsIcon },
     { id: "Context", label: "Context", icon: ContextIcon },
     { id: "Hypotheses", label: "Hypotheses", icon: HypothesesIcon },
+    { id: "Experiments", label: "Experiments", icon: ExperimentsIcon },
     { id: "Metrics", label: "Metrics", icon: MetricsIcon },
     { id: "Objectives", label: "Objectives", icon: ObjectivesIcon },
     { id: "Settings", label: "Settings", icon: SettingsIcon },
