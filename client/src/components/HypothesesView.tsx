@@ -38,15 +38,16 @@ const HypothesesView: React.FC = () => {
           </div>
         )}
         renderDetail={(item: any) => (
-          <div className="hypothesis-detail-view">
+          <div className="hypothesis-detail-view" key={item.id}>
             <h2 className="detail-title">{item.title}</h2>
 
             <div className="detail-section">
               <label className="detail-label">Action</label>
               <Input
                 className="detail-input"
-                defaultValue={item.action}
+                value={item.action}
                 placeholder="What action will you take?"
+                readOnly
               />
             </div>
 
@@ -54,8 +55,9 @@ const HypothesesView: React.FC = () => {
               <label className="detail-label">Expected Outcome</label>
               <Input
                 className="detail-input"
-                defaultValue={item.expected_outcome}
+                value={item.expected_outcome}
                 placeholder="What do you expect to happen?"
+                readOnly
               />
             </div>
 
@@ -63,8 +65,9 @@ const HypothesesView: React.FC = () => {
               <label className="detail-label">Rationale</label>
               <Input
                 className="detail-input"
-                defaultValue={item.rationale}
+                value={item.rationale}
                 placeholder="Why do you believe this will work?"
+                readOnly
               />
             </div>
           </div>

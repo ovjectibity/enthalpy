@@ -391,7 +391,7 @@ body {
     display: flex;
     flex-direction: row;
     background: white;
-    border-radius: 8px;
+    border-radius: 5px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -420,12 +420,12 @@ body {
 }
 
 .master-item.selected {
-    background: #3b82f6;
+    background: #835dd9;
     color: white;
 }
 
 .master-item.selected:hover {
-    background: #2563eb;
+    background: #572cbb;
 }
 
 .hypothesis-list-item {
@@ -484,7 +484,7 @@ body {
     width: 100%;
     padding: 12px 16px;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 14px;
     line-height: 1.5;
     transition:

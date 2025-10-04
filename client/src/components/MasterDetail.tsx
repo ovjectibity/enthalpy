@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface MasterDetailProps {
   items: any[];
@@ -15,6 +15,18 @@ const MasterDetail: React.FC<MasterDetailProps> = ({
     items.length ? items[0].id : null,
   );
 
+  // Update selectedId if items change and current selection is invalid
+  useEffect(() => {
+    if (items.length === 0) {
+      setSelectedId(null);
+    } else if (
+      selectedId === null ||
+      !items.find((item) => item.id === selectedId)
+    ) {
+      setSelectedId(items[0].id);
+    }
+  }, [items, selectedId]);
+
   return (
     <div className="master-detail-root">
       <div className="master-list">
@@ -29,10 +41,12 @@ const MasterDetail: React.FC<MasterDetailProps> = ({
         ))}
       </div>
       <div className="detail-pane">
-        {selectedId &&
-          renderDetail(
-            items.find((item: any) => item.id === selectedId),
-          )}
+        {(() => {
+          const selectedItem = items.find(
+            (item: any) => item.id === selectedId,
+          );
+          return selectedItem ? renderDetail(selectedItem) : null;
+        })()}
       </div>
     </div>
   );
