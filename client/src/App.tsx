@@ -1,94 +1,12 @@
 import React, { useState } from "react";
 import "./App.css";
-import { Input } from "@base-ui-components/react/input";
+import { HypothesesView } from "./components";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
 import MetricsIcon from "./assets/metrics-icon.svg";
 import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
-
-const MasterDetail = (arg: {
-  items: any;
-  renderMasterItem: any;
-  renderDetail: any;
-}) => {
-  const [selectedId, setSelectedId] = useState(
-    arg.items.length ? arg.items[0].id : null,
-  );
-
-  return (
-    <div className="master-detail-root">
-      <div className="master-list">
-        {arg.items.map((item: any) => (
-          <button
-            key={item.id}
-            className={`master-item${selectedId === item.id ? " selected" : ""}`}
-            onClick={() => setSelectedId(item.id)}
-          >
-            {arg.renderMasterItem(item)}
-          </button>
-        ))}
-      </div>
-      <div className="detail-pane">
-        {selectedId &&
-          arg.renderDetail(
-            arg.items.find((item: any) => item.id === selectedId),
-          )}
-      </div>
-    </div>
-  );
-};
-
-const TableView = (arg: { data: Array<any>; columns: Array<any> }) => {
-  if (!arg.data || arg.data.length === 0) {
-    return <div>No data available</div>;
-  }
-
-  return (
-    <div className="table-container">
-      <table className="data-table">
-        <thead>
-          <tr>
-            {arg.columns.map((column, index) => (
-              <th key={index} className="data-table-cell">
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {arg.data.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {arg.columns.map((column, colIndex) => (
-                <td key={colIndex} className="data-table-cell">
-                  {column.accessor ? row[column.accessor] : ""}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-const HypothesesCard = (arg: {
-  action: string;
-  rationale: string;
-  expected_outcome: string;
-}) => {
-  return (
-    <div className="hypothesis-card">
-      <Input className="hypotheses-attribute" placeholder={arg.action} />
-      <Input
-        className="hypotheses-attribute"
-        placeholder={arg.expected_outcome}
-      />
-      <Input className="hypotheses-attribute" placeholder={arg.rationale} />
-    </div>
-  );
-};
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
@@ -122,49 +40,33 @@ const App: React.FC = () => {
     { id: "Settings", label: "Settings", icon: SettingsIcon },
   ];
 
-  const tableData = [
-    { id: 1, name: "John Doe", email: "john@example.com", role: "Developer" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Designer" },
-    { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "Manager" },
-  ];
-
-  // Column configuration
-  const columns = [
-    { header: "ID", accessor: "action" },
-    { header: "Proposed change", accessor: "action" },
-    { header: "Expected outcome", accessor: "expected-outcome" },
-    { header: "Rationale", accessor: "reasoning" },
-    { header: "Mapped objectives", accessor: "objectives" },
-    { header: "Test Experiments", accessor: "experiments" },
-  ];
-
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     document.body.classList.add("resizing");
     e.preventDefault();
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      const containerWidth = window.innerWidth;
-      const newChatWidth = containerWidth - e.clientX;
-      // Set minimum and maximum widths
-      const minWidth = 300;
-      const maxWidth = containerWidth - 200;
-      const constrainedWidth = Math.max(
-        minWidth,
-        Math.min(maxWidth, newChatWidth),
-      );
-      setChatWidth(constrainedWidth);
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    document.body.classList.remove("resizing");
-  };
-
   React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        const containerWidth = window.innerWidth;
+        const newChatWidth = containerWidth - e.clientX;
+        // Set minimum and maximum widths
+        const minWidth = 300;
+        const maxWidth = containerWidth - 200;
+        const constrainedWidth = Math.max(
+          minWidth,
+          Math.min(maxWidth, newChatWidth),
+        );
+        setChatWidth(constrainedWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.classList.remove("resizing");
+    };
+
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
@@ -224,10 +126,11 @@ const App: React.FC = () => {
           </div>
 
           <div className="canvas-area">
-            {/* This would be where the visual canvas/diagram goes */}
-            {/*<div className="placeholder-text">{activeContext} Canvas</div>*/}
-            {/*<TableView data={tableData} columns={columns} />*/}
-            <HypothesesCard action="" rationale="" expected_outcome="" />
+            {activeContext === "Hypotheses" ? (
+              <HypothesesView />
+            ) : (
+              <div className="placeholder-text">{activeContext} Canvas</div>
+            )}
           </div>
         </div>
 
