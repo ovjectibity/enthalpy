@@ -725,6 +725,172 @@ body {
     opacity: 0.7;
 }
 
+/* Chat Header */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(42, 21, 90, 0.6);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.thread-history-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.thread-history-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+}
+
+.thread-history-button:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.95);
+}
+
+.thread-history-button img {
+    filter: brightness(0) invert(1);
+}
+
+/* Thread History Menu */
+.thread-history-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.thread-history-menu {
+    position: absolute;
+    top: 60px;
+    right: 16px;
+    width: 320px;
+    max-height: 400px;
+    background: rgba(42, 21, 90, 0.95);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    pointer-events: all;
+    animation: fadeInSlide 0.2s ease-out;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.thread-history-header {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.thread-history-header h3 {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.thread-history-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.thread-history-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background-color 0.15s ease;
+}
+
+.thread-history-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.thread-history-item:last-child {
+    border-bottom: none;
+}
+
+.thread-title {
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.thread-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: rgba(160, 174, 192, 0.7);
+}
+
+.thread-timestamp {
+    color: rgba(160, 174, 192, 0.7);
+}
+
+.thread-message-count {
+    color: rgba(160, 174, 192, 0.5);
+}
+
+.thread-history-empty {
+    padding: 32px 16px;
+    text-align: center;
+}
+
+.thread-history-empty p {
+    margin: 0;
+    color: rgba(160, 174, 192, 0.5);
+    font-size: 12px;
+}
+
+/* Thread History Scrollbar */
+.thread-history-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.thread-history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.thread-history-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.thread-history-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 .hypothesis-actions {
     display: flex;
     gap: 12px;

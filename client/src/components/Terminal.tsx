@@ -1,17 +1,27 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import sendIcon from "../assets/send-icon.svg";
 import stopIcon from "../assets/stop-icon.svg";
 import attachmentIcon from "../assets/attachment-icon.svg";
+import threadHistoryIcon from "../assets/thread-history-icon.svg";
+import ThreadHistoryMenu from "./ThreadHistoryMenu";
 
-interface Message {
+export interface Message {
   id: number;
   owner: "user" | "agent";
   text: string;
   isFinished: boolean;
+  messageType: "static" | "thinking" | "tool_use" | "enth-actions";
 }
 
-interface Agent {
+export interface Agent {
   state: "running" | "ready-for-input";
+}
+
+interface ThreadHistoryItem {
+  id: string;
+  title: string;
+  timestamp: string;
+  messageCount: number;
 }
 
 interface TerminalProps {
@@ -21,6 +31,8 @@ interface TerminalProps {
   onSendMessage: (message: string) => void;
   agent: Agent;
   onStopAgent: () => void;
+  threadHistory?: ThreadHistoryItem[];
+  onSelectThread?: (threadId: string) => void;
 }
 
 const Terminal: React.FC<TerminalProps> = ({
@@ -30,8 +42,12 @@ const Terminal: React.FC<TerminalProps> = ({
   onSendMessage,
   agent,
   onStopAgent,
+  threadHistory = [],
+  onSelectThread = () => {},
 }) => {
   const terminalContentRef = useRef<HTMLDivElement>(null);
+  const threadIconRef = useRef<HTMLButtonElement>(null);
+  const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -106,6 +122,20 @@ const Terminal: React.FC<TerminalProps> = ({
           <option>Flow graph agent</option>
           <option>UI agent</option>
         </select>
+        <button
+          ref={threadIconRef}
+          className="thread-history-button"
+          onClick={() => setIsThreadHistoryOpen(!isThreadHistoryOpen)}
+          aria-label="Thread history"
+          title="Thread history"
+        >
+          <img
+            src={threadHistoryIcon}
+            alt="Thread history"
+            width="16"
+            height="16"
+          />
+        </button>
       </div>
       <div
         ref={terminalContentRef}
@@ -114,14 +144,15 @@ const Terminal: React.FC<TerminalProps> = ({
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`message-container ${message.owner}`}
+            className={`message-container ${message.owner} ${message.messageType}`}
           >
             <div
               className={`message ${message.owner} ${message.isFinished ? "finished" : "in-progress"}`}
             >
               <div className="message-text">
                 {message.text}
-                {!message.isFinished && <span className="cursor">|</span>}
+                {/*{!message.isFinished && <span className="cursor">|</span>}*/}
+                {!message.isFinished}
               </div>
             </div>
           </div>
@@ -170,6 +201,13 @@ const Terminal: React.FC<TerminalProps> = ({
           </button>
         </div>
       </div>
+      <ThreadHistoryMenu
+        isOpen={isThreadHistoryOpen}
+        onClose={() => setIsThreadHistoryOpen(false)}
+        onSelectThread={onSelectThread}
+        threads={threadHistory}
+        anchorRef={threadIconRef}
+      />
     </div>
   );
 };

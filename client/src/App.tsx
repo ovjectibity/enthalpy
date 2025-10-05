@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import { HypothesesView, Terminal } from "./components";
+import { HypothesesView, Terminal, TerminalMessage, Agent } from "./components";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
@@ -9,29 +9,39 @@ import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
 import ExperimentsIcon from "./assets/experiments-icon.svg";
 
-interface Message {
-  id: number;
-  owner: "user" | "agent";
-  text: string;
-  isFinished: boolean;
-}
-
-interface Agent {
-  state: "running" | "ready-for-input";
-}
-
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
 
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
   const [activeContext, setActiveContext] = useState("Context");
   const [agent, setAgent] = useState<Agent>({ state: "ready-for-input" });
-  const [messages, setMessages] = useState<Message[]>([
+  const [threadHistory] = useState([
+    {
+      id: "thread-1",
+      title: "Onboarding Flow Analysis",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      messageCount: 12,
+    },
+    {
+      id: "thread-2",
+      title: "Payment Process Optimization",
+      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      messageCount: 8,
+    },
+    {
+      id: "thread-3",
+      title: "Mobile UX Enhancement Discussion",
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      messageCount: 15,
+    },
+  ]);
+  const [messages, setMessages] = useState<TerminalMessage[]>([
     {
       id: 1,
       owner: "agent",
       text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
       isFinished: false,
+      messageType: "thinking",
     },
   ]);
   const [chatWidth, setChatWidth] = useState(500);
@@ -155,18 +165,25 @@ const App: React.FC = () => {
             onAgentChange={setSelectedAgent}
             messages={messages}
             agent={agent}
+            threadHistory={threadHistory}
+            onSelectThread={(threadId: string) => {
+              console.log("Selected thread:", threadId);
+              // Here you would load the selected thread's messages
+            }}
             onSendMessage={(message: string) => {
-              const newUserMessage = {
+              const newUserMessage: TerminalMessage = {
                 id: Date.now(),
                 owner: "user" as const,
                 text: message,
                 isFinished: true,
+                messageType: "static",
               };
-              const newAgentMessage = {
+              const newAgentMessage: TerminalMessage = {
                 id: Date.now() + 1,
                 owner: "agent" as const,
                 text: "Processing your request...",
                 isFinished: false,
+                messageType: "static",
               };
               setMessages([...messages, newUserMessage, newAgentMessage]);
               setAgent({ state: "running" });
