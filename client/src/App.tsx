@@ -16,11 +16,16 @@ interface Message {
   isFinished: boolean;
 }
 
+interface Agent {
+  state: "running" | "ready-for-input";
+}
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
 
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
   const [activeContext, setActiveContext] = useState("Context");
+  const [agent, setAgent] = useState<Agent>({ state: "ready-for-input" });
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -149,6 +154,7 @@ const App: React.FC = () => {
             selectedAgent={selectedAgent}
             onAgentChange={setSelectedAgent}
             messages={messages}
+            agent={agent}
             onSendMessage={(message: string) => {
               const newUserMessage = {
                 id: Date.now(),
@@ -163,6 +169,15 @@ const App: React.FC = () => {
                 isFinished: false,
               };
               setMessages([...messages, newUserMessage, newAgentMessage]);
+              setAgent({ state: "running" });
+
+              // Simulate agent processing - after 3 seconds, set back to ready
+              setTimeout(() => {
+                setAgent({ state: "ready-for-input" });
+              }, 3000);
+            }}
+            onStopAgent={() => {
+              setAgent({ state: "ready-for-input" });
             }}
           />
         </div>

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import sendIcon from "../assets/send-icon.svg";
+import stopIcon from "../assets/stop-icon.svg";
 import attachmentIcon from "../assets/attachment-icon.svg";
 
 interface Message {
@@ -9,11 +10,17 @@ interface Message {
   isFinished: boolean;
 }
 
+interface Agent {
+  state: "running" | "ready-for-input";
+}
+
 interface TerminalProps {
   selectedAgent: string;
   onAgentChange: (agent: string) => void;
   messages: Message[];
   onSendMessage: (message: string) => void;
+  agent: Agent;
+  onStopAgent: () => void;
 }
 
 const Terminal: React.FC<TerminalProps> = ({
@@ -21,7 +28,18 @@ const Terminal: React.FC<TerminalProps> = ({
   onAgentChange,
   messages,
   onSendMessage,
+  agent,
+  onStopAgent,
 }) => {
+  const terminalContentRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (terminalContentRef.current) {
+      terminalContentRef.current.scrollTop =
+        terminalContentRef.current.scrollHeight;
+    }
+  }, [messages]);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
@@ -61,6 +79,21 @@ const Terminal: React.FC<TerminalProps> = ({
     console.log("Attachment clicked");
   };
 
+  const handleActionClick = () => {
+    if (agent.state === "running") {
+      onStopAgent();
+    } else {
+      const textarea = document.querySelector(
+        ".input-field",
+      ) as HTMLTextAreaElement;
+      if (textarea && textarea.value.trim()) {
+        onSendMessage(textarea.value);
+        textarea.value = "";
+        textarea.style.height = "auto";
+      }
+    }
+  };
+
   return (
     <div className="terminal">
       <div className="chat-header">
@@ -74,7 +107,10 @@ const Terminal: React.FC<TerminalProps> = ({
           <option>UI agent</option>
         </select>
       </div>
-      <div className="terminal-content">
+      <div
+        ref={terminalContentRef}
+        className={`terminal-content ${agent.state === "running" ? "agent-running" : ""}`}
+      >
         {messages.map((message) => (
           <div
             key={message.id}
@@ -95,7 +131,7 @@ const Terminal: React.FC<TerminalProps> = ({
         <div className="input-area">
           <textarea
             className="input-field"
-            placeholder="Prompt the enthalpy agent / Use Shift+Enter to send"
+            placeholder="prompt the enthalpy agent / use shift+enter to send"
             onKeyDown={handleKeyDown}
             onInput={handleInput}
             rows={1}
@@ -112,12 +148,25 @@ const Terminal: React.FC<TerminalProps> = ({
             <img src={attachmentIcon} alt="Attachment" width="12" height="12" />
           </button>
           <button
-            className="send-button"
-            onClick={handleSendClick}
-            aria-label="Send message"
-            title="Send message (Shift+Enter)"
+            className={
+              agent.state === "running" ? "stop-button" : "send-button"
+            }
+            onClick={handleActionClick}
+            aria-label={
+              agent.state === "running" ? "Stop agent" : "Send message"
+            }
+            title={
+              agent.state === "running"
+                ? "Stop agent"
+                : "Send message (Shift+Enter)"
+            }
           >
-            <img src={sendIcon} alt="Send" width="12" height="12" />
+            <img
+              src={agent.state === "running" ? stopIcon : sendIcon}
+              alt={agent.state === "running" ? "Stop" : "Send"}
+              width="12"
+              height="12"
+            />
           </button>
         </div>
       </div>
