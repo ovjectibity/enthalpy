@@ -1,4 +1,6 @@
 import React from "react";
+import sendIcon from "../assets/send-icon.svg";
+import attachmentIcon from "../assets/attachment-icon.svg";
 
 interface Message {
   id: number;
@@ -44,6 +46,21 @@ const Terminal: React.FC<TerminalProps> = ({
     textarea.style.height = `${newHeight}px`;
   };
 
+  const handleSendClick = () => {
+    const textarea = document.querySelector(
+      ".input-field",
+    ) as HTMLTextAreaElement;
+    if (textarea && textarea.value.trim()) {
+      onSendMessage(textarea.value);
+      textarea.value = "";
+      textarea.style.height = "auto";
+    }
+  };
+
+  const handleAttachmentClick = () => {
+    console.log("Attachment clicked");
+  };
+
   return (
     <div className="terminal">
       <div className="chat-header">
@@ -75,14 +92,34 @@ const Terminal: React.FC<TerminalProps> = ({
         ))}
       </div>
       <div className="terminal-input">
-        <textarea
-          className="input-field"
-          placeholder="Prompt the enthalpy agent — / to include context"
-          onKeyDown={handleKeyDown}
-          onInput={handleInput}
-          rows={1}
-          style={{ resize: "none", overflow: "auto" }}
-        />
+        <div className="input-area">
+          <textarea
+            className="input-field"
+            placeholder="Prompt the enthalpy agent / Use Shift+Enter to send"
+            onKeyDown={handleKeyDown}
+            onInput={handleInput}
+            rows={1}
+            style={{ resize: "none", overflow: "auto" }}
+          />
+        </div>
+        <div className="input-controls">
+          <button
+            className="attachment-button"
+            onClick={handleAttachmentClick}
+            aria-label="Add attachment"
+            title="Add attachment"
+          >
+            <img src={attachmentIcon} alt="Attachment" width="12" height="12" />
+          </button>
+          <button
+            className="send-button"
+            onClick={handleSendClick}
+            aria-label="Send message"
+            title="Send message (Shift+Enter)"
+          >
+            <img src={sendIcon} alt="Send" width="12" height="12" />
+          </button>
+        </div>
       </div>
     </div>
   );
