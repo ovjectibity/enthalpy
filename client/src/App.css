@@ -1550,38 +1550,20 @@ body {
 
 /* Agent Running Animation */
 @keyframes shiftingGradient {
-    0%,
-    100% {
-        background: linear-gradient(
-            270deg,
-            #640d5f 0%,
-            #432880ff 25%,
-            #ea2264 50%,
-            #432880ff 75%,
-            #640d5f 100%
-        );
-        background-size: 400% 400%;
+    0% {
         background-position: 0% 50%;
     }
-    50% {
-        background: linear-gradient(
-            270deg,
-            #640d5f 0%,
-            #432880ff 25%,
-            #ea2264 50%,
-            #432880ff 75%,
-            #640d5f 100%
-        );
-        background-size: 400% 400%;
+    100% {
         background-position: 100% 50%;
     }
 }
 
 .terminal-content {
     position: relative;
+    overflow-y: auto;
 }
 
-.terminal-content::before {
+.terminal-content.agent-running::before {
     content: "";
     position: absolute;
     top: 0;
@@ -1590,24 +1572,16 @@ body {
     bottom: 0;
     background: linear-gradient(
         270deg,
-        #640d5f 0%,
-        #432880ff 25%,
-        #ea2264 50%,
-        #432880ff 75%,
-        #640d5f 100%
+        rgba(100, 13, 95, 0.15) 0%,
+        rgba(67, 40, 128, 0.15) 25%,
+        rgba(234, 34, 100, 0.15) 50%,
+        rgba(67, 40, 128, 0.15) 75%,
+        rgba(100, 13, 95, 0.15) 100%
     );
     background-size: 400% 400%;
     animation: shiftingGradient 3s linear infinite;
-    animation-play-state: paused;
-    opacity: 0;
     z-index: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.terminal-content.agent-running::before {
-    animation-play-state: running;
-    opacity: 0.18;
 }
 
 .terminal-content > * {
