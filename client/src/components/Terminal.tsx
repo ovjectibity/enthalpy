@@ -10,7 +10,7 @@ export interface Message {
   owner: "user" | "agent";
   text: string;
   isFinished: boolean;
-  messageType: "static" | "thinking" | "tool_use" | "enth-actions";
+  messageType: "static" | "thinking" | "tool-use" | "enth-actions";
 }
 
 export interface Agent {
@@ -132,8 +132,8 @@ const Terminal: React.FC<TerminalProps> = ({
           <img
             src={threadHistoryIcon}
             alt="Thread history"
-            width="16"
-            height="16"
+            width="13"
+            height="13"
           />
         </button>
       </div>
@@ -144,10 +144,10 @@ const Terminal: React.FC<TerminalProps> = ({
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`message-container ${message.owner} ${message.messageType}`}
+            className={`message-container ${message.owner}`}
           >
             <div
-              className={`message ${message.owner} ${message.isFinished ? "finished" : "in-progress"}`}
+              className={`message ${message.owner} ${message.isFinished ? "finished" : "in-progress"} ${message.messageType}`}
             >
               <div className="message-text">
                 {message.text}

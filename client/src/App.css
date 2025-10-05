@@ -745,7 +745,7 @@ body {
     border: none;
     color: #e2e8f0;
     cursor: pointer;
-    padding: 5px;
+    padding: 6px;
     border-radius: 5px;
     transition: all 0.2s ease;
     opacity: 0.7;
@@ -1485,17 +1485,29 @@ body {
 .message.user {
     /*background: rgba(36, 15, 119, 0.6);*/
     background: #48249b;
-    border-left: 1px solid #68d391;
+    /*border-left: 1px solid #68d391;*/
 }
 
 .message.agent {
     /*background: rgba(36, 15, 119, 0.4);*/
     background: #48249b;
-    border-left: 1px solid #667eea;
+    /*border-left: 1px solid #667eea;*/
 }
 
-.message.in-progress {
-    border-left-color: #fbbf24;
+.message.static {
+    border-left: 2px solid #42e2b8;
+}
+
+.message.thinking {
+    border-left: 2px solid #f7ff58;
+}
+
+.message.tool-use {
+    border-left: 2px solid #eb8a90;
+}
+
+.message.enth-actions {
+    border-left: 2px solid #0496ff;
 }
 
 .message::before {

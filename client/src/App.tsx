@@ -43,6 +43,27 @@ const App: React.FC = () => {
       isFinished: false,
       messageType: "thinking",
     },
+    {
+      id: 2,
+      owner: "agent",
+      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
+      isFinished: false,
+      messageType: "static",
+    },
+    {
+      id: 3,
+      owner: "agent",
+      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
+      isFinished: false,
+      messageType: "tool-use",
+    },
+    {
+      id: 4,
+      owner: "agent",
+      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
+      isFinished: false,
+      messageType: "enth-actions",
+    },
   ]);
   const [chatWidth, setChatWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
