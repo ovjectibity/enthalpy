@@ -1469,6 +1469,7 @@ body {
 
 .message {
     max-width: 80%;
+    /*min-width: 80%;*/
     background: #48249b;
     /*background: rgba(36, 15, 119, 0.4);*/
     --border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1508,6 +1509,50 @@ body {
 
 .message.enth-actions {
     border-left: 2px solid #0496ff;
+}
+
+/* Collapsible Message Styles */
+.message.collapsible .message-header {
+    cursor: pointer;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /*margin-bottom: 8px;*/
+    /*padding-bottom: 4px;*/
+    /*border-bottom: 1px solid rgba(255, 255, 255, 0.1);*/
+}
+
+.collapse-icon {
+    transition: transform 0.2s ease;
+    opacity: 0.9;
+    filter: brightness(0) invert(1);
+}
+
+.collapse-icon.expanded {
+    transform: rotate(180deg);
+}
+
+.message-type-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: 0.5px;
+}
+
+.message-content.collapsed {
+    display: none;
+}
+
+.message-content.expanded {
+    margin-top: 5px;
+}
+
+.message-content {
+    transition: all 0.3s ease;
 }
 
 .message::before {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import { HypothesesView, Terminal, TerminalMessage, Agent } from "./components";
+import { HypothesesView, Terminal, Message, Agent } from "./components";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
@@ -35,7 +35,7 @@ const App: React.FC = () => {
       messageCount: 15,
     },
   ]);
-  const [messages, setMessages] = useState<TerminalMessage[]>([
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       owner: "agent",
@@ -187,19 +187,20 @@ const App: React.FC = () => {
             messages={messages}
             agent={agent}
             threadHistory={threadHistory}
+            collapsibleMessages={true}
             onSelectThread={(threadId: string) => {
               console.log("Selected thread:", threadId);
               // Here you would load the selected thread's messages
             }}
             onSendMessage={(message: string) => {
-              const newUserMessage: TerminalMessage = {
+              const newUserMessage: Message = {
                 id: Date.now(),
                 owner: "user" as const,
                 text: message,
                 isFinished: true,
                 messageType: "static",
               };
-              const newAgentMessage: TerminalMessage = {
+              const newAgentMessage: Message = {
                 id: Date.now() + 1,
                 owner: "agent" as const,
                 text: "Processing your request...",

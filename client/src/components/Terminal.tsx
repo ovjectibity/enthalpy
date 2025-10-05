@@ -4,6 +4,7 @@ import stopIcon from "../assets/stop-icon.svg";
 import attachmentIcon from "../assets/attachment-icon.svg";
 import threadHistoryIcon from "../assets/thread-history-icon.svg";
 import ThreadHistoryMenu from "./ThreadHistoryMenu";
+import TerminalMessage from "./TerminalMessage";
 
 export interface Message {
   id: number;
@@ -33,6 +34,7 @@ interface TerminalProps {
   onStopAgent: () => void;
   threadHistory?: ThreadHistoryItem[];
   onSelectThread?: (threadId: string) => void;
+  collapsibleMessages?: boolean;
 }
 
 const Terminal: React.FC<TerminalProps> = ({
@@ -44,6 +46,7 @@ const Terminal: React.FC<TerminalProps> = ({
   onStopAgent,
   threadHistory = [],
   onSelectThread = () => {},
+  collapsibleMessages = true,
 }) => {
   const terminalContentRef = useRef<HTMLDivElement>(null);
   const threadIconRef = useRef<HTMLButtonElement>(null);
@@ -118,7 +121,7 @@ const Terminal: React.FC<TerminalProps> = ({
           value={selectedAgent}
           onChange={(e) => onAgentChange(e.target.value)}
         >
-          <option>Master agent</option>
+          <option>Master of Ceremonies</option>
           <option>Flow graph agent</option>
           <option>UI agent</option>
         </select>
@@ -142,20 +145,13 @@ const Terminal: React.FC<TerminalProps> = ({
         className={`terminal-content ${agent.state === "running" ? "agent-running" : ""}`}
       >
         {messages.map((message) => (
-          <div
+          <TerminalMessage
             key={message.id}
-            className={`message-container ${message.owner}`}
-          >
-            <div
-              className={`message ${message.owner} ${message.isFinished ? "finished" : "in-progress"} ${message.messageType}`}
-            >
-              <div className="message-text">
-                {message.text}
-                {/*{!message.isFinished && <span className="cursor">|</span>}*/}
-                {!message.isFinished}
-              </div>
-            </div>
-          </div>
+            message={message}
+            isCollapsible={
+              collapsibleMessages && message.messageType === "thinking"
+            }
+          />
         ))}
       </div>
       <div className="terminal-input">
