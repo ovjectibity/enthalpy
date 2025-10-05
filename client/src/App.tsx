@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import { HypothesesView } from "./components";
+import { HypothesesView, Terminal } from "./components";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
@@ -9,20 +9,21 @@ import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
 import ExperimentsIcon from "./assets/experiments-icon.svg";
 
+interface Message {
+  id: number;
+  owner: "user" | "agent";
+  text: string;
+  isFinished: boolean;
+}
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
 
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
   const [activeContext, setActiveContext] = useState("Context");
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      owner: "agent",
-      text: "Tell me more about your objective.",
-      isFinished: true,
-    },
-    {
-      id: 2,
       owner: "agent",
       text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
       isFinished: false,
@@ -144,68 +145,26 @@ const App: React.FC = () => {
 
         {/* Right Panel - Terminal Interface */}
         <div className="right-panel" style={{ width: chatWidth }}>
-          <div className="terminal">
-            <div className="chat-header">
-              <select
-                className="agent-selector"
-                value={selectedAgent}
-                onChange={(e) => setSelectedAgent(e.target.value)}
-              >
-                <option>Master agent</option>
-                <option>Flow graph agent</option>
-                <option>UI agent</option>
-              </select>
-            </div>
-            <div className="terminal-content">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`message-container ${message.owner}`}
-                >
-                  <div
-                    className={`message ${message.owner} ${message.isFinished ? "finished" : "in-progress"}`}
-                  >
-                    <div className="message-text">
-                      {message.text}
-                      {!message.isFinished && <span className="cursor">|</span>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="terminal-input">
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Prompt the enthalpy agent — @ to include context"
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") {
-                    const input = e.currentTarget;
-                    if (input.value.trim()) {
-                      const newUserMessage = {
-                        id: Date.now(),
-                        owner: "user",
-                        text: input.value,
-                        isFinished: true,
-                      };
-                      const newAgentMessage = {
-                        id: Date.now() + 1,
-                        owner: "agent",
-                        text: "Processing your request...",
-                        isFinished: false,
-                      };
-                      setMessages([
-                        ...messages,
-                        newUserMessage,
-                        newAgentMessage,
-                      ]);
-                      input.value = "";
-                    }
-                  }
-                }}
-              />
-            </div>
-          </div>
+          <Terminal
+            selectedAgent={selectedAgent}
+            onAgentChange={setSelectedAgent}
+            messages={messages}
+            onSendMessage={(message: string) => {
+              const newUserMessage = {
+                id: Date.now(),
+                owner: "user" as const,
+                text: message,
+                isFinished: true,
+              };
+              const newAgentMessage = {
+                id: Date.now() + 1,
+                owner: "agent" as const,
+                text: "Processing your request...",
+                isFinished: false,
+              };
+              setMessages([...messages, newUserMessage, newAgentMessage]);
+            }}
+          />
         </div>
       </div>
     </div>
