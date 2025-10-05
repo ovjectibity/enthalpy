@@ -2,6 +2,7 @@ import React from "react";
 import { Input } from "@base-ui-components/react/input";
 import MasterDetail from "./MasterDetail";
 import HyperlistView from "./HyperlistView";
+
 const FeedbackComponent = require("./FeedbackComponent").default;
 
 const HypothesesView: React.FC = () => {
@@ -63,6 +64,23 @@ const HypothesesView: React.FC = () => {
           status: "PENDING DESIGN",
         },
       ],
+      contextItems: [
+        {
+          id: "ctx_1",
+          title: "User Drop-off Analysis",
+          tag: "Context",
+        },
+        {
+          id: "ctx_2",
+          title: "Signup Funnel Journey",
+          tag: "Journey Map",
+        },
+        {
+          id: "ctx_3",
+          title: "Competitor Onboarding Research",
+          tag: "Context",
+        },
+      ],
     },
     {
       id: 2,
@@ -104,6 +122,18 @@ const HypothesesView: React.FC = () => {
           name: "Guest Checkout Option",
           key: "payment_guest_checkout",
           status: "PENDING DESIGN",
+        },
+      ],
+      contextItems: [
+        {
+          id: "ctx_4",
+          title: "Cart Abandonment Heat Maps",
+          tag: "Context",
+        },
+        {
+          id: "ctx_5",
+          title: "Payment Flow Journey Map",
+          tag: "Journey Map",
         },
       ],
     },
@@ -162,6 +192,23 @@ const HypothesesView: React.FC = () => {
           name: "Voice Input Integration",
           key: "mobile_voice_input",
           status: "PENDING DESIGN",
+        },
+      ],
+      contextItems: [
+        {
+          id: "ctx_6",
+          title: "Mobile Usability Study",
+          tag: "Context",
+        },
+        {
+          id: "ctx_7",
+          title: "Mobile User Journey Analysis",
+          tag: "Journey Map",
+        },
+        {
+          id: "ctx_8",
+          title: "Device Usage Patterns",
+          tag: "Context",
         },
       ],
     },
@@ -241,13 +288,36 @@ const HypothesesView: React.FC = () => {
               />
             </div>
 
-            <FeedbackComponent
-              assetType="hypothesis"
-              assetId={item.id.toString()}
-              onFeedbackSubmit={(feedback: any) =>
-                console.log("Feedback submitted:", feedback)
-              }
-            />
+            <div className="detail-section">
+              <HyperlistView
+                items={item.contextItems}
+                title="Context Used"
+                showDescription={false}
+                showStatus={true}
+                linkTooltip={(contextItem: any) =>
+                  contextItem.tag === "Context"
+                    ? "Goto Context View"
+                    : "Goto Journey Map View"
+                }
+              />
+            </div>
+
+            <div className="hypothesis-actions">
+              <FeedbackComponent
+                assetType="hypothesis"
+                assetId={item.id.toString()}
+                onFeedbackSubmit={(feedback: any) =>
+                  console.log("Feedback submitted:", feedback)
+                }
+              />
+              <button
+                className="regenerate-button"
+                onClick={() => console.log("Regenerating asset:", item.id)}
+                aria-label="Regenerate asset"
+              >
+                Regenerate asset
+              </button>
+            </div>
           </div>
         )}
       />

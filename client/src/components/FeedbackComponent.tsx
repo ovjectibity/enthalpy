@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import commentIcon from "../assets/comment-icon.svg";
+
 import thumbsUpIcon from "../assets/thumbs-up-icon.svg";
 import thumbsDownIcon from "../assets/thumbs-down-icon.svg";
 import closeIcon from "../assets/close-icon.svg";
@@ -121,7 +121,6 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
         onClick={handleToggleExpanded}
         aria-label="Add feedback"
       >
-        <img src={commentIcon} alt="Comment" width="14" height="14" />
         Add feedback
       </button>
 

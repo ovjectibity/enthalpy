@@ -10,6 +10,7 @@ interface HyperlistItem {
   status?: string;
   formula?: string;
   category?: string;
+  tag?: string;
 }
 
 interface HyperlistViewProps {
@@ -18,7 +19,7 @@ interface HyperlistViewProps {
   defaultExpanded?: boolean;
   showDescription?: boolean;
   showStatus?: boolean;
-  linkTooltip?: string;
+  linkTooltip?: string | ((item: HyperlistItem) => string);
 }
 
 const HyperlistView: React.FC<HyperlistViewProps> = ({
@@ -68,12 +69,12 @@ const HyperlistView: React.FC<HyperlistViewProps> = ({
                     </p>
                   )}
                 </div>
-                {showStatus && (item.status || item.category) && (
+                {showStatus && (item.status || item.category || item.tag) && (
                   <div className="hyperlist-meta">
                     <span
-                      className={`hyperlist-tag status-${(item.category || item.status || "").toLowerCase().replace(" ", "-")}`}
+                      className={`hyperlist-tag status-${(item.tag || item.category || item.status || "").toLowerCase().replace(" ", "-")}`}
                     >
-                      {item.category || item.status}
+                      {item.tag || item.category || item.status}
                     </span>
                   </div>
                 )}
@@ -86,7 +87,11 @@ const HyperlistView: React.FC<HyperlistViewProps> = ({
                       `Opening item: ${item.key || item.id || item.name || item.title}`,
                     )
                   }
-                  title={linkTooltip}
+                  title={
+                    typeof linkTooltip === "function"
+                      ? linkTooltip(item)
+                      : linkTooltip
+                  }
                 >
                   <img src={linkIcon} alt="Link" width="16" height="16" />
                 </button>
