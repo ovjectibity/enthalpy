@@ -19,7 +19,12 @@ export interface Experiment {
   id: string;
   name: string;
   key: string;
-  status: 'PENDING_DESIGN' | 'IN_PROGRESS' | 'COMPLETED' | 'PAUSED' | 'CANCELLED';
+  status:
+    | "PENDING_DESIGN"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "PAUSED"
+    | "CANCELLED";
   description?: string;
   hypothesisId: string;
   createdAt: Date;
@@ -30,7 +35,7 @@ export interface Metric {
   id: string;
   name: string;
   formula: string;
-  category: 'Acquisition' | 'Activation' | 'Retention' | 'Referral' | 'Revenue';
+  category: "Acquisition" | "Activation" | "Retention" | "Referral" | "Revenue";
   description?: string;
   hypothesisId: string;
   createdAt: Date;
@@ -39,9 +44,9 @@ export interface Metric {
 
 export interface Feedback {
   id: string;
-  rating: 'positive' | 'negative';
+  rating: "positive" | "negative";
   comment?: string;
-  assetType: 'hypothesis' | 'experiment' | 'objective' | 'metric';
+  assetType: "hypothesis" | "experiment" | "objective" | "metric";
   assetId: string;
   userId: string;
   createdAt: Date;
@@ -75,7 +80,7 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface PaginatedResponse<T> {
@@ -108,9 +113,9 @@ export interface UpdateHypothesisRequest {
 }
 
 export interface CreateFeedbackRequest {
-  rating: 'positive' | 'negative';
+  rating: "positive" | "negative";
   comment?: string;
-  assetType: 'hypothesis' | 'experiment' | 'objective' | 'metric';
+  assetType: "hypothesis" | "experiment" | "objective" | "metric";
   assetId: string;
 }
 

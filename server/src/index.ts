@@ -1,7 +1,7 @@
 import express from "express";
 // import cors from "cors"; // TODO: Add after installing dependency
-import { FlowGraphGenerator } from "./flowgraph.js";
-import { ComputerTool, Tool } from "./tools.js";
+import { FlowGraphGenerator } from "./services/flowgraph.js";
+import { ComputerTool, Tool } from "./services/tools.js";
 import hypothesesRoutes from "./routes/hypotheses.js";
 
 const app = express();

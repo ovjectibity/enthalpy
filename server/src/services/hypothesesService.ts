@@ -8,8 +8,8 @@ import {
   Objective,
   Experiment,
   Metric,
-  Feedback
-} from '../types.js';
+  Feedback,
+} from "./types.js";
 
 export class HypothesesService {
   // Mock database - replace with actual database operations
@@ -26,16 +26,16 @@ export class HypothesesService {
           id: "obj_1",
           title: "Improve User Acquisition",
           userId: "user_123",
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15')
+          createdAt: new Date("2024-01-15"),
+          updatedAt: new Date("2024-01-15"),
         },
         {
           id: "obj_2",
           title: "Reduce Signup Friction",
           userId: "user_123",
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15')
-        }
+          createdAt: new Date("2024-01-15"),
+          updatedAt: new Date("2024-01-15"),
+        },
       ],
       experiments: [
         {
@@ -44,8 +44,8 @@ export class HypothesesService {
           key: "onboarding_welcome_ab",
           status: "PENDING_DESIGN",
           hypothesisId: "1",
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15')
+          createdAt: new Date("2024-01-15"),
+          updatedAt: new Date("2024-01-15"),
         },
         {
           id: "exp_2",
@@ -53,9 +53,9 @@ export class HypothesesService {
           key: "onboarding_progressive_disclosure",
           status: "PENDING_DESIGN",
           hypothesisId: "1",
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15')
-        }
+          createdAt: new Date("2024-01-15"),
+          updatedAt: new Date("2024-01-15"),
+        },
       ],
       metrics: [
         {
@@ -64,8 +64,8 @@ export class HypothesesService {
           formula: "(Converted Users / Total Signups) * 100",
           category: "Activation",
           hypothesisId: "1",
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15')
+          createdAt: new Date("2024-01-15"),
+          updatedAt: new Date("2024-01-15"),
         },
         {
           id: "met_2",
@@ -73,13 +73,13 @@ export class HypothesesService {
           formula: "Average(Time from Signup to First Key Action)",
           category: "Activation",
           hypothesisId: "1",
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-15')
-        }
+          createdAt: new Date("2024-01-15"),
+          updatedAt: new Date("2024-01-15"),
+        },
       ],
       feedback: [],
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-01-15')
+      createdAt: new Date("2024-01-15"),
+      updatedAt: new Date("2024-01-15"),
     },
     {
       id: "2",
@@ -93,9 +93,9 @@ export class HypothesesService {
           id: "obj_3",
           title: "Optimize Revenue Per User",
           userId: "user_123",
-          createdAt: new Date('2024-01-16'),
-          updatedAt: new Date('2024-01-16')
-        }
+          createdAt: new Date("2024-01-16"),
+          updatedAt: new Date("2024-01-16"),
+        },
       ],
       experiments: [
         {
@@ -104,9 +104,9 @@ export class HypothesesService {
           key: "payment_single_page",
           status: "PENDING_DESIGN",
           hypothesisId: "2",
-          createdAt: new Date('2024-01-16'),
-          updatedAt: new Date('2024-01-16')
-        }
+          createdAt: new Date("2024-01-16"),
+          updatedAt: new Date("2024-01-16"),
+        },
       ],
       metrics: [
         {
@@ -115,61 +115,70 @@ export class HypothesesService {
           formula: "1 - (Purchases / Cart Additions)",
           category: "Revenue",
           hypothesisId: "2",
-          createdAt: new Date('2024-01-16'),
-          updatedAt: new Date('2024-01-16')
-        }
+          createdAt: new Date("2024-01-16"),
+          updatedAt: new Date("2024-01-16"),
+        },
       ],
       feedback: [],
-      createdAt: new Date('2024-01-16'),
-      updatedAt: new Date('2024-01-16')
-    }
+      createdAt: new Date("2024-01-16"),
+      updatedAt: new Date("2024-01-16"),
+    },
   ];
 
-  static async getHypothesesByUser(query: GetHypothesesQuery): Promise<PaginatedResponse<Hypothesis>> {
+  static async getHypothesesByUser(
+    query: GetHypothesesQuery,
+  ): Promise<PaginatedResponse<Hypothesis>> {
     try {
-      let filteredHypotheses = this.mockHypotheses.filter(h => h.userId === query.userId);
+      let filteredHypotheses = this.mockHypotheses.filter(
+        (h) => h.userId === query.userId,
+      );
 
       // Apply search filter
       if (query.search) {
         const searchLower = query.search.toLowerCase();
-        filteredHypotheses = filteredHypotheses.filter(h =>
-          h.title.toLowerCase().includes(searchLower) ||
-          h.action.toLowerCase().includes(searchLower) ||
-          h.rationale.toLowerCase().includes(searchLower)
+        filteredHypotheses = filteredHypotheses.filter(
+          (h) =>
+            h.title.toLowerCase().includes(searchLower) ||
+            h.action.toLowerCase().includes(searchLower) ||
+            h.rationale.toLowerCase().includes(searchLower),
         );
       }
 
       // Apply objective filter
       if (query.objectiveId) {
-        filteredHypotheses = filteredHypotheses.filter(h =>
-          h.objectives.some(obj => obj.id === query.objectiveId)
+        filteredHypotheses = filteredHypotheses.filter((h) =>
+          h.objectives.some((obj) => obj.id === query.objectiveId),
         );
       }
 
       // Apply date filters
       if (query.startDate) {
         const startDate = new Date(query.startDate);
-        filteredHypotheses = filteredHypotheses.filter(h => h.createdAt >= startDate);
+        filteredHypotheses = filteredHypotheses.filter(
+          (h) => h.createdAt >= startDate,
+        );
       }
 
       if (query.endDate) {
         const endDate = new Date(query.endDate);
-        filteredHypotheses = filteredHypotheses.filter(h => h.createdAt <= endDate);
+        filteredHypotheses = filteredHypotheses.filter(
+          (h) => h.createdAt <= endDate,
+        );
       }
 
       // Apply sorting
-      const sortBy = query.sortBy || 'createdAt';
-      const sortOrder = query.sortOrder || 'desc';
+      const sortBy = query.sortBy || "createdAt";
+      const sortOrder = query.sortOrder || "desc";
 
       filteredHypotheses.sort((a, b) => {
         let aValue, bValue;
 
         switch (sortBy) {
-          case 'title':
+          case "title":
             aValue = a.title;
             bValue = b.title;
             break;
-          case 'updatedAt':
+          case "updatedAt":
             aValue = a.updatedAt;
             bValue = b.updatedAt;
             break;
@@ -178,7 +187,7 @@ export class HypothesesService {
             bValue = b.createdAt;
         }
 
-        if (sortOrder === 'asc') {
+        if (sortOrder === "asc") {
           return aValue > bValue ? 1 : -1;
         } else {
           return aValue < bValue ? 1 : -1;
@@ -202,10 +211,9 @@ export class HypothesesService {
           page,
           limit,
           total,
-          totalPages
-        }
+          totalPages,
+        },
       };
-
     } catch (error) {
       return {
         success: false,
@@ -214,37 +222,45 @@ export class HypothesesService {
           page: query.page || 1,
           limit: query.limit || 10,
           total: 0,
-          totalPages: 0
+          totalPages: 0,
         },
-        error: 'Failed to fetch hypotheses'
+        error: "Failed to fetch hypotheses",
       };
     }
   }
 
-  static async getHypothesisById(id: string, userId: string): Promise<ApiResponse<Hypothesis>> {
+  static async getHypothesisById(
+    id: string,
+    userId: string,
+  ): Promise<ApiResponse<Hypothesis>> {
     try {
-      const hypothesis = this.mockHypotheses.find(h => h.id === id && h.userId === userId);
+      const hypothesis = this.mockHypotheses.find(
+        (h) => h.id === id && h.userId === userId,
+      );
 
       if (!hypothesis) {
         return {
           success: false,
-          error: 'Hypothesis not found'
+          error: "Hypothesis not found",
         };
       }
 
       return {
         success: true,
-        data: hypothesis
+        data: hypothesis,
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to fetch hypothesis'
+        error: "Failed to fetch hypothesis",
       };
     }
   }
 
-  static async createHypothesis(userId: string, data: CreateHypothesisRequest): Promise<ApiResponse<Hypothesis>> {
+  static async createHypothesis(
+    userId: string,
+    data: CreateHypothesisRequest,
+  ): Promise<ApiResponse<Hypothesis>> {
     try {
       const newHypothesis: Hypothesis = {
         id: `hyp_${Date.now()}`,
@@ -258,7 +274,7 @@ export class HypothesesService {
         metrics: [],
         feedback: [],
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       this.mockHypotheses.push(newHypothesis);
@@ -266,24 +282,30 @@ export class HypothesesService {
       return {
         success: true,
         data: newHypothesis,
-        message: 'Hypothesis created successfully'
+        message: "Hypothesis created successfully",
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to create hypothesis'
+        error: "Failed to create hypothesis",
       };
     }
   }
 
-  static async updateHypothesis(id: string, userId: string, data: UpdateHypothesisRequest): Promise<ApiResponse<Hypothesis>> {
+  static async updateHypothesis(
+    id: string,
+    userId: string,
+    data: UpdateHypothesisRequest,
+  ): Promise<ApiResponse<Hypothesis>> {
     try {
-      const hypothesisIndex = this.mockHypotheses.findIndex(h => h.id === id && h.userId === userId);
+      const hypothesisIndex = this.mockHypotheses.findIndex(
+        (h) => h.id === id && h.userId === userId,
+      );
 
       if (hypothesisIndex === -1) {
         return {
           success: false,
-          error: 'Hypothesis not found'
+          error: "Hypothesis not found",
         };
       }
 
@@ -291,7 +313,7 @@ export class HypothesesService {
       const updatedHypothesis: Hypothesis = {
         ...existingHypothesis,
         ...data,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       this.mockHypotheses[hypothesisIndex] = updatedHypothesis;
@@ -299,24 +321,29 @@ export class HypothesesService {
       return {
         success: true,
         data: updatedHypothesis,
-        message: 'Hypothesis updated successfully'
+        message: "Hypothesis updated successfully",
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to update hypothesis'
+        error: "Failed to update hypothesis",
       };
     }
   }
 
-  static async deleteHypothesis(id: string, userId: string): Promise<ApiResponse<void>> {
+  static async deleteHypothesis(
+    id: string,
+    userId: string,
+  ): Promise<ApiResponse<void>> {
     try {
-      const hypothesisIndex = this.mockHypotheses.findIndex(h => h.id === id && h.userId === userId);
+      const hypothesisIndex = this.mockHypotheses.findIndex(
+        (h) => h.id === id && h.userId === userId,
+      );
 
       if (hypothesisIndex === -1) {
         return {
           success: false,
-          error: 'Hypothesis not found'
+          error: "Hypothesis not found",
         };
       }
 
@@ -324,46 +351,58 @@ export class HypothesesService {
 
       return {
         success: true,
-        message: 'Hypothesis deleted successfully'
+        message: "Hypothesis deleted successfully",
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to delete hypothesis'
+        error: "Failed to delete hypothesis",
       };
     }
   }
 
   static async getHypothesesStats(userId: string): Promise<ApiResponse<any>> {
     try {
-      const userHypotheses = this.mockHypotheses.filter(h => h.userId === userId);
+      const userHypotheses = this.mockHypotheses.filter(
+        (h) => h.userId === userId,
+      );
 
       const stats = {
         total: userHypotheses.length,
-        totalExperiments: userHypotheses.reduce((sum, h) => sum + h.experiments.length, 0),
-        totalMetrics: userHypotheses.reduce((sum, h) => sum + h.metrics.length, 0),
+        totalExperiments: userHypotheses.reduce(
+          (sum, h) => sum + h.experiments.length,
+          0,
+        ),
+        totalMetrics: userHypotheses.reduce(
+          (sum, h) => sum + h.metrics.length,
+          0,
+        ),
         feedbackStats: {
-          positive: userHypotheses.reduce((sum, h) =>
-            sum + h.feedback.filter(f => f.rating === 'positive').length, 0
+          positive: userHypotheses.reduce(
+            (sum, h) =>
+              sum + h.feedback.filter((f) => f.rating === "positive").length,
+            0,
           ),
-          negative: userHypotheses.reduce((sum, h) =>
-            sum + h.feedback.filter(f => f.rating === 'negative').length, 0
-          )
+          negative: userHypotheses.reduce(
+            (sum, h) =>
+              sum + h.feedback.filter((f) => f.rating === "negative").length,
+            0,
+          ),
         },
         recentlyCreated: userHypotheses
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
           .slice(0, 5)
-          .map(h => ({ id: h.id, title: h.title, createdAt: h.createdAt }))
+          .map((h) => ({ id: h.id, title: h.title, createdAt: h.createdAt })),
       };
 
       return {
         success: true,
-        data: stats
+        data: stats,
       };
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to fetch hypotheses statistics'
+        error: "Failed to fetch hypotheses statistics",
       };
     }
   }
