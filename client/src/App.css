@@ -786,7 +786,7 @@ body {
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    border-radius: 5px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     pointer-events: all;
@@ -884,7 +884,7 @@ body {
 
 .thread-history-list::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
+    border-radius: 5px;
 }
 
 .thread-history-list::-webkit-scrollbar-thumb:hover {
@@ -1692,7 +1692,7 @@ body {
     color: #e2e8f0;
     cursor: pointer;
     padding: 4px;
-    border-radius: 3px;
+    border-radius: 5px;
     transition: all 0.2s ease;
     opacity: 0.7;
     flex-shrink: 0;
@@ -1721,7 +1721,7 @@ body {
     color: #e2e8f0;
     cursor: pointer;
     padding: 4px;
-    border-radius: 3px;
+    border-radius: 5px;
     transition: all 0.2s ease;
     opacity: 0.7;
     flex-shrink: 0;
@@ -1750,7 +1750,7 @@ body {
     color: #e2e8f0;
     cursor: pointer;
     padding: 4px;
-    border-radius: 3px;
+    border-radius: 5px;
     transition: all 0.2s ease;
     opacity: 0.9;
     flex-shrink: 0;

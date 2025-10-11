@@ -7,3 +7,4 @@ server/dist
 client/dist
 server/tmp/
 server/src/prompts/fg-config.json
+.env
