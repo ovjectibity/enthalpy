@@ -50,10 +50,10 @@ INSERT INTO account (user_id, password, login_type) VALUES
 ('12', '$2b$12$8v3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj8xqKqf9/J6', 'email');
 
 -- ==========================================
--- USER_ASSETS DATABASE DATA
+-- ASSETS DATABASE DATA
 -- ==========================================
 
-\c user_assets;
+\c assets;
 
 -- Insert dummy context data
 INSERT INTO context (title, description, type) VALUES
@@ -193,8 +193,8 @@ SELECT 'Groups: ' || COUNT(*) as count FROM groups;
 SELECT 'Users: ' || COUNT(*) as count FROM users;
 SELECT 'Accounts: ' || COUNT(*) as count FROM account;
 
-\c user_assets;
-SELECT 'USER_ASSETS DATABASE SUMMARY:' as info;
+\c assets;
+SELECT 'ASSETS DATABASE SUMMARY:' as info;
 SELECT 'Context: ' || COUNT(*) as count FROM context;
 SELECT 'Objectives: ' || COUNT(*) as count FROM objectives;
 SELECT 'Metrics: ' || COUNT(*) as count FROM metrics;
