@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 // import cors from "cors"; // TODO: Add after installing dependency
 import { FlowGraphGenerator } from "./services/flowgraph.js";
 import { ComputerTool, Tool } from "./services/tools.js";
@@ -12,20 +13,12 @@ const port = process.env.APP_PORT;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static client files
+const __dirname = path.resolve(); // Get current directory (for ES Modules)
+app.use(express.static(path.join(__dirname, "client", "dist"))); // Assuming client build output is in the 'client/dist' directory relative to the project root
+
 // Routes
 app.use("/api/hypotheses", hypothesesRoutes);
-
-app.get("/", (_req, res) => {
-  res.json({
-    message: "Enthalpy API Server",
-    version: "1.0.0",
-    endpoints: {
-      hypotheses: "/api/hypotheses",
-      flowGraph: "/generate_flow_graph",
-      agentThreads: "/get_agent_threads",
-    },
-  });
-});
 
 app.get("/generate_flow_graph", (_req, res) => {
   const tools = new Map<string, Tool>();
@@ -41,6 +34,12 @@ app.get("/get_agent_threads", (_req, res) => {
   res.json({
     response: "Agent threads endpoint - implementation needed",
   });
+});
+
+// For any other requests, serve the client's index.html
+// This MUST come AFTER your API routes so that API calls are not caught by this.
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
 });
 
 // Error handling middleware
@@ -59,7 +58,7 @@ app.use(
   },
 );
 
-// 404 handler
+// 404 handler - This might be redundant with the '*' route above, but good to keep for explicit API 404s
 app.use((_req, res) => {
   res.status(404).json({
     success: false,
