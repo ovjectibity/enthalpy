@@ -1,17 +1,17 @@
 services:
   postgresdb:
-    image: postgres:13
+    image: postgres
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
+      - ./db-init-scripts:/docker-entrypoint-initdb.d # Correct path
       - postgres_data:/var/lib/postgresql/data
 
-  app:
+  enthalpy_app:
     depends_on:
       - postgresdb
     build: ./
@@ -22,7 +22,6 @@ services:
       - DB_HOST=postgresdb
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
       - DB_PORT=5432
 
 volumes:
