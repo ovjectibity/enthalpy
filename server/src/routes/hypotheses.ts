@@ -182,26 +182,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/hypotheses/user/:userId/stats - Get hypotheses statistics for a user
-router.get("/user/:userId/stats", async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-
-    const result = await HypothesesService.getHypothesesStats(userId);
-
-    if (!result.success) {
-      return res.status(500).json(result);
-    }
-
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "Internal server error",
-    });
-  }
-});
-
 // POST /api/hypotheses/:id/feedback - Add feedback to a hypothesis
 router.post("/:id/feedback", async (req: Request, res: Response) => {
   try {

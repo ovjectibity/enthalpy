@@ -10,127 +10,18 @@ import {
   Metric,
   Feedback,
 } from "./types.js";
+import { queryUtilities, ormUtilities } from "./orm.js";
+
+import { DatabaseConnections } from "./dbconnect.js";
+DatabaseConnections.initializePools();
 
 export class HypothesesService {
-  // Mock database - replace with actual database operations
-  private static mockHypotheses: Hypothesis[] = [
-    {
-      id: "1",
-      title: "Onboarding Flow Optimization",
-      action: "Implement user onboarding flow",
-      rationale: "New users are dropping off during signup process",
-      expectedOutcome: "Increase user conversion rate by 25%",
-      userId: "user_123",
-      objectives: [
-        {
-          id: "obj_1",
-          title: "Improve User Acquisition",
-          userId: "user_123",
-          createdAt: new Date("2024-01-15"),
-          updatedAt: new Date("2024-01-15"),
-        },
-        {
-          id: "obj_2",
-          title: "Reduce Signup Friction",
-          userId: "user_123",
-          createdAt: new Date("2024-01-15"),
-          updatedAt: new Date("2024-01-15"),
-        },
-      ],
-      experiments: [
-        {
-          id: "exp_1",
-          name: "A/B Test Welcome Screen",
-          key: "onboarding_welcome_ab",
-          status: "PENDING_DESIGN",
-          hypothesisId: "1",
-          createdAt: new Date("2024-01-15"),
-          updatedAt: new Date("2024-01-15"),
-        },
-        {
-          id: "exp_2",
-          name: "Progressive Disclosure Test",
-          key: "onboarding_progressive_disclosure",
-          status: "PENDING_DESIGN",
-          hypothesisId: "1",
-          createdAt: new Date("2024-01-15"),
-          updatedAt: new Date("2024-01-15"),
-        },
-      ],
-      metrics: [
-        {
-          id: "met_1",
-          name: "User Conversion Rate",
-          formula: "(Converted Users / Total Signups) * 100",
-          category: "Activation",
-          hypothesisId: "1",
-          createdAt: new Date("2024-01-15"),
-          updatedAt: new Date("2024-01-15"),
-        },
-        {
-          id: "met_2",
-          name: "Time to First Value",
-          formula: "Average(Time from Signup to First Key Action)",
-          category: "Activation",
-          hypothesisId: "1",
-          createdAt: new Date("2024-01-15"),
-          updatedAt: new Date("2024-01-15"),
-        },
-      ],
-      feedback: [],
-      createdAt: new Date("2024-01-15"),
-      updatedAt: new Date("2024-01-15"),
-    },
-    {
-      id: "2",
-      title: "Payment Process Simplification",
-      action: "Reduce checkout steps from 5 to 3",
-      rationale: "Cart abandonment is high at payment stage",
-      expectedOutcome: "Decrease cart abandonment by 15%",
-      userId: "user_123",
-      objectives: [
-        {
-          id: "obj_3",
-          title: "Optimize Revenue Per User",
-          userId: "user_123",
-          createdAt: new Date("2024-01-16"),
-          updatedAt: new Date("2024-01-16"),
-        },
-      ],
-      experiments: [
-        {
-          id: "exp_3",
-          name: "Single Page Checkout",
-          key: "payment_single_page",
-          status: "PENDING_DESIGN",
-          hypothesisId: "2",
-          createdAt: new Date("2024-01-16"),
-          updatedAt: new Date("2024-01-16"),
-        },
-      ],
-      metrics: [
-        {
-          id: "met_3",
-          name: "Cart Abandonment Rate",
-          formula: "1 - (Purchases / Cart Additions)",
-          category: "Revenue",
-          hypothesisId: "2",
-          createdAt: new Date("2024-01-16"),
-          updatedAt: new Date("2024-01-16"),
-        },
-      ],
-      feedback: [],
-      createdAt: new Date("2024-01-16"),
-      updatedAt: new Date("2024-01-16"),
-    },
-  ];
-
   static async getHypothesesByUser(
     query: GetHypothesesQuery,
   ): Promise<PaginatedResponse<Hypothesis>> {
     try {
-      let filteredHypotheses = this.mockHypotheses.filter(
-        (h) => h.userId === query.userId,
+      let filteredHypotheses = await queryUtilities.getHypothesesByUserId(
+        query.userId,
       );
 
       // Apply search filter
@@ -234,9 +125,13 @@ export class HypothesesService {
     userId: string,
   ): Promise<ApiResponse<Hypothesis>> {
     try {
-      const hypothesis = this.mockHypotheses.find(
-        (h) => h.id === id && h.userId === userId,
-      );
+      let hypotheses = await queryUtilities.getHypothesesByUserId(userId);
+      let hypothesis;
+      hypotheses.filter((h) => {
+        if (h.id === id) {
+          hypothesis = h;
+        }
+      });
 
       if (!hypothesis) {
         return {
@@ -277,7 +172,7 @@ export class HypothesesService {
         updatedAt: new Date(),
       };
 
-      this.mockHypotheses.push(newHypothesis);
+      queryUtilities.createHypothesis(userId, newHypothesis);
 
       return {
         success: true,
@@ -298,31 +193,40 @@ export class HypothesesService {
     data: UpdateHypothesisRequest,
   ): Promise<ApiResponse<Hypothesis>> {
     try {
-      const hypothesisIndex = this.mockHypotheses.findIndex(
-        (h) => h.id === id && h.userId === userId,
-      );
-
-      if (hypothesisIndex === -1) {
+      let hypotheses = await queryUtilities.getHypothesesByUserId(userId);
+      let hypothesis: Hypothesis | null = null;
+      hypotheses.filter((h) => {
+        if (h.id === id) {
+          hypothesis = h;
+        }
+      });
+      if (hypothesis === null) {
         return {
           success: false,
           error: "Hypothesis not found",
         };
       }
+      let h = hypothesis as Hypothesis;
+      h.title = data.title ? data.title : h.title;
+      h.action = data.action ? data.action : h.action;
+      h.rationale = data.rationale ? data.rationale : h.rationale;
+      h.expectedOutcome = data.expectedOutcome
+        ? data.expectedOutcome
+        : h.expectedOutcome;
 
-      const existingHypothesis = this.mockHypotheses[hypothesisIndex];
-      const updatedHypothesis: Hypothesis = {
-        ...existingHypothesis,
-        ...data,
-        updatedAt: new Date(),
-      };
-
-      this.mockHypotheses[hypothesisIndex] = updatedHypothesis;
-
-      return {
-        success: true,
-        data: updatedHypothesis,
-        message: "Hypothesis updated successfully",
-      };
+      let updatedHypothesis = await queryUtilities.updateHypothesis(userId, h);
+      if (updatedHypothesis === null) {
+        return {
+          success: false,
+          error: "Failed to update hypothesis",
+        };
+      } else {
+        return {
+          success: true,
+          data: updatedHypothesis,
+          message: "Hypothesis updated successfully",
+        };
+      }
     } catch (error) {
       return {
         success: false,
@@ -336,18 +240,7 @@ export class HypothesesService {
     userId: string,
   ): Promise<ApiResponse<void>> {
     try {
-      const hypothesisIndex = this.mockHypotheses.findIndex(
-        (h) => h.id === id && h.userId === userId,
-      );
-
-      if (hypothesisIndex === -1) {
-        return {
-          success: false,
-          error: "Hypothesis not found",
-        };
-      }
-
-      this.mockHypotheses.splice(hypothesisIndex, 1);
+      queryUtilities.deleteHypothesis(id);
 
       return {
         success: true,
@@ -357,52 +250,6 @@ export class HypothesesService {
       return {
         success: false,
         error: "Failed to delete hypothesis",
-      };
-    }
-  }
-
-  static async getHypothesesStats(userId: string): Promise<ApiResponse<any>> {
-    try {
-      const userHypotheses = this.mockHypotheses.filter(
-        (h) => h.userId === userId,
-      );
-
-      const stats = {
-        total: userHypotheses.length,
-        totalExperiments: userHypotheses.reduce(
-          (sum, h) => sum + h.experiments.length,
-          0,
-        ),
-        totalMetrics: userHypotheses.reduce(
-          (sum, h) => sum + h.metrics.length,
-          0,
-        ),
-        feedbackStats: {
-          positive: userHypotheses.reduce(
-            (sum, h) =>
-              sum + h.feedback.filter((f) => f.rating === "positive").length,
-            0,
-          ),
-          negative: userHypotheses.reduce(
-            (sum, h) =>
-              sum + h.feedback.filter((f) => f.rating === "negative").length,
-            0,
-          ),
-        },
-        recentlyCreated: userHypotheses
-          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-          .slice(0, 5)
-          .map((h) => ({ id: h.id, title: h.title, createdAt: h.createdAt })),
-      };
-
-      return {
-        success: true,
-        data: stats,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: "Failed to fetch hypotheses statistics",
       };
     }
   }

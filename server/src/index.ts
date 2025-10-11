@@ -5,7 +5,7 @@ import { ComputerTool, Tool } from "./services/tools.js";
 import hypothesesRoutes from "./routes/hypotheses.js";
 
 const app = express();
-const port = 3001;
+const port = process.env.APP_PORT;
 
 // Middleware
 // app.use(cors()); // TODO: Enable after installing cors
