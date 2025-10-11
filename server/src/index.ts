@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url"; // Import for ES Modules
 // import cors from "cors"; // TODO: Add after installing dependency
 import { FlowGraphGenerator } from "./services/flowgraph.js";
 import { ComputerTool, Tool } from "./services/tools.js";
@@ -14,7 +15,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static client files
-const __dirname = path.resolve(); // Get current directory (for ES Modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "client", "dist"))); // Assuming client build output is in the 'client/dist' directory relative to the project root
 
 // Routes
