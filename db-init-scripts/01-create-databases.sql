@@ -3,7 +3,7 @@ CREATE DATABASE common;
 CREATE DATABASE assets;
 
 -- Create specific users
-CREATE USER enthalpy_app WITH PASSWORD 's5tarbus*niCr';
+-- CREATE USER enthalpy_app WITH PASSWORD 's5tarbus*niCr';
 CREATE USER enthalpy_admin WITH PASSWORD 'mor00nKiraj*niCr';
 
 -- Grant permissions
