@@ -37,10 +37,10 @@ CREATE TABLE account (
 );
 
 -- ==========================================
--- USER_ASSETS DATABASE SCHEMA
+-- ASSETS DATABASE SCHEMA
 -- ==========================================
 
-\c user_assets;
+\c assets;
 
 -- Create hypotheses table
 CREATE TABLE hypotheses (
