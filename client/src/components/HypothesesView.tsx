@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@base-ui-components/react/input";
 import MasterDetail from "./MasterDetail";
 import HyperlistView from "./HyperlistView";
@@ -6,213 +6,27 @@ import HyperlistView from "./HyperlistView";
 const FeedbackComponent = require("./FeedbackComponent").default;
 
 const HypothesesView: React.FC = () => {
-  const hypothesesList = [
-    {
-      id: 1,
-      title: "Onboarding Flow Optimization",
-      action: "Implement user onboarding flow",
-      rationale: "New users are dropping off during signup process",
-      expected_outcome: "Increase user conversion rate by 25%",
-      metrics: [
-        {
-          id: "met_1",
-          name: "User Conversion Rate",
-          formula: "(Converted Users / Total Signups) * 100",
-          category: "Activation",
-        },
-        {
-          id: "met_2",
-          name: "Time to First Value",
-          formula: "Average(Time from Signup to First Key Action)",
-          category: "Activation",
-        },
-        {
-          id: "met_3",
-          name: "Signup Completion Rate",
-          formula: "(Completed Signups / Started Signups) * 100",
-          category: "Acquisition",
-        },
-      ],
-      objectives: [
-        {
-          id: "obj_1",
-          title: "Improve User Acquisition",
-        },
-        {
-          id: "obj_2",
-          title: "Reduce Signup Friction",
-        },
-        {
-          id: "obj_3",
-          title: "Increase Trial-to-Paid Conversion",
-        },
-      ],
-      experiments: [
-        {
-          name: "A/B Test Welcome Screen",
-          key: "onboarding_welcome_ab",
-          status: "PENDING DESIGN",
-        },
-        {
-          name: "Progressive Disclosure Test",
-          key: "onboarding_progressive_disclosure",
-          status: "PENDING DESIGN",
-        },
-        {
-          name: "Social Proof Integration",
-          key: "onboarding_social_proof",
-          status: "PENDING DESIGN",
-        },
-      ],
-      contextItems: [
-        {
-          id: "ctx_1",
-          title: "User Drop-off Analysis",
-          tag: "Context",
-        },
-        {
-          id: "ctx_2",
-          title: "Signup Funnel Journey",
-          tag: "Journey Map",
-        },
-        {
-          id: "ctx_3",
-          title: "Competitor Onboarding Research",
-          tag: "Context",
-        },
-      ],
-    },
-    {
-      id: 2,
-      title: "Payment Process Simplification",
-      action: "Reduce checkout steps from 5 to 3",
-      rationale: "Cart abandonment is high at payment stage",
-      expected_outcome: "Decrease cart abandonment by 15%",
-      metrics: [
-        {
-          id: "met_4",
-          name: "Cart Abandonment Rate",
-          formula: "1 - (Purchases / Cart Additions)",
-          category: "Revenue",
-        },
-        {
-          id: "met_5",
-          name: "Average Order Value",
-          formula: "Total Revenue / Number of Orders",
-          category: "Revenue",
-        },
-      ],
-      objectives: [
-        {
-          id: "obj_4",
-          title: "Optimize Revenue Per User",
-        },
-        {
-          id: "obj_5",
-          title: "Streamline Purchase Experience",
-        },
-      ],
-      experiments: [
-        {
-          name: "Single Page Checkout",
-          key: "payment_single_page",
-          status: "PENDING DESIGN",
-        },
-        {
-          name: "Guest Checkout Option",
-          key: "payment_guest_checkout",
-          status: "PENDING DESIGN",
-        },
-      ],
-      contextItems: [
-        {
-          id: "ctx_4",
-          title: "Cart Abandonment Heat Maps",
-          tag: "Context",
-        },
-        {
-          id: "ctx_5",
-          title: "Payment Flow Journey Map",
-          tag: "Journey Map",
-        },
-      ],
-    },
-    {
-      id: 3,
-      title: "Mobile UX Enhancement",
-      action: "Redesign mobile interface for key actions",
-      rationale: "Mobile users report difficulty completing tasks",
-      expected_outcome: "Improve mobile task completion rate by 30%",
-      metrics: [
-        {
-          id: "met_6",
-          name: "Mobile Task Completion Rate",
-          formula: "(Completed Tasks / Started Tasks) * 100",
-          category: "Retention",
-        },
-        {
-          id: "met_7",
-          name: "Mobile Session Duration",
-          formula: "Average(Session End Time - Session Start Time)",
-          category: "Retention",
-        },
-        {
-          id: "met_8",
-          name: "Cross-Device Consistency Score",
-          formula: "1 - (Mobile Errors / Desktop Errors)",
-          category: "Activation",
-        },
-      ],
-      objectives: [
-        {
-          id: "obj_6",
-          title: "Enhance Mobile User Experience",
-        },
-        {
-          id: "obj_7",
-          title: "Increase Mobile Engagement",
-        },
-        {
-          id: "obj_8",
-          title: "Improve Cross-Device Consistency",
-        },
-      ],
-      experiments: [
-        {
-          name: "Touch-Friendly Button Sizing",
-          key: "mobile_button_sizing",
-          status: "PENDING DESIGN",
-        },
-        {
-          name: "Gesture Navigation Test",
-          key: "mobile_gesture_nav",
-          status: "PENDING DESIGN",
-        },
-        {
-          name: "Voice Input Integration",
-          key: "mobile_voice_input",
-          status: "PENDING DESIGN",
-        },
-      ],
-      contextItems: [
-        {
-          id: "ctx_6",
-          title: "Mobile Usability Study",
-          tag: "Context",
-        },
-        {
-          id: "ctx_7",
-          title: "Mobile User Journey Analysis",
-          tag: "Journey Map",
-        },
-        {
-          id: "ctx_8",
-          title: "Device Usage Patterns",
-          tag: "Context",
-        },
-      ],
-    },
-  ];
+  const [hypothesesList, setHypothesesList] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/hypotheses?userId=yourUserId") // Replace 'yourUserId' with the actual user ID
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch hypotheses.");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          setHypothesesList(data.hypotheses); // Assuming the response structure contains 'hypotheses'
+        } else {
+          console.error("Error fetching hypotheses:", data.error);
+        }
+      })
+      .catch((error) => {
+        console.error("Fetch error:", error);
+      });
+  }, []); // Empty dependency array means this effect runs once on mount
 
   return (
     <div className="hypotheses-canvas">
