@@ -122,7 +122,7 @@ CREATE INDEX idx_groups_domain ON groups(domain);
 CREATE INDEX idx_account_login_type ON account(login_type);
 
 -- User_assets database indexes
-\c user_assets;
+\c assets;
 CREATE INDEX idx_hypotheses_user_target ON hypotheses(user_target);
 CREATE INDEX idx_experiments_user_id ON experiments(user_id);
 CREATE INDEX idx_experiments_status ON experiments(status);
@@ -151,7 +151,7 @@ CREATE TRIGGER trigger_users_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_last_updated_at();
 
-\c user_assets;
+\c assets;
 CREATE OR REPLACE FUNCTION update_last_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
