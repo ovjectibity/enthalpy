@@ -1,6 +1,7 @@
 import { Hypothesis, Objective, Experiment, Metric, User } from "./types.js";
 import { DatabaseConnections } from "./dbconnect.js";
 
+DatabaseConnections.initializePools();
 const assetsPool = DatabaseConnections.getAssetsPool();
 const commonPool = DatabaseConnections.getCommonPool();
 
