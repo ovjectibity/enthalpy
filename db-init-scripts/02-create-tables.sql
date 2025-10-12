@@ -60,7 +60,7 @@ CREATE TABLE hypotheses (
     linked_context INTEGER[],
     linked_objectives INTEGER[],
     linked_metrics INTEGER[],
-    CONSTRAINT fk_hypotheses_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- CONSTRAINT fk_hypotheses_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_hypotheses_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -75,7 +75,7 @@ CREATE TABLE experiments (
     linked_hypotheses INTEGER[],
     plan TEXT NOT NULL,
     status VARCHAR(50) NOT NULL,
-    CONSTRAINT fk_experiments_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- CONSTRAINT fk_experiments_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_experiments_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -88,7 +88,7 @@ CREATE TABLE objectives (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     description TEXT NOT NULL,
-    CONSTRAINT fk_objectives_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- CONSTRAINT fk_objectives_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_objectives_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -102,7 +102,7 @@ CREATE TABLE context (
     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     description TEXT NOT NULL,
     type VARCHAR(100) NOT NULL,
-    CONSTRAINT fk_context_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- CONSTRAINT fk_context_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_context_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -116,7 +116,7 @@ CREATE TABLE metrics (
     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     description TEXT NOT NULL,
     formula TEXT NOT NULL,
-    CONSTRAINT fk_metrics_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- CONSTRAINT fk_metrics_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_metrics_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -129,7 +129,7 @@ CREATE TABLE threads (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     chat_id INTEGER NOT NULL,
-    CONSTRAINT fk_threads_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    -- CONSTRAINT fk_threads_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_threads_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -140,7 +140,7 @@ CREATE TABLE projects (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     description TEXT NOT NULL,
-    CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+    -- CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ==========================================
