@@ -6,7 +6,7 @@
 CREATE SCHEMA common;
 
 -- Create groups table first (referenced by users)
-CREATE TABLE groups (
+CREATE TABLE common.groups (
     group_id SERIAL PRIMARY KEY,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name VARCHAR(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE groups (
 );
 
 -- Create users table
-CREATE TABLE users (
+CREATE TABLE common.users (
     user_id SERIAL PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE users (
 );
 
 -- Create account table
-CREATE TABLE account (
+CREATE TABLE common.account (
     user_id VARCHAR(255) PRIMARY KEY,
     password VARCHAR(255) NOT NULL,
     login_type VARCHAR(50) NOT NULL
@@ -45,7 +45,7 @@ CREATE TABLE account (
 CREATE SCHEMA assets;
 
 -- Create projects table
-CREATE TABLE projects (
+CREATE TABLE assets.projects (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -55,7 +55,7 @@ CREATE TABLE projects (
 );
 
 -- Create hypotheses table
-CREATE TABLE hypotheses (
+CREATE TABLE assets.hypotheses (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     project_id INTEGER NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE hypotheses (
 );
 
 -- Create experiments table
-CREATE TABLE experiments (
+CREATE TABLE assets.experiments (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     project_id INTEGER NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE experiments (
 );
 
 -- Create objectives table
-CREATE TABLE objectives (
+CREATE TABLE assets.objectives (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     project_id INTEGER NOT NULL,
@@ -103,7 +103,7 @@ CREATE TABLE objectives (
 );
 
 -- Create context table
-CREATE TABLE context (
+CREATE TABLE assets.context (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     project_id INTEGER NOT NULL,
@@ -117,7 +117,7 @@ CREATE TABLE context (
 );
 
 -- Create metrics table
-CREATE TABLE metrics (
+CREATE TABLE assets.metrics (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     project_id INTEGER NOT NULL,
@@ -131,7 +131,7 @@ CREATE TABLE metrics (
 );
 
 -- Create threads table
-CREATE TABLE threads (
+CREATE TABLE assets.threads (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     project_id INTEGER NOT NULL,
@@ -235,3 +235,7 @@ CREATE TRIGGER trigger_projects_updated_at
     BEFORE UPDATE ON projects
     FOR EACH ROW
     EXECUTE FUNCTION update_last_updated_at();
+ NULL,
+    status VARCHAR(50) NOT NULL,
+    CONSTRAINT fk_experiments_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk
