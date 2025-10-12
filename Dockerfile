@@ -77,7 +77,7 @@ RUN npm run build
 
 # Copy client build output to server's directory
 WORKDIR /app/server
-RUN mkdir -p client && mv ../client/build ./client/
+RUN mkdir -p client_dist && mv ../client/build ./client_dist/
 
 # Set up X11 virtual display for headless screenshot functionality (only relevant if GUI setup is enabled)
 ENV DISPLAY=:99
