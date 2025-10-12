@@ -19,11 +19,12 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DB_HOST=postgresdb
+      - DB_HOST=${DB_HOST}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
       - APP_PORT=${APP_PORT}
+      - DB_NAME=${DB_NAME}
 
 volumes:
   postgres_data:
