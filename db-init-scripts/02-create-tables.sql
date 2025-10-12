@@ -44,6 +44,16 @@ CREATE TABLE account (
 \c assets;
 CREATE SCHEMA assets;
 
+-- Create projects table
+CREATE TABLE projects (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    description TEXT NOT NULL,
+    -- CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- Create hypotheses table
 CREATE TABLE hypotheses (
     id SERIAL PRIMARY KEY,
@@ -131,16 +141,6 @@ CREATE TABLE threads (
     chat_id INTEGER NOT NULL,
     -- CONSTRAINT fk_threads_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_threads_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- Create projects table
-CREATE TABLE projects (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    description TEXT NOT NULL,
-    -- CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ==========================================
