@@ -44,6 +44,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY server/package.json server/package-lock.json* ./server/
 COPY client/package.json client/package-lock.json* ./client/
+COPY shared/package.json shared/package-lock.json* ./shared/
 
 # Install dependencies at root
 RUN npm install
@@ -60,6 +61,11 @@ RUN npm install
 WORKDIR /app
 COPY server/ ./server/
 COPY client/ ./client/
+COPY shared/ ./shared/
+
+# Build the server (TypeScript compilation)
+WORKDIR /app/shared
+RUN npm run build
 
 # Build the server (TypeScript compilation)
 WORKDIR /app/server
