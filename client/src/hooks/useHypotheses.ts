@@ -18,7 +18,7 @@ const useHypotheses = (): UseHypothesesResult => {
       setError(null);
       try {
         // TODO: Replace 'yourUserId' with the actual user ID, perhaps passed as an argument to the hook
-        const response = await fetch("/api/hypotheses?userId=yourUserId");
+        const response = await fetch("/api/hypotheses?userId=1");
         if (!response.ok) {
           throw new Error(`Failed to fetch hypotheses: ${response.statusText}`);
         }
