@@ -3,6 +3,7 @@
 -- ==========================================
 
 \c common;
+CREATE SCHEMA common;
 
 -- Create groups table first (referenced by users)
 CREATE TABLE groups (
@@ -41,6 +42,7 @@ CREATE TABLE account (
 -- ==========================================
 
 \c assets;
+CREATE SCHEMA assets;
 
 -- Create hypotheses table
 CREATE TABLE hypotheses (

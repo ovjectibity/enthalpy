@@ -97,7 +97,7 @@ export const ormUtilities = {
       action: String(row.action),
       rationale: String(row.rationale),
       expectedOutcome: String(row.expected_outcome),
-      userId: Number(row.user_target), // SQL uses user_target as userId reference
+      userId: Number(row.user_id),
       objectives: [], // Empty arrays - populate separately if needed
       experiments: [],
       metrics: [],
@@ -288,7 +288,7 @@ export const queryUtilities = {
         `
         SELECT m.* FROM metrics m
         JOIN hypotheses h ON m.id = ANY(h.linked_metrics)
-        WHERE h.user_target = $1
+        WHERE h.user_id = $1
         ORDER BY m.created_at DESC
       `,
         [userId],
@@ -332,7 +332,7 @@ export const queryUtilities = {
   async getHypothesesByUserId(userId: number): Promise<Hypothesis[]> {
     try {
       const result = await assetsPool.query(
-        "SELECT * FROM hypotheses WHERE user_target = $1 ORDER BY created_at DESC",
+        "SELECT * FROM hypotheses WHERE user_id = $1 ORDER BY created_at DESC",
         [userId],
       );
 
@@ -390,7 +390,7 @@ export const queryUtilities = {
           action,
           expected_outcome,
           rationale,
-          user_target,
+          user_id,
           linked_objectives,
           linked_experiments,
           linked_context,
@@ -404,7 +404,7 @@ export const queryUtilities = {
           hypothesisData.action,
           hypothesisData.expectedOutcome,
           hypothesisData.rationale,
-          "",
+          userId,
           [], // linked_objectives
           [], // linked_experiments (empty for new hypothesis)
           [], // linked_context (empty for new hypothesis)
