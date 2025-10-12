@@ -50,7 +50,7 @@ CREATE TABLE projects (
     user_id INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    description TEXT NOT NULL,
+    description TEXT NOT NULL
     -- CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
