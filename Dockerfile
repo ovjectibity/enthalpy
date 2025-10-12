@@ -67,17 +67,17 @@ COPY shared/ ./shared/
 WORKDIR /app/shared
 RUN npm run build
 
-# Build the server (TypeScript compilation)
-WORKDIR /app/server
-RUN npm run build
-
 # Build the client (React build)
 WORKDIR /app/client
 RUN npm run build
 
-# Copy client build output to server's directory
+# Build the server (TypeScript compilation)
 WORKDIR /app/server
-RUN mkdir -p client_dist && mv ../client/build ./client_dist/
+RUN npm run build
+
+# Copy client build output to server's directory [Handled by server build]
+# WORKDIR /app/server
+# RUN mkdir -p client_dist && mv ../client/build ./client_dist/
 
 # Set up X11 virtual display for headless screenshot functionality (only relevant if GUI setup is enabled)
 ENV DISPLAY=:99
