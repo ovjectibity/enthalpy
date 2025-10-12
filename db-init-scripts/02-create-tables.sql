@@ -61,7 +61,7 @@ CREATE TABLE hypotheses (
     linked_objectives INTEGER[],
     linked_metrics INTEGER[],
     -- CONSTRAINT fk_hypotheses_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_hypotheses_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fk_hypotheses_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Create experiments table
