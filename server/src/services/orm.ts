@@ -288,9 +288,7 @@ export const queryUtilities = {
         `
         SELECT m.* FROM metrics m
         JOIN hypotheses h ON m.id = ANY(h.linked_metrics)
-        WHERE h.user_target = (
-          SELECT email FROM users WHERE user_id = $1
-        )
+        WHERE h.user_target = $1
         ORDER BY m.created_at DESC
       `,
         [userId],
@@ -329,26 +327,13 @@ export const queryUtilities = {
   },
 
   /**
-   * Fetch hypotheses by user ID (using email as user_target)
+   * Fetch hypotheses by user ID
    */
   async getHypothesesByUserId(userId: number): Promise<Hypothesis[]> {
     try {
-      // First, get user's email from common database
-      const userResult = await commonPool.query(
-        "SELECT email FROM users WHERE user_id = $1",
-        [userId],
-      );
-
-      if (userResult.rows.length === 0) {
-        return [];
-      }
-
-      const userEmail = userResult.rows[0].email;
-
-      // Then, get hypotheses by user_target (email)
       const result = await assetsPool.query(
         "SELECT * FROM hypotheses WHERE user_target = $1 ORDER BY created_at DESC",
-        [userEmail],
+        [userId],
       );
 
       return ormUtilities.toHypotheses(result.rows);
