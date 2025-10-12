@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static client files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "client", "build"))); // Assuming client build output is in the 'client/dist' directory relative to the project root
+// app.use(express.static(path.join(__dirname, "client", "build"))); // Assuming client build output is in the 'client/dist' directory relative to the project root
 
 // Routes
 app.use("/api/hypotheses", hypothesesRoutes);
@@ -32,11 +32,11 @@ app.get("/generate_flow_graph", (_req, res) => {
   });
 });
 
-// For any other requests, serve the client's index.html
-// This MUST come AFTER your API routes so that API calls are not caught by this.
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
-});
+// app.get('/', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../../client/build/index.html'));
+// });
+
+app.use(express.static(path.join(__dirname, '../../client/build')));
 
 // Error handling middleware
 app.use(
