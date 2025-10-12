@@ -1,32 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Input } from "@base-ui-components/react/input";
 import MasterDetail from "./MasterDetail";
 import HyperlistView from "./HyperlistView";
+import useHypotheses from "../hooks/useHypotheses";
 
 const FeedbackComponent = require("./FeedbackComponent").default;
 
 const HypothesesView: React.FC = () => {
-  const [hypothesesList, setHypothesesList] = useState([]);
+  const { hypothesesList, loading, error } = useHypotheses();
 
-  useEffect(() => {
-    fetch("/api/hypotheses?userId=yourUserId") // Replace 'yourUserId' with the actual user ID
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch hypotheses.");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.success) {
-          setHypothesesList(data.hypotheses); // Assuming the response structure contains 'hypotheses'
-        } else {
-          console.error("Error fetching hypotheses:", data.error);
-        }
-      })
-      .catch((error) => {
-        console.error("Fetch error:", error);
-      });
-  }, []); // Empty dependency array means this effect runs once on mount
+  if (loading) {
+    return <div className="hypotheses-canvas">Loading hypotheses...</div>;
+  }
+
+  if (error) {
+    return <div className="hypotheses-canvas">Error: {error}</div>;
+  }
+
+  if (!hypothesesList || hypothesesList.length === 0) {
+    return <div className="hypotheses-canvas">No hypotheses found.</div>;
+  }
 
   return (
     <div className="hypotheses-canvas">

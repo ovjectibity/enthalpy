@@ -5,7 +5,7 @@ import {
   CreateHypothesisRequest,
   UpdateHypothesisRequest,
   CreateFeedbackRequest,
-} from "../services/types.js";
+} from "@enthalpy/shared";
 
 const router = express.Router();
 

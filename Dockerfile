@@ -1,41 +1,46 @@
 # Use Node.js 18 LTS as the base image
 FROM node:18-slim
 
-# Install system dependencies required for the application
+# Install core system dependencies (always needed for the server part)
 RUN apt-get update && apt-get install -y \
-    # For debugging, to check processes
     procps \
-    # For screenshot functionality (alternative to macOS screencapture)
+    libc6-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Conditionally install GUI dependencies and set up XFCE configuration
+# This block will only execute if COMPUTER_USE_SETUP is explicitly '1'.
+RUN if [ "$COMPUTER_USE_SETUP" = "1" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends \
     scrot \
     xvfb \
     x11vnc \
-    # XFCE desktop environment
     xfce4-session \
     xfce4-panel \
     xfce4-terminal \
     xfwm4 \
     xfdesktop4 \
     xfce4-settings \
-    # D-Bus system and session
     dbus \
     dbus-x11 \
-    # Minimal system services
     systemd \
-    # For Sharp image processing
-    libc6-dev \
-    # For system automation (alternative to macOS osascript)
     xdotool \
-    # General utilities
-    curl \
-    # Additional desktop utilities
     firefox-esr \
     thunar \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*; \
+    \
+    # Create minimal XFCE configuration to disable unnecessary services
+    mkdir -p /etc/xdg/autostart && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xfce4-power-manager.desktop && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/light-locker.desktop && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/polkit-gnome-authentication-agent-1.desktop && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xiccd.desktop; \
+    fi
 
-# Set working directory
+# Set working directory for the application
 WORKDIR /app
 
-# Copy package.json files for both client and server
+# Copy package.json files for both client and server to leverage Docker's cache
 COPY server/package.json server/package-lock.json* ./server/
 COPY client/package.json client/package-lock.json* ./client/
 
@@ -47,7 +52,7 @@ RUN npm install
 WORKDIR /app/client
 RUN npm install
 
-# Copy source code
+# Copy source code for both client and server
 WORKDIR /app
 COPY server/ ./server/
 COPY client/ ./client/
@@ -64,25 +69,16 @@ RUN npm run build
 WORKDIR /app/server
 RUN mkdir -p client && mv ../client/build ./client/
 
-# Set up X11 virtual display for headless screenshot functionality
+# Set up X11 virtual display for headless screenshot functionality (only relevant if GUI setup is enabled)
 ENV DISPLAY=:99
 
 # Set platform environment variable for cross-platform compatibility
 ENV PLATFORM=linux
 
-# Create minimal XFCE configuration to disable unnecessary services
-RUN mkdir -p /etc/xdg/autostart && \
-    # Disable power manager
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xfce4-power-manager.desktop && \
-    # Disable light locker
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/light-locker.desktop && \
-    # Disable polkit agent
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/polkit-gnome-authentication-agent-1.desktop && \
-    # Disable color daemon
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xiccd.desktop
-
-# Create startup script for X11 virtual display
-RUN echo '#!/bin/bash\n\
+# Conditionally create startup script for X11 virtual display
+# This script will only be created if COMPUTER_USE_SETUP is '1'.
+RUN if [ "$COMPUTER_USE_SETUP" = "1" ]; then \
+    echo '#!/bin/bash\n\
     # Start system D-Bus daemon\n\
     mkdir -p /var/run/dbus\n\
     dbus-daemon --system --fork\n\
@@ -105,15 +101,18 @@ RUN echo '#!/bin/bash\n\
     x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -verbose &\n\
     \n\
     # Start the application\n\
-    cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh
+    cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh; \
+    fi
 
 # Expose the server port
 EXPOSE 3001
-# Expose VNC port for x11vnc
+# Expose VNC port for x11vnc (only relevant if GUI setup is enabled)
 EXPOSE 5900
 
 # Set working directory back to server for startup
 WORKDIR /app/server
 
-# Start the application
-CMD ["/app/start.sh"]
+# Conditionally start the application
+# If COMPUTER_USE_SETUP is '1', run the script that starts GUI and then the server.
+# Otherwise, just start the Node.js server directly.
+CMD if [ "$COMPUTER_USE_SETUP" = "1" ]; then /app/start.sh; else npm start; fi

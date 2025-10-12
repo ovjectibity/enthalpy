@@ -1,4 +1,10 @@
-import { Hypothesis, Objective, Experiment, Metric, User } from "./types.js";
+import {
+  Hypothesis,
+  Objective,
+  Experiment,
+  Metric,
+  User,
+} from "@enthalpy/shared";
 import { DatabaseConnections } from "./dbconnect.js";
 
 DatabaseConnections.initializePools();

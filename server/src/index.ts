@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static client files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "client", "dist"))); // Assuming client build output is in the 'client/dist' directory relative to the project root
+app.use(express.static(path.join(__dirname, "client", "build"))); // Assuming client build output is in the 'client/dist' directory relative to the project root
 
 // Routes
 app.use("/api/hypotheses", hypothesesRoutes);
@@ -29,12 +29,6 @@ app.get("/generate_flow_graph", (_req, res) => {
   gphgen.generateFlowGraph();
   res.json({
     response: "Flow graph generation initiated",
-  });
-});
-
-app.get("/get_agent_threads", (_req, res) => {
-  res.json({
-    response: "Agent threads endpoint - implementation needed",
   });
 });
 

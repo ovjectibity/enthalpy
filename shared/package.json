@@ -1,0 +1,21 @@
+{
+  "name": "@enthalpy/shared",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Shared code and type definitions for Enthalpy client and server.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+      ".": "./src/index.ts"
+    }
+}

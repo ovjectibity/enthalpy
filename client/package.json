@@ -1,6 +1,7 @@
 {
-  "name": "client",
+  "name": "@enthalpy/client",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
@@ -16,7 +17,8 @@
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4",
-    "@base-ui-components/react": "1.0.0-beta.4"
+    "@base-ui-components/react": "1.0.0-beta.4",
+    "@enthalpy/shared": "*"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -9,7 +9,7 @@ import {
   Experiment,
   Metric,
   Feedback,
-} from "./types.js";
+} from "@enthalpy/shared";
 import { queryUtilities, ormUtilities } from "./orm.js";
 
 import { DatabaseConnections } from "./dbconnect.js";
