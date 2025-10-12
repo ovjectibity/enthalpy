@@ -121,8 +121,8 @@ export class HypothesesService {
   }
 
   static async getHypothesisById(
-    id: string,
-    userId: string,
+    id: number,
+    userId: number,
   ): Promise<ApiResponse<Hypothesis>> {
     try {
       let hypotheses = await queryUtilities.getHypothesesByUserId(userId);
@@ -153,12 +153,12 @@ export class HypothesesService {
   }
 
   static async createHypothesis(
-    userId: string,
+    userId: number,
     data: CreateHypothesisRequest,
   ): Promise<ApiResponse<Hypothesis>> {
     try {
       const newHypothesis: Hypothesis = {
-        id: `hyp_${Date.now()}`,
+        id: Math.random(),
         title: data.title,
         action: data.action,
         rationale: data.rationale,
@@ -188,8 +188,8 @@ export class HypothesesService {
   }
 
   static async updateHypothesis(
-    id: string,
-    userId: string,
+    id: number,
+    userId: number,
     data: UpdateHypothesisRequest,
   ): Promise<ApiResponse<Hypothesis>> {
     try {
@@ -236,8 +236,8 @@ export class HypothesesService {
   }
 
   static async deleteHypothesis(
-    id: string,
-    userId: string,
+    id: number,
+    userId: number,
   ): Promise<ApiResponse<void>> {
     try {
       queryUtilities.deleteHypothesis(id);

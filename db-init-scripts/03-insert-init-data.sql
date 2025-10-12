@@ -55,70 +55,77 @@ INSERT INTO account (user_id, password, login_type) VALUES
 
 \c assets;
 
+-- Insert dummy projects data
+INSERT INTO projects (user_id, description) VALUES
+(1, 'Project Alpha: User Engagement Initiative'),
+(1, 'Project Beta: Onboarding Flow Redesign'),
+(2, 'Project Gamma: Churn Reduction Strategy'),
+(3, 'Project Delta: Conversion Optimization');
+
 -- Insert dummy context data
-INSERT INTO context (title, description, type) VALUES
-('Mobile App Usage Trends', 'Analysis of user behavior patterns on mobile applications across different demographics', 'Market Research'),
-('Customer Satisfaction Survey Results', 'Quarterly customer satisfaction metrics and feedback analysis', 'Survey Data'),
-('Competitor Analysis Q4 2024', 'Comprehensive analysis of competitor strategies and market positioning', 'Competitive Intelligence'),
-('User Journey Mapping', 'End-to-end user experience mapping for web and mobile platforms', 'UX Research'),
-('Revenue Impact Analysis', 'Financial impact assessment of product changes and feature rollouts', 'Financial Analysis'),
-('Technical Performance Metrics', 'System performance, uptime, and scalability measurements', 'Technical Metrics'),
-('Market Segmentation Study', 'Customer segmentation based on behavior, demographics, and preferences', 'Market Research'),
-('Product Usage Analytics', 'Detailed analytics on feature adoption and user engagement', 'Product Analytics');
+INSERT INTO context (user_id, project_id, title, description, type) VALUES
+(1, 1, 'Mobile App Usage Trends', 'Analysis of user behavior patterns on mobile applications across different demographics', 'Market Research'),
+(1, 1, 'Customer Satisfaction Survey Results', 'Quarterly customer satisfaction metrics and feedback analysis', 'Survey Data'),
+(2, 3, 'Competitor Analysis Q4 2024', 'Comprehensive analysis of competitor strategies and market positioning', 'Competitive Intelligence'),
+(1, 2, 'User Journey Mapping', 'End-to-end user experience mapping for web and mobile platforms', 'UX Research'),
+(3, 4, 'Revenue Impact Analysis', 'Financial impact assessment of product changes and feature rollouts', 'Financial Analysis'),
+(4, 1, 'Technical Performance Metrics', 'System performance, uptime, and scalability measurements', 'Technical Metrics'),
+(5, 1, 'Market Segmentation Study', 'Customer segmentation based on behavior, demographics, and preferences', 'Market Research'),
+(6, 1, 'Product Usage Analytics', 'Detailed analytics on feature adoption and user engagement', 'Product Analytics');
 
 -- Insert dummy objectives data
-INSERT INTO objectives (title, description, user_id) VALUES
-('Increase User Engagement', 'Improve daily active users by 25% through enhanced user experience and feature optimization', 1),
-('Reduce Customer Churn', 'Decrease monthly churn rate from 8% to 5% by improving onboarding and support', 2),
-('Optimize Conversion Funnel', 'Increase conversion rate from trial to paid subscription by 15%', 3),
-('Improve App Performance', 'Reduce app load time by 30% and crash rate by 50%', 4),
-('Expand Market Reach', 'Enter two new geographic markets and acquire 10,000 new users', 5),
-('Enhance Customer Satisfaction', 'Achieve Net Promoter Score of 8.0 or higher', 6),
-('Streamline User Onboarding', 'Reduce onboarding completion time by 40% while maintaining quality', 7),
-('Increase Revenue Per User', 'Improve average revenue per user (ARPU) by 20% through upselling', 8);
+INSERT INTO objectives (user_id, project_id, title, description) VALUES
+(1, 1, 'Increase User Engagement', 'Improve daily active users by 25% through enhanced user experience and feature optimization'),
+(2, 3, 'Reduce Customer Churn', 'Decrease monthly churn rate from 8% to 5% by improving onboarding and support'),
+(3, 4, 'Optimize Conversion Funnel', 'Increase conversion rate from trial to paid subscription by 15%'),
+(4, 1, 'Improve App Performance', 'Reduce app load time by 30% and crash rate by 50%'),
+(5, 1, 'Expand Market Reach', 'Enter two new geographic markets and acquire 10,000 new users'),
+(6, 1, 'Enhance Customer Satisfaction', 'Achieve Net Promoter Score of 8.0 or higher'),
+(7, 2, 'Streamline User Onboarding', 'Reduce onboarding completion time by 40% while maintaining quality'),
+(8, 1, 'Increase Revenue Per User', 'Improve average revenue per user (ARPU) by 20% through upselling');
 
 -- Insert dummy metrics data
-INSERT INTO metrics (title, description, formula) VALUES
-('Daily Active Users', 'Number of unique users who engage with the platform daily', 'COUNT(DISTINCT user_id WHERE last_activity >= CURRENT_DATE)'),
-('Monthly Recurring Revenue', 'Predictable revenue generated from subscriptions each month', 'SUM(subscription_amount WHERE status = active)'),
-('Customer Acquisition Cost', 'Average cost to acquire a new paying customer', 'total_marketing_spend / new_customers_acquired'),
-('Lifetime Value', 'Predicted net profit from entire relationship with customer', 'average_revenue_per_month * average_customer_lifespan_months'),
-('Conversion Rate', 'Percentage of visitors who complete desired action', '(conversions / total_visitors) * 100'),
-('App Store Rating', 'Average user rating across all app stores', 'AVG(rating) FROM app_reviews WHERE review_date >= CURRENT_DATE - 30'),
-('Feature Adoption Rate', 'Percentage of users who use a specific feature', '(feature_users / total_active_users) * 100'),
-('Customer Satisfaction Score', 'Average satisfaction rating from customer surveys', 'AVG(satisfaction_rating) FROM customer_surveys');
+INSERT INTO metrics (user_id, project_id, title, description, formula) VALUES
+(1, 1, 'Daily Active Users', 'Number of unique users who engage with the platform daily', 'COUNT(DISTINCT user_id WHERE last_activity >= CURRENT_DATE)'),
+(1, 1, 'Monthly Recurring Revenue', 'Predictable revenue generated from subscriptions each month', 'SUM(subscription_amount WHERE status = active)'),
+(2, 3, 'Customer Acquisition Cost', 'Average cost to acquire a new paying customer', 'total_marketing_spend / new_customers_acquired'),
+(3, 4, 'Lifetime Value', 'Predicted net profit from entire relationship with customer', 'average_revenue_per_month * average_customer_lifespan_months'),
+(1, 2, 'Conversion Rate', 'Percentage of visitors who complete desired action', '(conversions / total_visitors) * 100'),
+(4, 1, 'App Store Rating', 'Average user rating across all app stores', 'AVG(rating) FROM app_reviews WHERE review_date >= CURRENT_DATE - 30'),
+(5, 1, 'Feature Adoption Rate', 'Percentage of users who use a specific feature', '(feature_users / total_active_users) * 100'),
+(6, 1, 'Customer Satisfaction Score', 'Average satisfaction rating from customer surveys', 'AVG(satisfaction_rating) FROM customer_surveys');
 
 -- Insert dummy hypotheses data
-INSERT INTO hypotheses (title, action, expected_outcome, rationale, user_target, linked_experiments, linked_context, linked_objectives, linked_metrics) VALUES
-('Simplified Onboarding Increases Retention',
+INSERT INTO hypotheses (user_id, project_id, title, action, expected_outcome, rationale, user_target, linked_experiments, linked_context, linked_objectives, linked_metrics) VALUES
+(1, 1, 'Simplified Onboarding Increases Retention',
  'Reduce onboarding steps from 8 to 4 and add progress indicators',
  'Day-7 retention rate will increase from 45% to 60%',
  'Shorter onboarding reduces friction and cognitive load, leading to higher completion rates',
  'New users in their first week',
  '{1,2}', '{1,4}', '{2,7}', '{1,5}'),
 
-('Push Notifications Boost Daily Engagement',
+(1, 1, 'Push Notifications Boost Daily Engagement',
  'Send personalized push notifications based on user behavior patterns',
  'Daily active users will increase by 30% within 4 weeks',
  'Timely, relevant notifications can re-engage dormant users and encourage daily usage',
  'Users inactive for 2+ days',
  '{3}', '{8}', '{1}', '{1,7}'),
 
-('Premium Feature Preview Increases Conversions',
+(2, 3, 'Premium Feature Preview Increases Conversions',
  'Show 3-day preview of premium features to free tier users',
  'Free-to-paid conversion rate will improve from 8% to 12%',
  'Experiencing premium value firsthand creates stronger motivation to upgrade than descriptions alone',
  'Free tier users active for 14+ days',
  '{4,5}', '{2}', '{3}', '{2,5}'),
 
-('Social Proof Reduces Signup Friction',
+(3, 4, 'Social Proof Reduces Signup Friction',
  'Add testimonials and user count display on landing page',
  'Signup conversion rate will increase from 3.2% to 4.5%',
  'Social validation reduces perceived risk and builds trust with potential users',
  'Landing page visitors',
  '{6}', '{3,7}', '{5}', '{5}'),
 
-('Gamification Improves Feature Adoption',
+(1, 1, 'Gamification Improves Feature Adoption',
  'Implement achievement badges and progress tracking for key features',
  'Feature adoption rate will increase by 40% for targeted features',
  'Gamification elements tap into intrinsic motivation and make feature discovery more engaging',
@@ -126,61 +133,61 @@ INSERT INTO hypotheses (title, action, expected_outcome, rationale, user_target,
  '{7,8}', '{6}', '{1}', '{7}');
 
 -- Insert dummy experiments data
-INSERT INTO experiments (title, linked_hypotheses, plan, status, user_id) VALUES
-('A/B Test: Reduced Onboarding Steps',
+INSERT INTO experiments (user_id, project_id, title, linked_hypotheses, plan, status) VALUES
+(1, 1, 'A/B Test: Reduced Onboarding Steps',
  '{1}',
  'Split test with 50% users getting current 8-step onboarding, 50% getting new 4-step version. Track completion rates, day-7 retention, and user feedback over 4 weeks.',
- 'running', 1),
+ 'running'),
 
-('Onboarding Progress Indicator Test',
+(2, 3, 'Onboarding Progress Indicator Test',
  '{1}',
  'Test addition of visual progress bar and completion percentage. Measure impact on onboarding completion and user satisfaction scores.',
- 'planning', 2),
+ 'planning'),
 
-('Smart Push Notification Campaign',
+(3, 4, 'Smart Push Notification Campaign',
  '{2}',
  'Implement ML-based notification timing and content personalization. A/B test against current generic notifications with 10,000 user cohorts.',
- 'completed', 3),
+ 'completed'),
 
-('Premium Preview Trial',
+(4, 1, 'Premium Preview Trial',
  '{3}',
  'Automatically grant 72-hour premium access to eligible free users. Track engagement with premium features and subsequent conversion rates.',
- 'running', 4),
+ 'running'),
 
-('Conversion Funnel Optimization',
+(5, 1, 'Conversion Funnel Optimization',
  '{3}',
  'Test streamlined payment flow with guest checkout option. Compare against current multi-step process.',
- 'planning', 5),
+ 'planning'),
 
-('Landing Page Social Proof Test',
+(6, 1, 'Landing Page Social Proof Test',
  '{4}',
  'A/B test landing page with customer testimonials, logos, and live user counter vs control version. Track signup rates and user quality.',
- 'completed', 6),
+ 'completed'),
 
-('Achievement System Rollout',
+(7, 2, 'Achievement System Rollout',
  '{5}',
  'Phase 1: Implement basic badge system for 3 core features. Measure feature engagement before and after implementation.',
- 'running', 7),
+ 'running'),
 
-('Progress Tracking Dashboard',
+(8, 1, 'Progress Tracking Dashboard',
  '{5}',
  'Create user dashboard showing feature usage progress and achievements. Test impact on overall platform engagement.',
- 'planning', 8);
+ 'planning');
 
 -- Insert dummy threads data
-INSERT INTO threads (user_id, agent_type, chat_id) VALUES
-(1, 'experiment_analyst', 1001),
-(1, 'hypothesis_generator', 1002),
-(2, 'data_insights', 1003),
-(3, 'conversion_optimizer', 1004),
-(4, 'performance_analyzer', 1005),
-(2, 'user_research', 1006),
-(5, 'market_intelligence', 1007),
-(6, 'satisfaction_tracker', 1008),
-(7, 'onboarding_specialist', 1009),
-(8, 'revenue_optimizer', 1010),
-(1, 'experiment_analyst', 1011),
-(3, 'ab_test_manager', 1012);
+INSERT INTO threads (user_id, project_id, agent_type, chat_id) VALUES
+(1, 1, 'experiment_analyst', 1001),
+(1, 1, 'hypothesis_generator', 1002),
+(2, 3, 'data_insights', 1003),
+(3, 4, 'conversion_optimizer', 1004),
+(4, 1, 'performance_analyzer', 1005),
+(2, 3, 'user_research', 1006),
+(5, 1, 'market_intelligence', 1007),
+(6, 1, 'satisfaction_tracker', 1008),
+(7, 2, 'onboarding_specialist', 1009),
+(8, 1, 'revenue_optimizer', 1010),
+(1, 1, 'experiment_analyst', 1011),
+(3, 4, 'ab_test_manager', 1012);
 
 -- ==========================================
 -- SUMMARY STATISTICS
@@ -195,6 +202,7 @@ SELECT 'Accounts: ' || COUNT(*) as count FROM account;
 
 \c assets;
 SELECT 'ASSETS DATABASE SUMMARY:' as info;
+SELECT 'Projects: ' || COUNT(*) as count FROM projects;
 SELECT 'Context: ' || COUNT(*) as count FROM context;
 SELECT 'Objectives: ' || COUNT(*) as count FROM objectives;
 SELECT 'Metrics: ' || COUNT(*) as count FROM metrics;

@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  id: number;
   email: string;
   name: string;
   createdAt: Date;
@@ -7,16 +7,16 @@ export interface User {
 }
 
 export interface Objective {
-  id: string;
+  id: number;
   title: string;
   description?: string;
-  userId: string;
+  userId: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface Experiment {
-  id: string;
+  id: number;
   name: string;
   key: string;
   status:
@@ -32,7 +32,7 @@ export interface Experiment {
 }
 
 export interface Metric {
-  id: string;
+  id: number;
   name: string;
   formula: string;
   category: "Acquisition" | "Activation" | "Retention" | "Referral" | "Revenue";
@@ -43,7 +43,7 @@ export interface Metric {
 }
 
 export interface Feedback {
-  id: string;
+  id: number;
   rating: "positive" | "negative";
   comment?: string;
   assetType: "hypothesis" | "experiment" | "objective" | "metric";
@@ -54,12 +54,12 @@ export interface Feedback {
 }
 
 export interface Hypothesis {
-  id: string;
+  id: number;
+  userId: number,
   title: string;
   action: string;
   rationale: string;
   expectedOutcome: string;
-  userId: string;
   objectives: Objective[];
   experiments: Experiment[];
   metrics: Metric[];
@@ -120,9 +120,9 @@ export interface CreateFeedbackRequest {
 }
 
 export interface GetHypothesesQuery extends PaginationParams {
-  userId: string;
+  userId: number;
   search?: string;
-  objectiveId?: string;
+  objectiveId?: number;
   startDate?: string;
   endDate?: string;
 }

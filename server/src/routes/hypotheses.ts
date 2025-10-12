@@ -13,13 +13,13 @@ const router = express.Router();
 router.get("/", async (req: Request, res: Response) => {
   try {
     const query: GetHypothesesQuery = {
-      userId: req.query.userId as string,
+      userId: parseInt(req.query.userId as string),
       page: req.query.page ? parseInt(req.query.page as string) : undefined,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
       sortBy: req.query.sortBy as string,
       sortOrder: req.query.sortOrder as "asc" | "desc",
       search: req.query.search as string,
-      objectiveId: req.query.objectiveId as string,
+      objectiveId: req.query.objectiveId ? parseInt(req.query.objectiveId as string) : undefined,
       startDate: req.query.startDate as string,
       endDate: req.query.endDate as string,
     };
@@ -50,8 +50,8 @@ router.get("/", async (req: Request, res: Response) => {
 // GET /api/hypotheses/:id - Get a specific hypothesis by ID
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const userId = req.query.userId as string;
+    const id = parseInt(req.params.id as string);
+    const userId = parseInt(req.query.userId as string);
 
     if (!userId) {
       return res.status(400).json({
@@ -78,7 +78,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 // POST /api/hypotheses - Create a new hypothesis
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const userId = req.body.userId as string;
+    const userId = parseInt(req.query.userId as string);
     const hypothesisData: CreateHypothesisRequest = req.body;
 
     if (!userId) {
@@ -122,8 +122,8 @@ router.post("/", async (req: Request, res: Response) => {
 // PUT /api/hypotheses/:id - Update an existing hypothesis
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const userId = req.body.userId as string;
+    const id = parseInt(req.params.id as string);
+    const userId = parseInt(req.query.userId as string);
     const updateData: UpdateHypothesisRequest = req.body;
 
     if (!userId) {
@@ -156,8 +156,8 @@ router.put("/:id", async (req: Request, res: Response) => {
 // DELETE /api/hypotheses/:id - Delete a hypothesis
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const userId = req.query.userId as string;
+    const id = parseInt(req.params.id as string);
+    const userId = parseInt(req.query.userId as string);
 
     if (!userId) {
       return res.status(400).json({
@@ -186,7 +186,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 router.post("/:id/feedback", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.body.userId as string;
+    const userId = parseInt(req.query.userId as string);
     const feedbackData: CreateFeedbackRequest = {
       ...req.body,
       assetType: "hypothesis",

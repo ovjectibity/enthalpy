@@ -18,7 +18,7 @@ export const ormUtilities = {
    */
   toUser(row: any): User {
     return {
-      id: String(row.user_id),
+      id: Number(row.user_id),
       email: String(row.email),
       name: row.first_name,
       createdAt: new Date(row.created_at),
@@ -31,10 +31,10 @@ export const ormUtilities = {
    */
   toObjective(row: any): Objective {
     return {
-      id: String(row.id),
+      id: Number(row.id),
       title: String(row.title),
       description: row.description ? String(row.description) : undefined,
-      userId: String(row.user_id),
+      userId: Number(row.user_id),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.last_updated_at),
     };
@@ -54,7 +54,7 @@ export const ormUtilities = {
     };
 
     return {
-      id: String(row.id),
+      id: Number(row.id),
       name: String(row.title), // SQL uses 'title', interface uses 'name'
       key: String(row.id), // Using id as key since no separate key field in SQL
       status: statusMap[row.status] || "PENDING_DESIGN",
@@ -76,7 +76,7 @@ export const ormUtilities = {
     const defaultCategory: Metric["category"] = "Acquisition";
 
     return {
-      id: String(row.id),
+      id: Number(row.id),
       name: String(row.title), // SQL uses 'title', interface uses 'name'
       formula: String(row.formula),
       category: defaultCategory, // SQL schema doesn't have category field
@@ -92,12 +92,12 @@ export const ormUtilities = {
    */
   toHypothesis(row: any): Hypothesis {
     return {
-      id: String(row.id),
+      id: Number(row.id),
       title: String(row.title),
       action: String(row.action),
       rationale: String(row.rationale),
       expectedOutcome: String(row.expected_outcome),
-      userId: String(row.user_target), // SQL uses user_target as userId reference
+      userId: Number(row.user_target), // SQL uses user_target as userId reference
       objectives: [], // Empty arrays - populate separately if needed
       experiments: [],
       metrics: [],
@@ -151,7 +151,7 @@ export const queryUtilities = {
   /**
    * Fetch user by user ID
    */
-  async getUserByUserId(userId: string): Promise<User | null> {
+  async getUserByUserId(userId: number): Promise<User | null> {
     try {
       const result = await commonPool.query(
         "SELECT * FROM users WHERE user_id = $1",
@@ -176,7 +176,7 @@ export const queryUtilities = {
   /**
    * Fetch objective by ID
    */
-  async getObjectiveById(objectiveId: string): Promise<Objective | null> {
+  async getObjectiveById(objectiveId: number): Promise<Objective | null> {
     try {
       const result = await assetsPool.query(
         "SELECT * FROM objectives WHERE id = $1",
@@ -197,7 +197,7 @@ export const queryUtilities = {
   /**
    * Fetch objectives by user ID
    */
-  async getObjectivesByUserId(userId: string): Promise<Objective[]> {
+  async getObjectivesByUserId(userId: number): Promise<Objective[]> {
     try {
       const result = await assetsPool.query(
         "SELECT * FROM objectives WHERE user_id = $1 ORDER BY created_at DESC",
@@ -218,7 +218,7 @@ export const queryUtilities = {
   /**
    * Fetch experiment by ID
    */
-  async getExperimentById(experimentId: string): Promise<Experiment | null> {
+  async getExperimentById(experimentId: number): Promise<Experiment | null> {
     try {
       const result = await assetsPool.query(
         "SELECT * FROM experiments WHERE id = $1",
@@ -239,7 +239,7 @@ export const queryUtilities = {
   /**
    * Fetch experiments by user ID
    */
-  async getExperimentsByUserId(userId: string): Promise<Experiment[]> {
+  async getExperimentsByUserId(userId: number): Promise<Experiment[]> {
     try {
       const result = await assetsPool.query(
         "SELECT * FROM experiments WHERE user_id = $1 ORDER BY created_at DESC",
@@ -260,7 +260,7 @@ export const queryUtilities = {
   /**
    * Fetch metric by ID
    */
-  async getMetricById(metricId: string): Promise<Metric | null> {
+  async getMetricById(metricId: number): Promise<Metric | null> {
     try {
       const result = await assetsPool.query(
         "SELECT * FROM metrics WHERE id = $1",
@@ -282,7 +282,7 @@ export const queryUtilities = {
    * Fetch metrics by user ID (via hypothesis relationship)
    * Note: Since metrics don't have direct user_id, we join through hypotheses
    */
-  async getMetricsByUserId(userId: string): Promise<Metric[]> {
+  async getMetricsByUserId(userId: number): Promise<Metric[]> {
     try {
       const result = await assetsPool.query(
         `
@@ -310,7 +310,7 @@ export const queryUtilities = {
   /**
    * Fetch hypothesis by ID
    */
-  async getHypothesisById(hypothesisId: string): Promise<Hypothesis | null> {
+  async getHypothesisById(hypothesisId: number): Promise<Hypothesis | null> {
     try {
       const result = await assetsPool.query(
         "SELECT * FROM hypotheses WHERE id = $1",
@@ -331,7 +331,7 @@ export const queryUtilities = {
   /**
    * Fetch hypotheses by user ID (using email as user_target)
    */
-  async getHypothesesByUserId(userId: string): Promise<Hypothesis[]> {
+  async getHypothesesByUserId(userId: number): Promise<Hypothesis[]> {
     try {
       // First, get user's email from common database
       const userResult = await commonPool.query(
@@ -361,7 +361,7 @@ export const queryUtilities = {
   /**
    * Delete an existing hypothesis
    */
-  async deleteHypothesis(hypothesisId: string): Promise<boolean> {
+  async deleteHypothesis(hypothesisId: number): Promise<boolean> {
     try {
       // Check if hypothesis exists first
       const checkResult = await assetsPool.query(
@@ -393,7 +393,7 @@ export const queryUtilities = {
    * Create a new hypothesis
    */
   async createHypothesis(
-    userId: string,
+    userId: number,
     hypothesisData: Hypothesis,
   ): Promise<Hypothesis> {
     try {
@@ -435,7 +435,7 @@ export const queryUtilities = {
   },
 
   async updateHypothesis(
-    hypothesisId: string,
+    hypothesisId: number,
     hypothesisData: Hypothesis,
   ): Promise<Hypothesis | null> {
     const assetsPool = DatabaseConnections.getAssetsPool();
@@ -491,7 +491,7 @@ export const batchQueryUtilities = {
   /**
    * Get all user assets by user ID
    */
-  async getAllAssetsByUserId(userId: string): Promise<{
+  async getAllAssetsByUserId(userId: number): Promise<{
     user: User | null;
     objectives: Objective[];
     experiments: Experiment[];
