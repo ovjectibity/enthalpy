@@ -22,7 +22,7 @@ export class DatabaseConnections {
       password: process.env.DB_PASSWORD,
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT),
-      database: "user_assets",
+      database: "assets",
       max: 20,
       idleTimeoutMillis: 30000,
     });
