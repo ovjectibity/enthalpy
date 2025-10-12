@@ -4,7 +4,7 @@ import {
 } from "@anthropic-ai/sdk/resources";
 import { exec, execSync } from "child_process";
 import * as fs from "fs";
-const sharp = require("sharp");
+import sharp from "sharp";
 
 export interface Tool {
   act: (
