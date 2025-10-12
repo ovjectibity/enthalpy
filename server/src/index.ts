@@ -8,6 +8,7 @@ import hypothesesRoutes from "./routes/hypotheses.js";
 
 const app = express();
 const port = process.env.APP_PORT;
+console.log("Running app at port", port);
 
 // Middleware
 // app.use(cors()); // TODO: Enable after installing cors

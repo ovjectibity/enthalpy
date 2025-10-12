@@ -12,9 +12,6 @@ import {
 } from "@enthalpy/shared";
 import { queryUtilities, ormUtilities } from "./orm.js";
 
-import { DatabaseConnections } from "./dbconnect.js";
-DatabaseConnections.initializePools();
-
 export class HypothesesService {
   static async getHypothesesByUser(
     query: GetHypothesesQuery,

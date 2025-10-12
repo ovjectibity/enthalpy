@@ -6,10 +6,10 @@ import {
   User,
 } from "@enthalpy/shared";
 import { DatabaseConnections } from "./dbconnect.js";
+import 'dotenv/config';
 
 DatabaseConnections.initializePools();
-const assetsPool = DatabaseConnections.getAssetsPool();
-const commonPool = DatabaseConnections.getCommonPool();
+const commonPool = DatabaseConnections.getDBPool();
 
 // ORM conversion functions
 export const ormUtilities = {
@@ -154,7 +154,7 @@ export const queryUtilities = {
   async getUserByUserId(userId: number): Promise<User | null> {
     try {
       const result = await commonPool.query(
-        "SELECT * FROM users WHERE user_id = $1",
+        "SELECT * FROM common.users WHERE user_id = $1",
         [userId],
       );
 
@@ -178,8 +178,8 @@ export const queryUtilities = {
    */
   async getObjectiveById(objectiveId: number): Promise<Objective | null> {
     try {
-      const result = await assetsPool.query(
-        "SELECT * FROM objectives WHERE id = $1",
+      const result = await commonPool.query(
+        "SELECT * FROM assets.objectives WHERE id = $1",
         [objectiveId],
       );
 
@@ -199,8 +199,8 @@ export const queryUtilities = {
    */
   async getObjectivesByUserId(userId: number): Promise<Objective[]> {
     try {
-      const result = await assetsPool.query(
-        "SELECT * FROM objectives WHERE user_id = $1 ORDER BY created_at DESC",
+      const result = await commonPool.query(
+        "SELECT * FROM assets.objectives WHERE user_id = $1 ORDER BY created_at DESC",
         [userId],
       );
 
@@ -220,8 +220,8 @@ export const queryUtilities = {
    */
   async getExperimentById(experimentId: number): Promise<Experiment | null> {
     try {
-      const result = await assetsPool.query(
-        "SELECT * FROM experiments WHERE id = $1",
+      const result = await commonPool.query(
+        "SELECT * FROM assets.experiments WHERE id = $1",
         [experimentId],
       );
 
@@ -241,8 +241,8 @@ export const queryUtilities = {
    */
   async getExperimentsByUserId(userId: number): Promise<Experiment[]> {
     try {
-      const result = await assetsPool.query(
-        "SELECT * FROM experiments WHERE user_id = $1 ORDER BY created_at DESC",
+      const result = await commonPool.query(
+        "SELECT * FROM assets.experiments WHERE user_id = $1 ORDER BY created_at DESC",
         [userId],
       );
 
@@ -262,8 +262,8 @@ export const queryUtilities = {
    */
   async getMetricById(metricId: number): Promise<Metric | null> {
     try {
-      const result = await assetsPool.query(
-        "SELECT * FROM metrics WHERE id = $1",
+      const result = await commonPool.query(
+        "SELECT * FROM assets.metrics WHERE id = $1",
         [metricId],
       );
 
@@ -284,10 +284,10 @@ export const queryUtilities = {
    */
   async getMetricsByUserId(userId: number): Promise<Metric[]> {
     try {
-      const result = await assetsPool.query(
+      const result = await commonPool.query(
         `
-        SELECT m.* FROM metrics m
-        JOIN hypotheses h ON m.id = ANY(h.linked_metrics)
+        SELECT m.* FROM assets.metrics m
+        JOIN assets.hypotheses h ON m.id = ANY(h.linked_metrics)
         WHERE h.user_id = $1
         ORDER BY m.created_at DESC
       `,
@@ -310,8 +310,8 @@ export const queryUtilities = {
    */
   async getHypothesisById(hypothesisId: number): Promise<Hypothesis | null> {
     try {
-      const result = await assetsPool.query(
-        "SELECT * FROM hypotheses WHERE id = $1",
+      const result = await commonPool.query(
+        "SELECT * FROM assets.hypotheses WHERE id = $1",
         [hypothesisId],
       );
 
@@ -331,8 +331,8 @@ export const queryUtilities = {
    */
   async getHypothesesByUserId(userId: number): Promise<Hypothesis[]> {
     try {
-      const result = await assetsPool.query(
-        "SELECT * FROM hypotheses WHERE user_id = $1 ORDER BY created_at DESC",
+      const result = await commonPool.query(
+        "SELECT * FROM assets.hypotheses WHERE user_id = $1 ORDER BY created_at DESC",
         [userId],
       );
 
@@ -349,8 +349,8 @@ export const queryUtilities = {
   async deleteHypothesis(hypothesisId: number): Promise<boolean> {
     try {
       // Check if hypothesis exists first
-      const checkResult = await assetsPool.query(
-        "SELECT id FROM hypotheses WHERE id = $1",
+      const checkResult = await commonPool.query(
+        "SELECT id FROM assets.hypotheses WHERE id = $1",
         [hypothesisId],
       );
 
@@ -362,8 +362,8 @@ export const queryUtilities = {
       // For example, update experiments that link to this hypothesis
 
       // Delete the hypothesis
-      const result = await assetsPool.query(
-        "DELETE FROM hypotheses WHERE id = $1",
+      const result = await commonPool.query(
+        "DELETE FROM assets.hypotheses WHERE id = $1",
         [hypothesisId],
       );
 
@@ -383,9 +383,9 @@ export const queryUtilities = {
   ): Promise<Hypothesis> {
     try {
       // Insert hypothesis into assets database
-      const result = await assetsPool.query(
+      const result = await commonPool.query(
         `
-        INSERT INTO hypotheses (
+        INSERT INTO assets.hypotheses (
           title,
           action,
           expected_outcome,
@@ -423,13 +423,11 @@ export const queryUtilities = {
     hypothesisId: number,
     hypothesisData: Hypothesis,
   ): Promise<Hypothesis | null> {
-    const assetsPool = DatabaseConnections.getAssetsPool();
-
     try {
       // Replace all fields with new data (except ID and timestamps)
-      const result = await assetsPool.query(
+      const result = await commonPool.query(
         `
-          UPDATE hypotheses
+          UPDATE assets.hypotheses
           SET
             title = $1,
             action = $2,

@@ -6,10 +6,10 @@
 -- COMMON DATABASE DATA
 -- ==========================================
 
-\c common;
+\c enthalpy_production;
 
 -- Insert dummy groups data
-INSERT INTO groups (name, domain, industry, address) VALUES
+INSERT INTO common.groups (name, domain, industry, address) VALUES
 ('TechCorp Solutions', 'techcorp.com', 'Technology', '123 Silicon Valley Blvd, San Francisco, CA 94102'),
 ('Healthcare Innovations', 'healthinnovate.com', 'Healthcare', '456 Medical Center Dr, Boston, MA 02115'),
 ('FinanceFirst', 'financefirst.com', 'Financial Services', '789 Wall Street, New York, NY 10005'),
@@ -20,7 +20,7 @@ INSERT INTO groups (name, domain, industry, address) VALUES
 ('ConsultingExperts', 'consultexperts.com', 'Consulting', '258 Business Center, Seattle, WA 98101');
 
 -- Insert dummy users data
-INSERT INTO users (first_name, last_name, email, signedup_at, email_verified_at, org_role, group_id) VALUES
+INSERT INTO common.users (first_name, last_name, email, signedup_at, email_verified_at, org_role, group_id) VALUES
 ('John', 'Doe', 'john.doe@techcorp.com', NOW() - INTERVAL '30 days', NOW() - INTERVAL '29 days', 'Admin', 1),
 ('Jane', 'Smith', 'jane.smith@techcorp.com', NOW() - INTERVAL '25 days', NOW() - INTERVAL '24 days', 'Manager', 1),
 ('Mike', 'Johnson', 'mike.johnson@healthinnovate.com', NOW() - INTERVAL '20 days', NOW() - INTERVAL '19 days', 'Developer', 2),
@@ -35,7 +35,7 @@ INSERT INTO users (first_name, last_name, email, signedup_at, email_verified_at,
 ('Amy', 'Harris', 'amy.harris@financefirst.com', NOW() - INTERVAL '1 day', NULL, 'Business Analyst', 3);
 
 -- Insert dummy account data
-INSERT INTO account (user_id, password, login_type) VALUES
+INSERT INTO common.account (user_id, password, login_type) VALUES
 ('1', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj8xqKqf9/Jy', 'email'),
 ('2', '$2b$12$5f8yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj8xqKqf9/Jy3c', 'email'),
 ('3', '$2b$12$8c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj8xqKqf9/Jy5g', 'google'),
@@ -53,17 +53,15 @@ INSERT INTO account (user_id, password, login_type) VALUES
 -- ASSETS DATABASE DATA
 -- ==========================================
 
-\c assets;
-
 -- Insert dummy projects data
-INSERT INTO projects (user_id, description) VALUES
+INSERT INTO assets.projects (user_id, description) VALUES
 (1, 'Project Alpha: User Engagement Initiative'),
 (1, 'Project Beta: Onboarding Flow Redesign'),
 (2, 'Project Gamma: Churn Reduction Strategy'),
 (3, 'Project Delta: Conversion Optimization');
 
 -- Insert dummy context data
-INSERT INTO context (user_id, project_id, title, description, type) VALUES
+INSERT INTO assets.context (user_id, project_id, title, description, type) VALUES
 (1, 1, 'Mobile App Usage Trends', 'Analysis of user behavior patterns on mobile applications across different demographics', 'Market Research'),
 (1, 1, 'Customer Satisfaction Survey Results', 'Quarterly customer satisfaction metrics and feedback analysis', 'Survey Data'),
 (2, 3, 'Competitor Analysis Q4 2024', 'Comprehensive analysis of competitor strategies and market positioning', 'Competitive Intelligence'),
@@ -74,7 +72,7 @@ INSERT INTO context (user_id, project_id, title, description, type) VALUES
 (6, 1, 'Product Usage Analytics', 'Detailed analytics on feature adoption and user engagement', 'Product Analytics');
 
 -- Insert dummy objectives data
-INSERT INTO objectives (user_id, project_id, title, description) VALUES
+INSERT INTO assets.objectives (user_id, project_id, title, description) VALUES
 (1, 1, 'Increase User Engagement', 'Improve daily active users by 25% through enhanced user experience and feature optimization'),
 (2, 3, 'Reduce Customer Churn', 'Decrease monthly churn rate from 8% to 5% by improving onboarding and support'),
 (3, 4, 'Optimize Conversion Funnel', 'Increase conversion rate from trial to paid subscription by 15%'),
@@ -85,7 +83,7 @@ INSERT INTO objectives (user_id, project_id, title, description) VALUES
 (8, 1, 'Increase Revenue Per User', 'Improve average revenue per user (ARPU) by 20% through upselling');
 
 -- Insert dummy metrics data
-INSERT INTO metrics (user_id, project_id, title, description, formula) VALUES
+INSERT INTO assets.metrics (user_id, project_id, title, description, formula) VALUES
 (1, 1, 'Daily Active Users', 'Number of unique users who engage with the platform daily', 'COUNT(DISTINCT user_id WHERE last_activity >= CURRENT_DATE)'),
 (1, 1, 'Monthly Recurring Revenue', 'Predictable revenue generated from subscriptions each month', 'SUM(subscription_amount WHERE status = active)'),
 (2, 3, 'Customer Acquisition Cost', 'Average cost to acquire a new paying customer', 'total_marketing_spend / new_customers_acquired'),
@@ -96,7 +94,7 @@ INSERT INTO metrics (user_id, project_id, title, description, formula) VALUES
 (6, 1, 'Customer Satisfaction Score', 'Average satisfaction rating from customer surveys', 'AVG(satisfaction_rating) FROM customer_surveys');
 
 -- Insert dummy hypotheses data
-INSERT INTO hypotheses (user_id, project_id, title, action, expected_outcome, rationale, user_target, linked_experiments, linked_context, linked_objectives, linked_metrics) VALUES
+INSERT INTO assets.hypotheses (user_id, project_id, title, action, expected_outcome, rationale, user_target, linked_experiments, linked_context, linked_objectives, linked_metrics) VALUES
 (1, 1, 'Simplified Onboarding Increases Retention',
  'Reduce onboarding steps from 8 to 4 and add progress indicators',
  'Day-7 retention rate will increase from 45% to 60%',
@@ -133,7 +131,7 @@ INSERT INTO hypotheses (user_id, project_id, title, action, expected_outcome, ra
  '{7,8}', '{6}', '{1}', '{7}');
 
 -- Insert dummy experiments data
-INSERT INTO experiments (user_id, project_id, title, linked_hypotheses, plan, status) VALUES
+INSERT INTO assets.experiments (user_id, project_id, title, linked_hypotheses, plan, status) VALUES
 (1, 1, 'A/B Test: Reduced Onboarding Steps',
  '{1}',
  'Split test with 50% users getting current 8-step onboarding, 50% getting new 4-step version. Track completion rates, day-7 retention, and user feedback over 4 weeks.',
@@ -175,7 +173,7 @@ INSERT INTO experiments (user_id, project_id, title, linked_hypotheses, plan, st
  'planning');
 
 -- Insert dummy threads data
-INSERT INTO threads (user_id, project_id, agent_type, chat_id) VALUES
+INSERT INTO assets.threads (user_id, project_id, agent_type, chat_id) VALUES
 (1, 1, 'experiment_analyst', 1001),
 (1, 1, 'hypothesis_generator', 1002),
 (2, 3, 'data_insights', 1003),
@@ -194,20 +192,18 @@ INSERT INTO threads (user_id, project_id, agent_type, chat_id) VALUES
 -- ==========================================
 
 -- Display summary of inserted data
-\c common;
 SELECT 'COMMON DATABASE SUMMARY:' as info;
-SELECT 'Groups: ' || COUNT(*) as count FROM groups;
-SELECT 'Users: ' || COUNT(*) as count FROM users;
-SELECT 'Accounts: ' || COUNT(*) as count FROM account;
+SELECT 'Groups: ' || COUNT(*) as count FROM common.groups;
+SELECT 'Users: ' || COUNT(*) as count FROM common.users;
+SELECT 'Accounts: ' || COUNT(*) as count FROM common.account;
 
-\c assets;
 SELECT 'ASSETS DATABASE SUMMARY:' as info;
-SELECT 'Projects: ' || COUNT(*) as count FROM projects;
-SELECT 'Context: ' || COUNT(*) as count FROM context;
-SELECT 'Objectives: ' || COUNT(*) as count FROM objectives;
-SELECT 'Metrics: ' || COUNT(*) as count FROM metrics;
-SELECT 'Hypotheses: ' || COUNT(*) as count FROM hypotheses;
-SELECT 'Experiments: ' || COUNT(*) as count FROM experiments;
-SELECT 'Threads: ' || COUNT(*) as count FROM threads;
+SELECT 'Projects: ' || COUNT(*) as count FROM assets.projects;
+SELECT 'Context: ' || COUNT(*) as count FROM assets.context;
+SELECT 'Objectives: ' || COUNT(*) as count FROM assets.objectives;
+SELECT 'Metrics: ' || COUNT(*) as count FROM assets.metrics;
+SELECT 'Hypotheses: ' || COUNT(*) as count FROM assets.hypotheses;
+SELECT 'Experiments: ' || COUNT(*) as count FROM assets.experiments;
+SELECT 'Threads: ' || COUNT(*) as count FROM assets.threads;
 
 SELECT 'Data insertion completed successfully!' as status;
