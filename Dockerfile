@@ -41,16 +41,20 @@ RUN if [ "$COMPUTER_USE_SETUP" = "1" ]; then \
 WORKDIR /app
 
 # Copy package.json files for both client and server to leverage Docker's cache
+COPY package.json package-lock.json* ./
 COPY server/package.json server/package-lock.json* ./server/
 COPY client/package.json client/package-lock.json* ./client/
 
-# Install server dependencies
-WORKDIR /app/server
+# Install dependencies at root
 RUN npm install
 
+# Install server dependencies
+# WORKDIR /app/server
+# RUN npm install
+
 # Install client dependencies
-WORKDIR /app/client
-RUN npm install
+# WORKDIR /app/client
+# RUN npm install
 
 # Copy source code for both client and server
 WORKDIR /app
