@@ -24,7 +24,7 @@ const useHypotheses = (): UseHypothesesResult => {
         }
         const data = await response.json();
         if (data.success) {
-          setHypothesesList(data.hypotheses);
+          setHypothesesList(data.data);
         } else {
           setError(data.error || "Unknown error fetching hypotheses.");
           console.error("Error fetching hypotheses:", data.error);

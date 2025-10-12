@@ -49,7 +49,7 @@ const HypothesesView: React.FC = () => {
               <label className="detail-label">Expected Outcome</label>
               <Input
                 className="detail-input"
-                value={item.expected_outcome}
+                value={item.expectedOutcome}
                 placeholder="What do you expect to happen?"
                 readOnly
               />
@@ -97,7 +97,7 @@ const HypothesesView: React.FC = () => {
 
             <div className="detail-section">
               <HyperlistView
-                items={item.contextItems}
+                items={item.contextItems ? item.contextItems : []}
                 title="Context Used"
                 showDescription={false}
                 showStatus={true}
