@@ -68,6 +68,18 @@ export interface Hypothesis {
   updatedAt: Date;
 }
 
+export interface Threads {
+  id: number,
+  index: number,
+  user_id: number
+  project_id: number,
+  role: "agent" | "user" | "tool_result"
+  message_type: "static" | "thinking" | "tool-use" | "enth-actions";
+  message: string
+  timestamp: Date;
+  agent_name: string;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   success: boolean;

@@ -11,9 +11,20 @@ services:
       - ./db-init-scripts:/docker-entrypoint-initdb.d # Correct path
       - postgres_data:/var/lib/postgresql/data
 
+  mongodb:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/var/lib/mongodb/data
+
   enthalpy_app:
     depends_on:
       - postgresdb
+      - mongodb
     build: ./
     restart: unless-stopped
     ports:
@@ -28,3 +39,4 @@ services:
 
 volumes:
   postgres_data:
+  mongodb_data:
