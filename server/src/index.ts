@@ -5,10 +5,26 @@ import { fileURLToPath } from "url"; // Import for ES Modules
 import { FlowGraphGenerator } from "./services/flowgraph.js";
 import { ComputerTool, Tool } from "./services/tools.js";
 import hypothesesRoutes from "./routes/hypotheses.js";
+import { threadsRouter } from "./routes/threads.js";
+import { MongoDBConnections } from "./services/mongoConnect.js";
 
 const app = express();
 const port = process.env.APP_PORT;
 console.log("Running app at port", port);
+
+// Initialize MongoDB connection
+async function initializeMongoDB() {
+  try {
+    await MongoDBConnections.initializeConnection();
+    console.log("MongoDB initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize MongoDB:", error);
+    console.log("Continuing without MongoDB...");
+  }
+}
+
+// Initialize MongoDB on startup
+initializeMongoDB();
 
 // Middleware
 // app.use(cors()); // TODO: Enable after installing cors
@@ -22,6 +38,7 @@ const __dirname = path.dirname(__filename);
 
 // Routes
 app.use("/api/hypotheses", hypothesesRoutes);
+app.use("/api/threads", threadsRouter);
 
 app.get("/generate_flow_graph", (_req, res) => {
   const tools = new Map<string, Tool>();
@@ -65,4 +82,27 @@ app.use((_req, res) => {
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\nShutting down gracefully...');
+  try {
+    await MongoDBConnections.closeConnection();
+    console.log('MongoDB connection closed');
+  } catch (error) {
+    console.error('Error closing MongoDB connection:', error);
+  }
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\nShutting down gracefully...');
+  try {
+    await MongoDBConnections.closeConnection();
+    console.log('MongoDB connection closed');
+  } catch (error) {
+    console.error('Error closing MongoDB connection:', error);
+  }
+  process.exit(0);
 });

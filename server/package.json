@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc && cp -r src/prompts dist/ && mkdir -p client_dist && rm -rf ./client_dist/* && mv ../client/build ./client_dist/",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "mongo-init": "ts-node ../mongo-init.ts",
+    "mongo-init:compiled": "node dist/services/mongoInit.js",
+    "test-mongo": "ts-node test-mongo.ts"
   },
   "keywords": [],
   "author": "",
