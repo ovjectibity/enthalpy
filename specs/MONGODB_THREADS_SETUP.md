@@ -157,8 +157,9 @@ npm run test-mongo
 
 ```typescript
 import { ThreadsService } from './services/threadsService.js';
+import { Threads } from '@enthalpy/shared';
 
-// Create a thread
+// Create a thread (using Omit<Threads, 'id'> type)
 const result = await ThreadsService.createThread({
   index: 0,
   user_id: 1,
@@ -166,10 +167,11 @@ const result = await ThreadsService.createThread({
   role: 'user',
   message_type: 'static',
   message: 'Hello, how can I help?',
-  agent_name: 'User'
+  agent_name: 'User',
+  timestamp: new Date()
 });
 
-// Get threads with pagination
+// Get threads with pagination (uses shared Threads interface for type safety)
 const threads = await ThreadsService.getAllThreads({
   user_id: 1,
   project_id: 1,
@@ -179,7 +181,7 @@ const threads = await ThreadsService.getAllThreads({
   sortOrder: 'desc'
 });
 
-// Update a thread
+// Update a thread (using Partial<Omit<Threads, 'id'>> type)
 const updated = await ThreadsService.updateThread(1, {
   message: 'Updated message',
   message_type: 'thinking'
@@ -222,14 +224,21 @@ The initialization script creates 15 sample threads demonstrating:
 - Various roles (user, agent, tool_result)
 - Realistic conversation flows
 
-## 🛠️ Integration with Server
+## 🛠️ Type Safety & Integration
 
-The MongoDB service is integrated into the main server:
+The service is built with type safety in mind:
 
+### **Simplified Type Definitions**
+- **CreateThreadRequest**: `Omit<Threads, 'id'>` - Uses shared interface minus ID
+- **UpdateThreadRequest**: `Partial<Omit<Threads, 'id'>>` - Partial updates without ID
+- **GetThreadsQuery**: Extends `PaginationParams` with optional Threads fields
+
+### **Integration with Server**
 1. **Automatic Initialization**: MongoDB connection is established on server startup
 2. **Graceful Shutdown**: Connections are properly closed on server termination
 3. **Error Handling**: Server continues running even if MongoDB is unavailable
 4. **Route Integration**: Threads API is mounted at `/api/threads`
+5. **Shared Types**: Uses the same Threads interface across client and server
 
 ## 🔧 Development Workflow
 
@@ -237,10 +246,11 @@ The MongoDB service is integrated into the main server:
 
 1. **Update Schema**: Modify the `Threads` interface in `shared/src/types/types.ts`
 2. **Update Model**: Modify `threadsModel.ts` to include new fields
-3. **Update Service**: Add new methods to `threadsService.ts`
-4. **Add Routes**: Create new endpoints in `routes/threads.ts`
-5. **Add Validation**: Update request validation in routes
-6. **Update Tests**: Add tests for new functionality
+3. **Automatic Type Propagation**: Service and routes automatically inherit new types
+4. **Update Validation**: Add validation for new fields in routes (if needed)
+5. **Update Tests**: Add tests for new functionality
+
+**Note**: The simplified type approach means most changes only require updating the shared `Threads` interface, and the service will automatically use the correct types.
 
 ### Testing Changes
 
@@ -338,6 +348,23 @@ npm run test-mongo
 4. **Monitoring Setup**: Implement logging and metrics
 5. **Backup Strategy**: Set up automated backups
 
+## 🎯 Benefits of Simplified Type Approach
+
+### **Reduced Code Duplication**
+- No custom interfaces that duplicate shared types
+- Single source of truth for data structure
+- Automatic type propagation when shared interface changes
+
+### **Type Safety**
+- Compile-time checks ensure API compatibility
+- IntelliSense support across the entire stack
+- Reduced runtime errors from type mismatches
+
+### **Maintainability**
+- Changes to data structure only need to be made in one place
+- Less boilerplate code to maintain
+- Easier onboarding for new developers
+
 ---
 
-This setup provides a robust, production-ready MongoDB service for managing conversation threads in your Enthalpy project. The service includes comprehensive error handling, validation, and documentation to ensure reliable operation.
+This setup provides a robust, production-ready MongoDB service for managing conversation threads in your Enthalpy project. The service uses a simplified type approach that leverages your shared interfaces, reducing code duplication while maintaining full type safety.

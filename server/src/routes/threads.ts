@@ -1,7 +1,15 @@
 import express from 'express';
 import { ThreadsService, CreateThreadRequest, UpdateThreadRequest, GetThreadsQuery } from '../services/threadsService.js';
+import { Threads } from '@enthalpy/shared';
 
 const router = express.Router();
+
+// Validation utilities
+const isValidRole = (role: string): role is Threads['role'] =>
+  ['agent', 'user', 'tool_result'].includes(role);
+
+const isValidMessageType = (messageType: string): messageType is Threads['message_type'] =>
+  ['static', 'thinking', 'tool-use', 'enth-actions'].includes(messageType);
 
 // GET /api/threads - Get all threads with filtering and pagination
 router.get('/', async (req, res) => {
@@ -9,8 +17,8 @@ router.get('/', async (req, res) => {
     const query: GetThreadsQuery = {
       user_id: req.query.user_id ? Number(req.query.user_id) : undefined,
       project_id: req.query.project_id ? Number(req.query.project_id) : undefined,
-      role: req.query.role as "agent" | "user" | "tool_result" | undefined,
-      message_type: req.query.message_type as "static" | "thinking" | "tool-use" | "enth-actions" | undefined,
+      role: req.query.role as Threads['role'] | undefined,
+      message_type: req.query.message_type as Threads['message_type'] | undefined,
       agent_name: req.query.agent_name as string | undefined,
       search: req.query.search as string | undefined,
       startDate: req.query.startDate as string | undefined,
@@ -115,20 +123,17 @@ router.post('/', async (req, res) => {
     }
 
     // Validate enum values
-    const validRoles = ['agent', 'user', 'tool_result'];
-    const validMessageTypes = ['static', 'thinking', 'tool-use', 'enth-actions'];
-
-    if (!validRoles.includes(req.body.role)) {
+    if (!isValidRole(req.body.role)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+        error: 'Invalid role. Must be one of: agent, user, tool_result'
       });
     }
 
-    if (!validMessageTypes.includes(req.body.message_type)) {
+    if (!isValidMessageType(req.body.message_type)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid message_type. Must be one of: ${validMessageTypes.join(', ')}`
+        error: 'Invalid message_type. Must be one of: static, thinking, tool-use, enth-actions'
       });
     }
 
@@ -175,20 +180,17 @@ router.put('/:id', async (req, res) => {
     }
 
     // Validate enum values if provided
-    const validRoles = ['agent', 'user', 'tool_result'];
-    const validMessageTypes = ['static', 'thinking', 'tool-use', 'enth-actions'];
-
-    if (req.body.role && !validRoles.includes(req.body.role)) {
+    if (req.body.role && !isValidRole(req.body.role)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+        error: 'Invalid role. Must be one of: agent, user, tool_result'
       });
     }
 
-    if (req.body.message_type && !validMessageTypes.includes(req.body.message_type)) {
+    if (req.body.message_type && !isValidMessageType(req.body.message_type)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid message_type. Must be one of: ${validMessageTypes.join(', ')}`
+        error: 'Invalid message_type. Must be one of: static, thinking, tool-use, enth-actions'
       });
     }
 

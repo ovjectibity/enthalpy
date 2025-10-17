@@ -1,54 +1,15 @@
 import { Threads, ApiResponse, PaginatedResponse, PaginationParams } from '@enthalpy/shared';
-import { ThreadsModel, IThreadsDocument } from './threadsModel.js';
+import { ThreadsModel, documentToThreads } from './threadsModel.js';
 import { MongoDBConnections } from './mongoConnect.js';
 
-// Utility function to convert MongoDB document to Threads interface
-function documentToThreads(doc: any): Threads {
-  return {
-    id: doc.id,
-    index: doc.index,
-    user_id: doc.user_id,
-    project_id: doc.project_id,
-    role: doc.role,
-    message_type: doc.message_type,
-    message: doc.message,
-    timestamp: doc.timestamp,
-    agent_name: doc.agent_name
-  };
-}
-
-export interface CreateThreadRequest {
-  index: number;
-  user_id: number;
-  project_id: number;
-  role: "agent" | "user" | "tool_result";
-  message_type: "static" | "thinking" | "tool-use" | "enth-actions";
-  message: string;
-  agent_name: string;
-  timestamp?: Date;
-}
-
-export interface UpdateThreadRequest {
-  index?: number;
-  user_id?: number;
-  project_id?: number;
-  role?: "agent" | "user" | "tool_result";
-  message_type?: "static" | "thinking" | "tool-use" | "enth-actions";
-  message?: string;
-  agent_name?: string;
-  timestamp?: Date;
-}
-
-export interface GetThreadsQuery extends PaginationParams {
-  user_id?: number;
-  project_id?: number;
-  role?: "agent" | "user" | "tool_result";
-  message_type?: "static" | "thinking" | "tool-use" | "enth-actions";
-  agent_name?: string;
+// Type definitions using shared Threads interface
+export type CreateThreadRequest = Omit<Threads, 'id' | 'timestamp'> & { timestamp?: Date };
+export type UpdateThreadRequest = Partial<Omit<Threads, 'id'>>;
+export type GetThreadsQuery = PaginationParams & Partial<Omit<Threads, 'timestamp'>> & {
   startDate?: string;
   endDate?: string;
   search?: string;
-}
+};
 
 export class ThreadsService {
 
@@ -112,7 +73,7 @@ export class ThreadsService {
 
       return {
         success: true,
-        data: threads.map((thread: any) => documentToThreads(thread)),
+        data: threads.map(documentToThreads),
         pagination: {
           page,
           limit,
@@ -155,7 +116,7 @@ export class ThreadsService {
 
       return {
         success: true,
-        data: documentToThreads(thread as any)
+        data: documentToThreads(thread)
       };
 
     } catch (error) {
@@ -247,7 +208,7 @@ export class ThreadsService {
 
       return {
         success: true,
-        data: documentToThreads(updatedThread as any),
+        data: documentToThreads(updatedThread),
         message: 'Thread updated successfully'
       };
 

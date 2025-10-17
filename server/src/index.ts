@@ -7,6 +7,7 @@ import { ComputerTool, Tool } from "./services/tools.js";
 import hypothesesRoutes from "./routes/hypotheses.js";
 import { threadsRouter } from "./routes/threads.js";
 import { MongoDBConnections } from "./services/mongoConnect.js";
+import {MongoDBInitializer} from "./services/mongoInit.js"
 
 const app = express();
 const port = process.env.APP_PORT;
@@ -15,7 +16,9 @@ console.log("Running app at port", port);
 // Initialize MongoDB connection
 async function initializeMongoDB() {
   try {
-    await MongoDBConnections.initializeConnection();
+    await MongoDBInitializer.initializeDatabase(
+      process.env.SEED_MONGO_COLLECTION &&
+      process.env.SEED_MONGO_COLLECTION === "1" ? true : false);
     console.log("MongoDB initialized successfully");
   } catch (error) {
     console.error("Failed to initialize MongoDB:", error);

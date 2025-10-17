@@ -3,7 +3,7 @@ import { ThreadsModel } from './threadsModel.js';
 import { Threads } from '@enthalpy/shared';
 
 export class MongoDBInitializer {
-  static async initializeDatabase(): Promise<void> {
+  static async initializeDatabase(seedCollection: boolean): Promise<void> {
     try {
       console.log('Starting MongoDB initialization...');
 
@@ -13,7 +13,7 @@ export class MongoDBInitializer {
 
       // Check if threads collection already has data
       const existingThreadsCount = await ThreadsModel.countDocuments();
-      if (existingThreadsCount > 0) {
+      if (existingThreadsCount > 0 || seedCollection === false) {
         console.log(`Threads collection already has ${existingThreadsCount} documents. Skipping initialization.`);
         return;
       }
@@ -228,7 +228,7 @@ export class MongoDBInitializer {
       }
 
       // Reinitialize with sample data
-      await this.initializeDatabase();
+      await this.initializeDatabase(true);
 
       console.log('Database reset completed successfully');
 
@@ -297,7 +297,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   switch (command) {
     case 'init':
-      MongoDBInitializer.initializeDatabase()
+      MongoDBInitializer.initializeDatabase(false)
         .then(() => {
           console.log('Initialization completed successfully');
           process.exit(0);

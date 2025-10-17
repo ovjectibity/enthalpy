@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 import { Threads } from '@enthalpy/shared';
 
 // Create a separate interface for the MongoDB document
@@ -13,6 +13,11 @@ export interface IThreadsDocument extends Document {
   message: string;
   timestamp: Date;
   agent_name: string;
+}
+
+// Interface for static methods
+interface IThreadsModel extends Model<IThreadsDocument> {
+  toThreads(doc: any): Threads;
 }
 
 const ThreadsSchema = new Schema<IThreadsDocument>({
@@ -76,19 +81,22 @@ ThreadsSchema.index({ user_id: 1, project_id: 1 });
 ThreadsSchema.index({ timestamp: -1 });
 ThreadsSchema.index({ id: 1 }, { unique: true });
 
-// Helper method to convert document to Threads interface
-ThreadsSchema.methods.toThreads = function(): Threads {
+// Static utility method to convert plain object to Threads interface
+ThreadsSchema.statics.toThreads = function(doc: any): Threads {
   return {
-    id: this.id,
-    index: this.index,
-    user_id: this.user_id,
-    project_id: this.project_id,
-    role: this.role,
-    message_type: this.message_type,
-    message: this.message,
-    timestamp: this.timestamp,
-    agent_name: this.agent_name
+    id: doc.id,
+    index: doc.index,
+    user_id: doc.user_id,
+    project_id: doc.project_id,
+    role: doc.role,
+    message_type: doc.message_type,
+    message: doc.message,
+    timestamp: doc.timestamp,
+    agent_name: doc.agent_name
   };
 };
 
-export const ThreadsModel = mongoose.model<IThreadsDocument>('Threads', ThreadsSchema);
+export const ThreadsModel = mongoose.model<IThreadsDocument, IThreadsModel>('Threads', ThreadsSchema);
+
+// Export utility function for converting lean query results
+export const documentToThreads = (doc: any): Threads => ThreadsModel.toThreads(doc);
