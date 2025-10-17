@@ -13,7 +13,9 @@ export class MongoDBConnections {
       dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 
       const mongoUri = process.env.MONGODB_URI ||
-        `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST || 'localhost'}:${process.env.MONGO_PORT || '27017'}/assets?authSource=admin`;
+        (process.env.MONGO_INITDB_ROOT_USERNAME && process.env.MONGO_INITDB_ROOT_PASSWORD) ?
+        `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.MONGO_HOST || 'localhost'}:${process.env.MONGO_PORT || '27017'}/assets?authSource=admin` :
+        `mongodb://${process.env.MONGO_HOST || 'localhost'}:${process.env.MONGO_PORT || '27017'}/assets`;
 
       console.log("Initializing MongoDB connection with URI:", mongoUri.replace(/\/\/.*@/, '//***:***@'));
 
