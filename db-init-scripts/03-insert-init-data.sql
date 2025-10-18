@@ -172,21 +172,6 @@ INSERT INTO assets.experiments (user_id, project_id, title, linked_hypotheses, p
  'Create user dashboard showing feature usage progress and achievements. Test impact on overall platform engagement.',
  'planning');
 
--- Insert dummy threads data
-INSERT INTO assets.threads (user_id, project_id, agent_type, chat_id) VALUES
-(1, 1, 'experiment_analyst', 1001),
-(1, 1, 'hypothesis_generator', 1002),
-(2, 3, 'data_insights', 1003),
-(3, 4, 'conversion_optimizer', 1004),
-(4, 1, 'performance_analyzer', 1005),
-(2, 3, 'user_research', 1006),
-(5, 1, 'market_intelligence', 1007),
-(6, 1, 'satisfaction_tracker', 1008),
-(7, 2, 'onboarding_specialist', 1009),
-(8, 1, 'revenue_optimizer', 1010),
-(1, 1, 'experiment_analyst', 1011),
-(3, 4, 'ab_test_manager', 1012);
-
 -- ==========================================
 -- SUMMARY STATISTICS
 -- ==========================================
@@ -204,6 +189,5 @@ SELECT 'Objectives: ' || COUNT(*) as count FROM assets.objectives;
 SELECT 'Metrics: ' || COUNT(*) as count FROM assets.metrics;
 SELECT 'Hypotheses: ' || COUNT(*) as count FROM assets.hypotheses;
 SELECT 'Experiments: ' || COUNT(*) as count FROM assets.experiments;
-SELECT 'Threads: ' || COUNT(*) as count FROM assets.threads;
 
 SELECT 'Data insertion completed successfully!' as status;

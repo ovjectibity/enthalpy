@@ -125,19 +125,6 @@ CREATE TABLE assets.metrics (
     CONSTRAINT fk_metrics_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Create threads table
-CREATE TABLE assets.threads (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    project_id INTEGER NOT NULL,
-    agent_type VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    chat_id INTEGER NOT NULL,
-    CONSTRAINT fk_threads_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_threads_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 -- ==========================================
 -- CREATE INDEXES FOR PERFORMANCE
 -- ==========================================
@@ -157,9 +144,6 @@ CREATE INDEX idx_objectives_user_id ON assets.objectives(user_id);
 CREATE INDEX idx_objectives_project_id ON assets.objectives(project_id);
 CREATE INDEX idx_context_type ON assets.context(type);
 CREATE INDEX idx_context_project_id ON assets.context(project_id);
-CREATE INDEX idx_threads_user_id ON assets.threads(user_id);
-CREATE INDEX idx_threads_chat_id ON assets.threads(chat_id);
-CREATE INDEX idx_threads_project_id ON assets.threads(project_id);
 CREATE INDEX idx_projects_user_id ON assets.projects(user_id);
 CREATE INDEX idx_metrics_project_id ON assets.metrics(project_id);
 CREATE INDEX idx_metrics_user_id ON assets.metrics(user_id);
@@ -214,11 +198,6 @@ CREATE TRIGGER trigger_context_updated_at
 
 CREATE TRIGGER trigger_metrics_updated_at
     BEFORE UPDATE ON assets.metrics
-    FOR EACH ROW
-    EXECUTE FUNCTION assets.update_last_updated_at();
-
-CREATE TRIGGER trigger_threads_updated_at
-    BEFORE UPDATE ON assets.threads
     FOR EACH ROW
     EXECUTE FUNCTION assets.update_last_updated_at();
 
