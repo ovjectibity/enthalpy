@@ -68,7 +68,7 @@ export interface Hypothesis {
   updatedAt: Date;
 }
 
-export interface Threads {
+export interface ThreadMessage {
   id: number,
   index: number,
   user_id: number

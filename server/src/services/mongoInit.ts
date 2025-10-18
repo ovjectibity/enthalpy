@@ -1,6 +1,6 @@
 import { MongoDBConnections } from './mongoConnect.js';
 import { ThreadsModel } from './threadsModel.js';
-import { Threads } from '@enthalpy/shared';
+import { ThreadMessage } from '@enthalpy/shared';
 
 export class MongoDBInitializer {
   static async initializeDatabase(seedCollection: boolean): Promise<void> {
@@ -19,7 +19,7 @@ export class MongoDBInitializer {
       }
 
       // Create sample threads data
-      const sampleThreads: Threads[] = [
+      const sampleThreads: ThreadMessage[] = [
         {
           id: 1,
           index: 0,

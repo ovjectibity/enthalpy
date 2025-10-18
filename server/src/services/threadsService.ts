@@ -1,11 +1,11 @@
-import { Threads, ApiResponse, PaginatedResponse, PaginationParams } from '@enthalpy/shared';
+import { ThreadMessage, ApiResponse, PaginatedResponse, PaginationParams } from '@enthalpy/shared';
 import { ThreadsModel, documentToThreads } from './threadsModel.js';
 import { MongoDBConnections } from './mongoConnect.js';
 
 // Type definitions using shared Threads interface
-export type CreateThreadRequest = Omit<Threads, 'id' | 'timestamp'> & { timestamp?: Date };
-export type UpdateThreadRequest = Partial<Omit<Threads, 'id'>>;
-export type GetThreadsQuery = PaginationParams & Partial<Omit<Threads, 'timestamp'>> & {
+export type CreateThreadRequest = Omit<ThreadMessage, 'id' | 'timestamp'> & { timestamp?: Date };
+export type UpdateThreadRequest = Partial<Omit<ThreadMessage, 'id'>>;
+export type GetThreadsQuery = PaginationParams & Partial<Omit<ThreadMessage, 'timestamp'>> & {
   startDate?: string;
   endDate?: string;
   search?: string;
@@ -13,7 +13,7 @@ export type GetThreadsQuery = PaginationParams & Partial<Omit<Threads, 'timestam
 
 export class ThreadsService {
 
-  static async getAllThreads(query: GetThreadsQuery): Promise<PaginatedResponse<Threads>> {
+  static async getAllThreads(query: GetThreadsQuery): Promise<PaginatedResponse<ThreadMessage>> {
     try {
       // Ensure MongoDB connection
       if (!MongoDBConnections.getConnection()) {
@@ -98,7 +98,7 @@ export class ThreadsService {
     }
   }
 
-  static async getThreadById(id: number): Promise<ApiResponse<Threads>> {
+  static async getThreadById(id: number): Promise<ApiResponse<ThreadMessage>> {
     try {
       // Ensure MongoDB connection
       if (!MongoDBConnections.getConnection()) {
@@ -132,7 +132,7 @@ export class ThreadsService {
     user_id: number,
     project_id: number,
     query?: PaginationParams
-  ): Promise<PaginatedResponse<Threads>> {
+  ): Promise<PaginatedResponse<ThreadMessage>> {
     const threadsQuery: GetThreadsQuery = {
       user_id,
       project_id,
@@ -142,7 +142,7 @@ export class ThreadsService {
     return this.getAllThreads(threadsQuery);
   }
 
-  static async createThread(data: CreateThreadRequest): Promise<ApiResponse<Threads>> {
+  static async createThread(data: CreateThreadRequest): Promise<ApiResponse<ThreadMessage>> {
     try {
       // Ensure MongoDB connection
       if (!MongoDBConnections.getConnection()) {
@@ -153,7 +153,7 @@ export class ThreadsService {
       const lastThread = await ThreadsModel.findOne().sort({ id: -1 }).exec();
       const newId = lastThread ? lastThread.id + 1 : 1;
 
-      const threadData: Threads = {
+      const threadData: ThreadMessage = {
         id: newId,
         index: data.index,
         user_id: data.user_id,
@@ -183,7 +183,7 @@ export class ThreadsService {
     }
   }
 
-  static async updateThread(id: number, data: UpdateThreadRequest): Promise<ApiResponse<Threads>> {
+  static async updateThread(id: number, data: UpdateThreadRequest): Promise<ApiResponse<ThreadMessage>> {
     try {
       // Ensure MongoDB connection
       if (!MongoDBConnections.getConnection()) {

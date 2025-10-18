@@ -1,44 +1,15 @@
 import express from 'express';
 import { ThreadsService, CreateThreadRequest, UpdateThreadRequest, GetThreadsQuery } from '../services/threadsService.js';
-import { Threads } from '@enthalpy/shared';
+import { ThreadMessage } from '@enthalpy/shared';
 
 const router = express.Router();
 
 // Validation utilities
-const isValidRole = (role: string): role is Threads['role'] =>
+const isValidRole = (role: string): role is ThreadMessage['role'] =>
   ['agent', 'user', 'tool_result'].includes(role);
 
-const isValidMessageType = (messageType: string): messageType is Threads['message_type'] =>
+const isValidMessageType = (messageType: string): messageType is ThreadMessage['message_type'] =>
   ['static', 'thinking', 'tool-use', 'enth-actions'].includes(messageType);
-
-// GET /api/threads - Get all threads with filtering and pagination
-router.get('/', async (req, res) => {
-  try {
-    const query: GetThreadsQuery = {
-      user_id: req.query.user_id ? Number(req.query.user_id) : undefined,
-      project_id: req.query.project_id ? Number(req.query.project_id) : undefined,
-      role: req.query.role as Threads['role'] | undefined,
-      message_type: req.query.message_type as Threads['message_type'] | undefined,
-      agent_name: req.query.agent_name as string | undefined,
-      search: req.query.search as string | undefined,
-      startDate: req.query.startDate as string | undefined,
-      endDate: req.query.endDate as string | undefined,
-      page: req.query.page ? Number(req.query.page) : undefined,
-      limit: req.query.limit ? Number(req.query.limit) : undefined,
-      sortBy: req.query.sortBy as string | undefined,
-      sortOrder: req.query.sortOrder as "asc" | "desc" | undefined
-    };
-
-    const result = await ThreadsService.getAllThreads(query);
-    res.status(result.success ? 200 : 500).json(result);
-  } catch (error) {
-    console.error('Error in GET /threads:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-});
 
 // GET /api/threads/stats - Get thread statistics
 router.get('/stats', async (req, res) => {

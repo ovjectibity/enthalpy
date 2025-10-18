@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { Threads } from '@enthalpy/shared';
+import { ThreadMessage } from '@enthalpy/shared';
 
 // Create a separate interface for the MongoDB document
 // We'll use a custom 'id' field and disable the default '_id' behavior
@@ -17,7 +17,7 @@ export interface IThreadsDocument extends Document {
 
 // Interface for static methods
 interface IThreadsModel extends Model<IThreadsDocument> {
-  toThreads(doc: any): Threads;
+  toThreads(doc: any): ThreadMessage;
 }
 
 const ThreadsSchema = new Schema<IThreadsDocument>({
@@ -82,7 +82,7 @@ ThreadsSchema.index({ timestamp: -1 });
 ThreadsSchema.index({ id: 1 }, { unique: true });
 
 // Static utility method to convert plain object to Threads interface
-ThreadsSchema.statics.toThreads = function(doc: any): Threads {
+ThreadsSchema.statics.toThreads = function(doc: any): ThreadMessage {
   return {
     id: doc.id,
     index: doc.index,
@@ -99,4 +99,4 @@ ThreadsSchema.statics.toThreads = function(doc: any): Threads {
 export const ThreadsModel = mongoose.model<IThreadsDocument, IThreadsModel>('Threads', ThreadsSchema);
 
 // Export utility function for converting lean query results
-export const documentToThreads = (doc: any): Threads => ThreadsModel.toThreads(doc);
+export const documentToThreads = (doc: any): ThreadMessage => ThreadsModel.toThreads(doc);
