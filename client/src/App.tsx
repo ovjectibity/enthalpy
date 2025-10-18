@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
-import { HypothesesView, Terminal, Message, Agent } from "./components";
+import { HypothesesView, Terminal, TerminalMessage, TerminalMessageProps, Agent } from "./components";
+import useThreads from "./hooks/useThreads";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
   const [activeContext, setActiveContext] = useState("Context");
   const [agent, setAgent] = useState<Agent>({ state: "ready-for-input" });
+  const { threadsList, loading, error } = useThreads();
   const [threadHistory] = useState([
     {
       id: "thread-1",
@@ -33,36 +35,6 @@ const App: React.FC = () => {
       title: "Mobile UX Enhancement Discussion",
       timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       messageCount: 15,
-    },
-  ]);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      owner: "agent",
-      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
-      isFinished: false,
-      messageType: "thinking",
-    },
-    {
-      id: 2,
-      owner: "agent",
-      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
-      isFinished: false,
-      messageType: "static",
-    },
-    {
-      id: 3,
-      owner: "agent",
-      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
-      isFinished: false,
-      messageType: "tool-use",
-    },
-    {
-      id: 4,
-      owner: "agent",
-      text: "Here's your objective based on what you've told me so far. I need more details to provide a comprehensive analysis.",
-      isFinished: false,
-      messageType: "enth-actions",
     },
   ]);
   const [chatWidth, setChatWidth] = useState(500);
@@ -184,7 +156,7 @@ const App: React.FC = () => {
           <Terminal
             selectedAgent={selectedAgent}
             onAgentChange={setSelectedAgent}
-            messages={messages}
+            messages={threadsList.map(thread => ({ message: thread, isFinished: true }))}
             agent={agent}
             threadHistory={threadHistory}
             collapsibleMessages={true}
@@ -193,21 +165,7 @@ const App: React.FC = () => {
               // Here you would load the selected thread's messages
             }}
             onSendMessage={(message: string) => {
-              const newUserMessage: Message = {
-                id: Date.now(),
-                owner: "user" as const,
-                text: message,
-                isFinished: true,
-                messageType: "static",
-              };
-              const newAgentMessage: Message = {
-                id: Date.now() + 1,
-                owner: "agent" as const,
-                text: "Processing your request...",
-                isFinished: false,
-                messageType: "static",
-              };
-              setMessages([...messages, newUserMessage, newAgentMessage]);
+              console.log("Sending message:", message);
               setAgent({ state: "running" });
 
               // Simulate agent processing - after 3 seconds, set back to ready

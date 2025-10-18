@@ -4,15 +4,7 @@ import stopIcon from "../assets/stop-icon.svg";
 import attachmentIcon from "../assets/attachment-icon.svg";
 import threadHistoryIcon from "../assets/thread-history-icon.svg";
 import ThreadHistoryMenu from "./ThreadHistoryMenu";
-import TerminalMessage from "./TerminalMessage";
-
-export interface Message {
-  id: number;
-  owner: "user" | "agent";
-  text: string;
-  isFinished: boolean;
-  messageType: "static" | "thinking" | "tool-use" | "enth-actions";
-}
+import {TerminalMessageProps, TerminalMessage} from "./TerminalMessage";
 
 export interface Agent {
   state: "running" | "ready-for-input";
@@ -28,7 +20,7 @@ interface ThreadHistoryItem {
 interface TerminalProps {
   selectedAgent: string;
   onAgentChange: (agent: string) => void;
-  messages: Message[];
+  messages: TerminalMessageProps[];
   onSendMessage: (message: string) => void;
   agent: Agent;
   onStopAgent: () => void;
@@ -146,10 +138,11 @@ const Terminal: React.FC<TerminalProps> = ({
       >
         {messages.map((message) => (
           <TerminalMessage
-            key={message.id}
-            message={message}
+            key={message.message.id}
+            message={message.message}
+            isFinished={true}
             isCollapsible={
-              collapsibleMessages && message.messageType === "thinking"
+              collapsibleMessages && message.message.message_type === "thinking"
             }
           />
         ))}

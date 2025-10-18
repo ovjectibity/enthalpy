@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import chevronDownIcon from "../assets/chevron-down-icon.svg";
-import { Message } from "./Terminal";
+import { ThreadMessage } from "@enthalpy/shared";
 
-interface TerminalMessageProps {
-  message: Message;
+export interface TerminalMessageProps {
+  message: ThreadMessage;
   isCollapsible?: boolean;
+  isFinished?: boolean;
 }
 
-const TerminalMessage: React.FC<TerminalMessageProps> = ({
+export const TerminalMessage: React.FC<TerminalMessageProps> = ({
   message,
   isCollapsible = false,
+  isFinished = true,
 }) => {
   // Only make "thinking" messages collapsible and collapsed by default
   const shouldBeCollapsible =
-    isCollapsible && message.messageType === "thinking";
+    isCollapsible && message.message_type === "thinking";
   const [isCollapsed, setIsCollapsed] = useState(shouldBeCollapsible);
 
   const handleToggleCollapse = () => {
@@ -30,16 +32,15 @@ const TerminalMessage: React.FC<TerminalMessageProps> = ({
   // If not collapsible, use simple design
   if (!shouldBeCollapsible) {
     return (
-      <div className={`message-container ${message.owner}`}>
+      <div className={`message-container ${message.role}`}>
         <div
-          className={`message ${message.owner} ${
-            message.isFinished ? "finished" : "in-progress"
-          } ${message.messageType}`}
+          className={`message ${message.role} ${
+            isFinished ? "finished" : "in-progress"
+          } ${message.message_type}`}
         >
           <div className="message-text">
-            {message.text}
-            {/*{!message.isFinished && <span className="cursor">|</span>}*/}
-            {!message.isFinished}
+            {message.message}
+            {!isFinished && <span className="cursor">|</span>}
           </div>
         </div>
       </div>
@@ -48,11 +49,11 @@ const TerminalMessage: React.FC<TerminalMessageProps> = ({
 
   // Collapsible design for thinking messages
   return (
-    <div className={`message-container ${message.owner}`}>
+    <div className={`message-container ${message.role}`}>
       <div
-        className={`message ${message.owner} ${
-          message.isFinished ? "finished" : "in-progress"
-        } ${message.messageType} collapsible`}
+        className={`message ${message.role} ${
+          isFinished ? "finished" : "in-progress"
+        } ${message.message_type} collapsible`}
       >
         <div className="message-header" onClick={handleToggleCollapse}>
           <img
@@ -63,20 +64,18 @@ const TerminalMessage: React.FC<TerminalMessageProps> = ({
             className={`collapse-icon ${isCollapsed ? "" : "expanded"}`}
           />
           <span className="message-type-label">
-            {message.messageType.replace("-", " ")}
+            {message.message_type.replace("-", " ")}
           </span>
         </div>
         <div
           className={`message-content ${isCollapsed ? "collapsed" : "expanded"}`}
         >
           <div className="message-text">
-            {isCollapsed ? getPreviewText(message.text) : message.text}
-            {!message.isFinished && !isCollapsed}
+            {isCollapsed ? getPreviewText(message.message) : message.message}
+            {!isFinished && !isCollapsed && <span className="cursor">|</span>}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-export default TerminalMessage;
