@@ -2,8 +2,8 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url"; // Import for ES Modules
 // import cors from "cors"; // TODO: Add after installing dependency
-import { FlowGraphGenerator } from "./services/flowgraph.js";
-import { ComputerTool, Tool } from "./services/tools.js";
+import { FlowGraphGenerator } from "../../computer-use-service/flowgraph.js";
+// import { ComputerTool, Tool } from "./services/tools.js";
 import hypothesesRoutes from "./routes/hypotheses.js";
 import { threadsRouter } from "./routes/threads.js";
 import { MongoDBConnections } from "./services/mongoConnect.js";
@@ -43,15 +43,15 @@ const __dirname = path.dirname(__filename);
 app.use("/api/hypotheses", hypothesesRoutes);
 app.use("/api/threads", threadsRouter);
 
-app.get("/generate_flow_graph", (_req, res) => {
-  const tools = new Map<string, Tool>();
-  tools.set("computer", new ComputerTool());
-  let gphgen = new FlowGraphGenerator(tools);
-  gphgen.generateFlowGraph();
-  res.json({
-    response: "Flow graph generation initiated",
-  });
-});
+// app.get("/generate_flow_graph", (_req, res) => {
+//   const tools = new Map<string, Tool>();
+//   tools.set("computer", new ComputerTool());
+//   let gphgen = new FlowGraphGenerator(tools);
+//   gphgen.generateFlowGraph();
+//   res.json({
+//     response: "Flow graph generation initiated",
+//   });
+// });
 
 // app.get('/', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../../client/build/index.html'));

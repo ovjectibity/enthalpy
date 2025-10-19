@@ -1,0 +1,21 @@
+{
+  "name": "@enthalpy/computer-use-service",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Computer use agent for the customer jounrney mapping service",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
