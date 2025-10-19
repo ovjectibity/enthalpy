@@ -8,35 +8,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Conditionally install GUI dependencies and set up XFCE configuration
-# This block will only execute if COMPUTER_USE_SETUP is explicitly '1'.
-RUN if [ "$COMPUTER_USE_SETUP" = "1" ]; then \
-    apt-get update && apt-get install -y --no-install-recommends \
-    scrot \
-    xvfb \
-    x11vnc \
-    xfce4-session \
-    xfce4-panel \
-    xfce4-terminal \
-    xfwm4 \
-    xfdesktop4 \
-    xfce4-settings \
-    dbus \
-    dbus-x11 \
-    systemd \
-    xdotool \
-    firefox-esr \
-    thunar \
-    && rm -rf /var/lib/apt/lists/*; \
-    \
-    # Create minimal XFCE configuration to disable unnecessary services
-    mkdir -p /etc/xdg/autostart && \
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xfce4-power-manager.desktop && \
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/light-locker.desktop && \
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/polkit-gnome-authentication-agent-1.desktop && \
-    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xiccd.desktop; \
-    fi
-
 # Set working directory for the application
 WORKDIR /app
 

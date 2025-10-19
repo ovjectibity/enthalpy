@@ -138,7 +138,7 @@ const Terminal: React.FC<TerminalProps> = ({
       >
         {messages.map((message) => (
           <TerminalMessage
-            key={message.message.id}
+            key={message.message.threadId}
             message={message.message}
             isFinished={true}
             isCollapsible={

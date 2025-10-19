@@ -1,32 +1,32 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { ThreadMessage } from '@enthalpy/shared';
+import { ThreadMessage} from '@enthalpy/shared';
 
 // Create a separate interface for the MongoDB document
 // We'll use a custom 'id' field and disable the default '_id' behavior
-export interface IThreadsDocument extends Document {
-  id: number;
+export interface IThreadMessageDocument extends Document {
   index: number;
+  thread_idx: number;
   user_id: number;
   project_id: number;
   role: "agent" | "user" | "tool_result";
   message_type: "static" | "thinking" | "tool-use" | "enth-actions";
   message: string;
   timestamp: Date;
-  agent_name: string;
+  agent_name: "mc" | "flow-graph" | "exp-design" | "hypotheses";
 }
 
 // Interface for static methods
-interface IThreadsModel extends Model<IThreadsDocument> {
+interface IThreadMessageModel extends Model<IThreadMessageDocument> {
   toThreads(doc: any): ThreadMessage;
 }
 
-const ThreadsSchema = new Schema<IThreadsDocument>({
-  id: {
+const ThreadMessageSchema = new Schema<IThreadMessageDocument>({
+  index: {
     type: Number,
     required: true,
     unique: true
   },
-  index: {
+  thread_idx: {
     type: Number,
     required: true
   },
@@ -59,10 +59,11 @@ const ThreadsSchema = new Schema<IThreadsDocument>({
   },
   agent_name: {
     type: String,
+    enum: ["mc", "flow-graph", "exp-design", "hypotheses"],
     required: true
   }
 }, {
-  collection: 'threads',
+  collection: 'thread_message',
   timestamps: false, // We're managing timestamp manually
   toJSON: {
     transform: function(doc, ret) {
@@ -75,16 +76,17 @@ const ThreadsSchema = new Schema<IThreadsDocument>({
 });
 
 // Create indexes for better query performance
-ThreadsSchema.index({ user_id: 1 });
-ThreadsSchema.index({ project_id: 1 });
-ThreadsSchema.index({ user_id: 1, project_id: 1 });
-ThreadsSchema.index({ timestamp: -1 });
-ThreadsSchema.index({ id: 1 }, { unique: true });
+ThreadMessageSchema.index({ user_id: 1 });
+ThreadMessageSchema.index({ project_id: 1 });
+ThreadMessageSchema.index({ user_id: 1, project_id: 1 });
+ThreadMessageSchema.index({ timestamp: -1 });
+ThreadMessageSchema.index({ thread_idx: 1 });
+ThreadMessageSchema.index({ index: 1 }, { unique: true });
 
 // Static utility method to convert plain object to Threads interface
-ThreadsSchema.statics.toThreads = function(doc: any): ThreadMessage {
+ThreadMessageSchema.statics.toThreads = function(doc: any): ThreadMessage {
   return {
-    id: doc.id,
+    threadId: doc.thread_idx,
     index: doc.index,
     user_id: doc.user_id,
     project_id: doc.project_id,
@@ -92,11 +94,13 @@ ThreadsSchema.statics.toThreads = function(doc: any): ThreadMessage {
     message_type: doc.message_type,
     message: doc.message,
     timestamp: doc.timestamp,
-    agent_name: doc.agent_name
+    agent_name: {
+      name: doc.agent_name
+    }
   };
 };
 
-export const ThreadsModel = mongoose.model<IThreadsDocument, IThreadsModel>('Threads', ThreadsSchema);
+export const ThreadMessageModel = mongoose.model<IThreadMessageDocument, IThreadMessageModel>('Threads', ThreadMessageSchema);
 
 // Export utility function for converting lean query results
-export const documentToThreads = (doc: any): ThreadMessage => ThreadsModel.toThreads(doc);
+export const documentToThreads = (doc: any): ThreadMessage => ThreadMessageModel.toThreads(doc);

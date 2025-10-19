@@ -15,21 +15,21 @@ export interface UseThreadsResult {
 }
 
 interface UseThreadsOptions {
-  userId?: number;
-  projectId?: number;
+  userId: number;
+  projectId: number;
   page?: number;
   limit?: number;
 }
 
-const useThreads = (options: UseThreadsOptions = {}): UseThreadsResult => {
+const useThreads = (options: UseThreadsOptions): UseThreadsResult => {
   const [threadsList, setThreadsList] = useState<ThreadMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<UseThreadsResult['pagination']>(null);
 
   // Use hardcoded defaults but allow overrides
-  const userId = options.userId ?? 1;
-  const projectId = options.projectId ?? 1;
+  const userId = options.userId;
+  const projectId = options.projectId;
   const page = options.page ?? 1;
   const limit = options.limit ?? 50;
 

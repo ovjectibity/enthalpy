@@ -17,3 +17,7 @@ server/src/prompts/fg-config.json
 .env
 node_modules
 server/client_dist/
+server/package-lock.json
+client/package-lock.json
+shared/package-lock.json
+computer-use-service/package-lock.json

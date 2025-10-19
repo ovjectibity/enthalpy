@@ -1,6 +1,6 @@
 import express from 'express';
-import { ThreadsService, CreateThreadRequest, UpdateThreadRequest, GetThreadsQuery } from '../services/threadsService.js';
-import { ThreadMessage } from '@enthalpy/shared';
+import { ThreadsService } from '../services/threadsService.js';
+import { Thread, ThreadMessage, Agent } from '@enthalpy/shared';
 
 const router = express.Router();
 
@@ -11,44 +11,26 @@ const isValidRole = (role: string): role is ThreadMessage['role'] =>
 const isValidMessageType = (messageType: string): messageType is ThreadMessage['message_type'] =>
   ['static', 'thinking', 'tool-use', 'enth-actions'].includes(messageType);
 
-// GET /api/threads/stats - Get thread statistics
-router.get('/stats', async (req, res) => {
-  try {
-    const result = await ThreadsService.getThreadStats();
-    res.status(result.success ? 200 : 500).json(result);
-  } catch (error) {
-    console.error('Error in GET /threads/stats:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-});
+const isValidAgentName = (agentName: string): agentName is Agent['name'] =>
+  ['mc', 'flow-graph', 'exp-design', 'hypotheses'].includes(agentName);
 
-// GET /api/threads/user/:userId/project/:projectId - Get threads by user and project
-router.get('/user/:userId/project/:projectId', async (req, res) => {
+// 1. GET /api/threads/project/:projectId/user/:userId - Get all threads for a given project ID & user ID
+router.get('/project/:projectId/user/:userId', async (req, res) => {
   try {
-    const userId = Number(req.params.userId);
     const projectId = Number(req.params.projectId);
+    const userId = Number(req.params.userId);
 
-    if (isNaN(userId) || isNaN(projectId)) {
+    if (isNaN(projectId) || isNaN(userId)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid user ID or project ID'
+        error: 'Invalid project ID or user ID'
       });
     }
 
-    const paginationQuery = {
-      page: req.query.page ? Number(req.query.page) : undefined,
-      limit: req.query.limit ? Number(req.query.limit) : undefined,
-      sortBy: req.query.sortBy as string | undefined,
-      sortOrder: req.query.sortOrder as "asc" | "desc" | undefined
-    };
-
-    const result = await ThreadsService.getThreadsByUserAndProject(userId, projectId, paginationQuery);
+    const result = await ThreadsService.getThreadsByProjectAndUser(projectId, userId);
     res.status(result.success ? 200 : 500).json(result);
   } catch (error) {
-    console.error('Error in GET /threads/user/:userId/project/:projectId:', error);
+    console.error('Error in GET /threads/project/:projectId/user/:userId:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -56,34 +38,20 @@ router.get('/user/:userId/project/:projectId', async (req, res) => {
   }
 });
 
-// GET /api/threads/:id - Get thread by ID
-router.get('/:id', async (req, res) => {
+// 2. POST /api/threads/:threadId/messages - Append a thread message to an existing thread
+router.post('/:threadId/messages', async (req, res) => {
   try {
-    const id = Number(req.params.id);
+    const threadId = Number(req.params.threadId);
 
-    if (isNaN(id)) {
+    if (isNaN(threadId)) {
       return res.status(400).json({
         success: false,
         error: 'Invalid thread ID'
       });
     }
 
-    const result = await ThreadsService.getThreadById(id);
-    res.status(result.success ? 200 : 404).json(result);
-  } catch (error) {
-    console.error('Error in GET /threads/:id:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-});
-
-// POST /api/threads - Create new thread
-router.post('/', async (req, res) => {
-  try {
     // Validate required fields
-    const requiredFields = ['index', 'user_id', 'project_id', 'role', 'message_type', 'message', 'agent_name'];
+    const requiredFields = ['role', 'message_type', 'message'];
     const missingFields = requiredFields.filter(field => req.body[field] === undefined || req.body[field] === null);
 
     if (missingFields.length > 0) {
@@ -108,26 +76,66 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const createData: CreateThreadRequest = {
-      index: Number(req.body.index),
-      user_id: Number(req.body.user_id),
-      project_id: Number(req.body.project_id),
+    const messageData = {
       role: req.body.role,
       message_type: req.body.message_type,
       message: req.body.message,
-      agent_name: req.body.agent_name,
       timestamp: req.body.timestamp ? new Date(req.body.timestamp) : undefined
     };
 
-    // Validate numeric fields
-    if (isNaN(createData.index) || isNaN(createData.user_id) || isNaN(createData.project_id)) {
+    const result = await ThreadsService.appendMessageToThread(threadId, messageData);
+    res.status(result.success ? 201 : (result.error?.includes('not found') ? 404 : 500)).json(result);
+  } catch (error) {
+    console.error('Error in POST /threads/:threadId/messages:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// 3. POST /api/threads - Create a new thread for given project, user ID & agent name
+router.post('/', async (req, res) => {
+  try {
+    // Validate required fields
+    const requiredFields = ['project_id', 'user_id', 'agent_name'];
+    const missingFields = requiredFields.filter(field => req.body[field] === undefined || req.body[field] === null);
+
+    if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid numeric values for index, user_id, or project_id'
+        error: `Missing required fields: ${missingFields.join(', ')}`
       });
     }
 
-    const result = await ThreadsService.createThread(createData);
+    // Validate numeric fields
+    const projectId = Number(req.body.project_id);
+    const userId = Number(req.body.user_id);
+
+    if (isNaN(projectId) || isNaN(userId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid numeric values for project_id or user_id'
+      });
+    }
+
+    // Validate agent name
+    if (!isValidAgentName(req.body.agent_name)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid agent_name. Must be one of: mc, flow-graph, exp-design, hypotheses'
+      });
+    }
+
+    const threadData = {
+      project_id: projectId,
+      user_id: userId,
+      agent_name: req.body.agent_name,
+      role: req.body.role || 'agent', // default to agent if not specified
+      agent: req.body.agent || 'static' // default message type if not specified
+    };
+
+    const result = await ThreadsService.createNewThread(threadData);
     res.status(result.success ? 201 : 500).json(result);
   } catch (error) {
     console.error('Error in POST /threads:', error);
@@ -138,128 +146,31 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/threads/:id - Update thread
-router.put('/:id', async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-
-    if (isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid thread ID'
-      });
-    }
-
-    // Validate enum values if provided
-    if (req.body.role && !isValidRole(req.body.role)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid role. Must be one of: agent, user, tool_result'
-      });
-    }
-
-    if (req.body.message_type && !isValidMessageType(req.body.message_type)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid message_type. Must be one of: static, thinking, tool-use, enth-actions'
-      });
-    }
-
-    const updateData: UpdateThreadRequest = {};
-
-    // Only include fields that are provided
-    if (req.body.index !== undefined) updateData.index = Number(req.body.index);
-    if (req.body.user_id !== undefined) updateData.user_id = Number(req.body.user_id);
-    if (req.body.project_id !== undefined) updateData.project_id = Number(req.body.project_id);
-    if (req.body.role !== undefined) updateData.role = req.body.role;
-    if (req.body.message_type !== undefined) updateData.message_type = req.body.message_type;
-    if (req.body.message !== undefined) updateData.message = req.body.message;
-    if (req.body.agent_name !== undefined) updateData.agent_name = req.body.agent_name;
-    if (req.body.timestamp !== undefined) updateData.timestamp = new Date(req.body.timestamp);
-
-    // Validate numeric fields if provided
-    if ((updateData.index !== undefined && isNaN(updateData.index)) ||
-        (updateData.user_id !== undefined && isNaN(updateData.user_id)) ||
-        (updateData.project_id !== undefined && isNaN(updateData.project_id))) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid numeric values for index, user_id, or project_id'
-      });
-    }
-
-    const result = await ThreadsService.updateThread(id, updateData);
-    res.status(result.success ? 200 : 404).json(result);
-  } catch (error) {
-    console.error('Error in PUT /threads/:id:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-});
-
-// DELETE /api/threads/:id - Delete thread
-router.delete('/:id', async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-
-    if (isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid thread ID'
-      });
-    }
-
-    const result = await ThreadsService.deleteThread(id);
-    res.status(result.success ? 200 : 404).json(result);
-  } catch (error) {
-    console.error('Error in DELETE /threads/:id:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-});
-
-// DELETE /api/threads/project/:projectId - Delete all threads for a project
-router.delete('/project/:projectId', async (req, res) => {
+// 4. GET /api/threads/project/:projectId/user/:userId/agent/:agentName - Get all threads for project ID, user ID & agent name
+router.get('/project/:projectId/user/:userId/agent/:agentName', async (req, res) => {
   try {
     const projectId = Number(req.params.projectId);
-
-    if (isNaN(projectId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid project ID'
-      });
-    }
-
-    const result = await ThreadsService.deleteThreadsByProject(projectId);
-    res.status(result.success ? 200 : 500).json(result);
-  } catch (error) {
-    console.error('Error in DELETE /threads/project/:projectId:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
-  }
-});
-
-// DELETE /api/threads/user/:userId - Delete all threads for a user
-router.delete('/user/:userId', async (req, res) => {
-  try {
     const userId = Number(req.params.userId);
+    const agentName = req.params.agentName;
 
-    if (isNaN(userId)) {
+    if (isNaN(projectId) || isNaN(userId)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid user ID'
+        error: 'Invalid project ID or user ID'
       });
     }
 
-    const result = await ThreadsService.deleteThreadsByUser(userId);
+    if (!isValidAgentName(agentName)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid agent_name. Must be one of: mc, flow-graph, exp-design, hypotheses'
+      });
+    }
+
+    const result = await ThreadsService.getThreadsByProjectUserAndAgent(projectId, userId, agentName);
     res.status(result.success ? 200 : 500).json(result);
   } catch (error) {
-    console.error('Error in DELETE /threads/user/:userId:', error);
+    console.error('Error in GET /threads/project/:projectId/user/:userId/agent/:agentName:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'

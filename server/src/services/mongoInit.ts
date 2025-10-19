@@ -1,5 +1,5 @@
 import { MongoDBConnections } from './mongoConnect.js';
-import { ThreadsModel } from './threadsModel.js';
+import { ThreadMessageModel } from './threadsModel.js';
 import { ThreadMessage } from '@enthalpy/shared';
 
 export class MongoDBInitializer {
@@ -12,7 +12,7 @@ export class MongoDBInitializer {
       console.log('MongoDB connection established');
 
       // Check if threads collection already has data
-      const existingThreadsCount = await ThreadsModel.countDocuments();
+      const existingThreadsCount = await ThreadMessageModel.countDocuments();
       if (existingThreadsCount > 0 || seedCollection === false) {
         console.log(`Threads collection already has ${existingThreadsCount} documents. Skipping initialization.`);
         return;
@@ -21,7 +21,7 @@ export class MongoDBInitializer {
       // Create sample threads data
       const sampleThreads: ThreadMessage[] = [
         {
-          id: 1,
+          threadId: 1,
           index: 0,
           user_id: 1,
           project_id: 1,
@@ -29,10 +29,12 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'Hello, I need help with my project setup. Can you guide me through the initial configuration?',
           timestamp: new Date('2024-01-15T10:00:00Z'),
-          agent_name: 'User'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 2,
+          threadId: 2,
           index: 1,
           user_id: 1,
           project_id: 1,
@@ -40,10 +42,12 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'The user is asking for help with project setup. I should provide a comprehensive guide covering the key configuration steps.',
           timestamp: new Date('2024-01-15T10:00:30Z'),
-          agent_name: 'Assistant'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 3,
+          threadId: 3,
           index: 2,
           user_id: 1,
           project_id: 1,
@@ -51,10 +55,12 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'I\'d be happy to help you with your project setup! Let\'s start with the basic configuration. First, we\'ll need to set up your environment variables and database connections.',
           timestamp: new Date('2024-01-15T10:01:00Z'),
-          agent_name: 'Assistant'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 4,
+          threadId: 4,
           index: 3,
           user_id: 1,
           project_id: 1,
@@ -62,10 +68,12 @@ export class MongoDBInitializer {
           message_type: 'tool-use',
           message: 'Creating configuration template file...',
           timestamp: new Date('2024-01-15T10:01:15Z'),
-          agent_name: 'Assistant'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 5,
+          threadId: 5,
           index: 4,
           user_id: 1,
           project_id: 1,
@@ -73,10 +81,12 @@ export class MongoDBInitializer {
           message_type: 'enth-actions',
           message: 'Configuration template created successfully at /config/template.env',
           timestamp: new Date('2024-01-15T10:01:30Z'),
-          agent_name: 'System'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 6,
+          threadId: 6,
           index: 0,
           user_id: 2,
           project_id: 2,
@@ -84,10 +94,12 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'I\'m working on a data analysis project and need help with MongoDB queries. Can you help me optimize my aggregation pipeline?',
           timestamp: new Date('2024-01-15T14:30:00Z'),
-          agent_name: 'DataAnalyst'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 7,
+          threadId: 7,
           index: 1,
           user_id: 2,
           project_id: 2,
@@ -95,10 +107,12 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'The user needs help with MongoDB aggregation pipeline optimization. I should ask about their current pipeline and the performance issues they\'re experiencing.',
           timestamp: new Date('2024-01-15T14:30:15Z'),
-          agent_name: 'DataExpert'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 8,
+          threadId: 8,
           index: 2,
           user_id: 2,
           project_id: 2,
@@ -106,10 +120,12 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'Absolutely! I can help you optimize your MongoDB aggregation pipeline. Could you share your current pipeline code and tell me what performance issues you\'re experiencing?',
           timestamp: new Date('2024-01-15T14:30:30Z'),
-          agent_name: 'DataExpert'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 9,
+          threadId: 9,
           index: 0,
           user_id: 3,
           project_id: 3,
@@ -117,10 +133,12 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'Starting a new machine learning experiment to predict user engagement patterns.',
           timestamp: new Date('2024-01-16T09:00:00Z'),
-          agent_name: 'MLResearcher'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 10,
+          threadId: 10,
           index: 1,
           user_id: 3,
           project_id: 3,
@@ -128,10 +146,12 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'This is an interesting ML project. I should help them establish a proper experimental framework and data pipeline for user engagement prediction.',
           timestamp: new Date('2024-01-16T09:00:20Z'),
-          agent_name: 'MLAssistant'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 11,
+          threadId: 11,
           index: 2,
           user_id: 3,
           project_id: 3,
@@ -139,10 +159,12 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'That sounds like a fascinating project! Predicting user engagement is crucial for product optimization. Let\'s start by defining your features and target variables. What engagement metrics are you looking to predict?',
           timestamp: new Date('2024-01-16T09:00:45Z'),
-          agent_name: 'MLAssistant'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 12,
+          threadId: 12,
           index: 3,
           user_id: 3,
           project_id: 3,
@@ -150,10 +172,12 @@ export class MongoDBInitializer {
           message_type: 'tool-use',
           message: 'Setting up ML experiment tracking environment...',
           timestamp: new Date('2024-01-16T09:01:00Z'),
-          agent_name: 'MLAssistant'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 13,
+          threadId: 13,
           index: 4,
           user_id: 3,
           project_id: 3,
@@ -161,10 +185,12 @@ export class MongoDBInitializer {
           message_type: 'enth-actions',
           message: 'ML experiment tracking environment initialized with MLflow. Experiment ID: exp_001_user_engagement',
           timestamp: new Date('2024-01-16T09:01:30Z'),
-          agent_name: 'System'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 14,
+          threadId: 14,
           index: 0,
           user_id: 1,
           project_id: 4,
@@ -172,10 +198,12 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'I need to implement real-time notifications for my web application. What\'s the best approach?',
           timestamp: new Date('2024-01-16T11:15:00Z'),
-          agent_name: 'WebDev'
+          agent_name: {
+            name: "mc"
+          }
         },
         {
-          id: 15,
+          threadId: 15,
           index: 1,
           user_id: 1,
           project_id: 4,
@@ -183,23 +211,25 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'For real-time notifications, I should consider WebSockets, Server-Sent Events, or push notifications. The choice depends on their specific requirements and architecture.',
           timestamp: new Date('2024-01-16T11:15:25Z'),
-          agent_name: 'TechLead'
+          agent_name: {
+            name: "mc"
+          }
         }
       ];
 
       console.log(`Inserting ${sampleThreads.length} sample threads...`);
 
       // Insert sample data
-      await ThreadsModel.insertMany(sampleThreads);
+      await ThreadMessageModel.insertMany(sampleThreads);
 
       console.log('Sample threads inserted successfully');
 
       // Create additional indexes if needed
-      await ThreadsModel.createIndexes();
+      await ThreadMessageModel.createIndexes();
       console.log('Database indexes created');
 
       // Verify the insertion
-      const insertedCount = await ThreadsModel.countDocuments();
+      const insertedCount = await ThreadMessageModel.countDocuments();
       console.log(`MongoDB initialization completed. Total threads in collection: ${insertedCount}`);
 
     } catch (error) {
@@ -217,7 +247,7 @@ export class MongoDBInitializer {
 
       // Drop the collection if it exists
       try {
-        await ThreadsModel.collection.drop();
+        await ThreadMessageModel.collection.drop();
         console.log('Threads collection dropped');
       } catch (error: any) {
         if (error.code === 26) {
@@ -264,8 +294,8 @@ export class MongoDBInitializer {
       const stats = await db.stats();
 
       // Get collection stats using countDocuments instead of deprecated stats()
-      const threadsCount = await ThreadsModel.countDocuments();
-      const threadsSize = await ThreadsModel.collection.estimatedDocumentCount();
+      const threadsCount = await ThreadMessageModel.countDocuments();
+      const threadsSize = await ThreadMessageModel.collection.estimatedDocumentCount();
 
       return {
         database: {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import { HypothesesView, Terminal, TerminalMessage, TerminalMessageProps, Agent } from "./components";
+import { HypothesesView, Terminal, Agent } from "./components";
 import useThreads from "./hooks/useThreads";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
@@ -16,7 +16,10 @@ const App: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
   const [activeContext, setActiveContext] = useState("Context");
   const [agent, setAgent] = useState<Agent>({ state: "ready-for-input" });
-  const { threadsList, loading, error } = useThreads();
+  const { threadsList, loading, error } = useThreads({
+    projectId: 1,
+    userId: 1
+  });
   const [threadHistory] = useState([
     {
       id: "thread-1",

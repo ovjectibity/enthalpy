@@ -69,7 +69,7 @@ export interface Hypothesis {
 }
 
 export interface ThreadMessage {
-  id: number,
+  threadId: number,
   index: number,
   user_id: number
   project_id: number,
@@ -77,7 +77,17 @@ export interface ThreadMessage {
   message_type: "static" | "thinking" | "tool-use" | "enth-actions";
   message: string
   timestamp: Date;
-  agent_name: string;
+  agent_name: Agent;
+}
+
+export interface Thread {
+  threadId: number,
+  //Assumption: ThreadMessage array is ordered by index,
+  // index representing the order of messages
+  threads: ThreadMessage[],
+  user_id: number,
+  project_id: number,
+  agent_name: Agent
 }
 
 // API Response types
@@ -137,4 +147,8 @@ export interface GetHypothesesQuery extends PaginationParams {
   objectiveId?: number;
   startDate?: string;
   endDate?: string;
+}
+
+export interface Agent {
+  name: "mc" | "flow-graph" | "exp-design" | "hypotheses";
 }
