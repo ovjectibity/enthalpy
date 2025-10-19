@@ -1,50 +1,39 @@
 import React, { useEffect, useRef } from "react";
-
-interface ThreadHistoryItem {
-  id: string;
-  title: string;
-  timestamp: string;
-  messageCount: number;
-}
+import { Thread } from "@enthalpy/shared";
 
 interface ThreadHistoryMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectThread: (threadId: string) => void;
-  threads: ThreadHistoryItem[];
+  onSelectThread: (threadId: number) => void;
+  //Only threads of the relevant agent to be shown here
+  threads: Map<number,Thread>;
   anchorRef: React.RefObject<HTMLElement | null>;
 }
 
-const ThreadHistoryMenu: React.FC<ThreadHistoryMenuProps> = ({
-  isOpen,
-  onClose,
-  onSelectThread,
-  threads,
-  anchorRef,
-}) => {
+const ThreadHistoryMenu: React.FC<ThreadHistoryMenuProps> = (state: ThreadHistoryMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Handle clicks outside menu to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        isOpen &&
+        state.isOpen &&
         menuRef.current &&
         !menuRef.current.contains(event.target as Node) &&
-        anchorRef?.current &&
-        !anchorRef?.current.contains(event.target as Node)
+        state.anchorRef?.current &&
+        !state.anchorRef?.current.contains(event.target as Node)
       ) {
-        onClose();
+        state.onClose();
       }
     };
 
     const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isOpen) {
-        onClose();
+      if (event.key === "Escape" && state.isOpen) {
+        state.onClose();
       }
     };
 
-    if (isOpen) {
+    if (state.isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleEscapeKey);
     }
@@ -53,33 +42,14 @@ const ThreadHistoryMenu: React.FC<ThreadHistoryMenuProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscapeKey);
     };
-  }, [isOpen, onClose, anchorRef]);
+  }, [state.isOpen, state.onClose, state.anchorRef]);
 
-  const handleThreadClick = (threadId: string) => {
-    onSelectThread(threadId);
-    onClose();
+  const handleThreadClick = (threadId: number) => {
+    state.onSelectThread(threadId);
+    state.onClose();
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-    if (diffDays > 0) {
-      return `${diffDays}d ago`;
-    } else if (diffHours > 0) {
-      return `${diffHours}h ago`;
-    } else if (diffMinutes > 0) {
-      return `${diffMinutes}m ago`;
-    } else {
-      return "Just now";
-    }
-  };
-
-  if (!isOpen) return null;
+  if (!state.isOpen) return null;
 
   return (
     <div className="thread-history-overlay">
@@ -88,20 +58,20 @@ const ThreadHistoryMenu: React.FC<ThreadHistoryMenuProps> = ({
           <h3>Thread History</h3>
         </div>
         <div className="thread-history-list">
-          {threads.length > 0 ? (
-            threads.map((thread) => (
+          {state.threads.values.length > 0 ? (
+            Array.from(state.threads.values()).map((thread) => (
               <div
-                key={thread.id}
+                key={thread.threadId}
                 className="thread-history-item"
-                onClick={() => handleThreadClick(thread.id)}
+                onClick={() => handleThreadClick(thread.threadId)}
               >
-                <div className="thread-title">{thread.title}</div>
+                <div className="thread-title">{thread.summary}</div>
                 <div className="thread-meta">
                   <span className="thread-timestamp">
-                    {formatTimestamp(thread.timestamp)}
+                    {thread.messages[thread.messages.length - 1].timestamp.toDateString()}
                   </span>
                   <span className="thread-message-count">
-                    {thread.messageCount} messages
+                    {thread.messages.length} messages
                   </span>
                 </div>
               </div>

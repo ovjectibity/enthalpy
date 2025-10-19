@@ -5,4 +5,3 @@ export { default as HyperlistView } from "./HyperlistView";
 export { default as Terminal } from "./Terminal";
 export { default as ThreadHistoryMenu } from "./ThreadHistoryMenu";
 export type { TerminalMessage, TerminalMessageProps } from "./TerminalMessage";
-export type { Agent } from "./Terminal";

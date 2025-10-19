@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
-import { ThreadMessage} from '@enthalpy/shared';
+import { ThreadMessage, Agent } from '@enthalpy/shared';
 
 // Create a separate interface for the MongoDB document
 // We'll use a custom 'id' field and disable the default '_id' behavior
@@ -94,9 +94,7 @@ ThreadMessageSchema.statics.toThreads = function(doc: any): ThreadMessage {
     message_type: doc.message_type,
     message: doc.message,
     timestamp: doc.timestamp,
-    agent_name: {
-      name: doc.agent_name
-    }
+    agent_name: doc.agent_name as Agent
   };
 };
 

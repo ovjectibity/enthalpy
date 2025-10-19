@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { ThreadMessage, PaginatedResponse } from "@enthalpy/shared";
+import { Thread, PaginatedResponse } from "@enthalpy/shared";
 
 export interface UseThreadsResult {
-  threadsList: ThreadMessage[];
+  threads: Map<number,Thread>;
   loading: boolean;
   error: string | null;
   pagination: {
@@ -14,6 +14,14 @@ export interface UseThreadsResult {
   refetch: () => void;
 }
 
+const getMapFromThreads = (threads: Thread[]): Map<number,Thread> => {
+  let threadMap = new Map<number, Thread>();
+  for(const thread of threads) {
+    threadMap.set(thread.threadId, thread);
+  }
+  return threadMap;
+};
+
 interface UseThreadsOptions {
   userId: number;
   projectId: number;
@@ -22,7 +30,7 @@ interface UseThreadsOptions {
 }
 
 const useThreads = (options: UseThreadsOptions): UseThreadsResult => {
-  const [threadsList, setThreadsList] = useState<ThreadMessage[]>([]);
+  const [threadsList, setThreadsList] = useState<Map<number,Thread>>(new Map<number,Thread>());
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<UseThreadsResult['pagination']>(null);
@@ -43,10 +51,10 @@ const useThreads = (options: UseThreadsOptions): UseThreadsResult => {
         throw new Error(`Failed to fetch threads: ${response.statusText}`);
       }
 
-      const data: PaginatedResponse<ThreadMessage> = await response.json();
+      const data: PaginatedResponse<Thread> = await response.json();
 
       if (data.success) {
-        setThreadsList(data.data);
+        setThreadsList(getMapFromThreads(data.data));
         setPagination(data.pagination);
       } else {
         setError(data.error || "Unknown error fetching threads.");
@@ -65,7 +73,7 @@ const useThreads = (options: UseThreadsOptions): UseThreadsResult => {
   }, [userId, projectId, page, limit]); // Re-fetch when parameters change
 
   return {
-    threadsList,
+    threads: threadsList,
     loading,
     error,
     pagination,

@@ -4,45 +4,32 @@ import stopIcon from "../assets/stop-icon.svg";
 import attachmentIcon from "../assets/attachment-icon.svg";
 import threadHistoryIcon from "../assets/thread-history-icon.svg";
 import ThreadHistoryMenu from "./ThreadHistoryMenu";
-import {TerminalMessageProps, TerminalMessage} from "./TerminalMessage";
-
-export interface Agent {
-  state: "running" | "ready-for-input";
-}
-
-interface ThreadHistoryItem {
-  id: string;
-  title: string;
-  timestamp: string;
-  messageCount: number;
-}
+import {TerminalMessage} from "./TerminalMessage";
+import { Thread, Agent } from "@enthalpy/shared";
 
 interface TerminalProps {
-  selectedAgent: string;
-  onAgentChange: (agent: string) => void;
-  messages: TerminalMessageProps[];
-  onSendMessage: (message: string) => void;
-  agent: Agent;
-  onStopAgent: () => void;
-  threadHistory?: ThreadHistoryItem[];
-  onSelectThread?: (threadId: string) => void;
-  collapsibleMessages?: boolean;
+  onAgentChange: (agent: Agent) => number;
+  onSendMessage: (threadId: number, message: string) => void;
+  onSelectThread: (threadId: number) => void;
+  onStopAgent: (threadId: number) => void;
+  selectedThreadId: number;
+  threads: Map<number, Thread>;
+  currentThreadState: "running" | "ready-for-input";
 }
 
-const Terminal: React.FC<TerminalProps> = ({
-  selectedAgent,
-  onAgentChange,
-  messages,
-  onSendMessage,
-  agent,
-  onStopAgent,
-  threadHistory = [],
-  onSelectThread = () => {},
-  collapsibleMessages = true,
-}) => {
+const Terminal: React.FC<TerminalProps> = (state: TerminalProps) => {
   const terminalContentRef = useRef<HTMLDivElement>(null);
   const threadIconRef = useRef<HTMLButtonElement>(null);
   const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
+
+  const agentName: {
+    [key: string]: string
+  } = {
+    "mc": "Master of Ceremonies",
+    "flow-graph": "User journey mapper",
+    "exp-design": "Experiment generator",
+    "hypotheses": "Hypotheses generator"
+  }
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -50,13 +37,14 @@ const Terminal: React.FC<TerminalProps> = ({
       terminalContentRef.current.scrollTop =
         terminalContentRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [state.threads.get(state.selectedThreadId)]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
       const textarea = e.currentTarget;
       if (textarea.value.trim()) {
-        onSendMessage(textarea.value);
+        state.onSendMessage(state.selectedThreadId, textarea.value);
         textarea.value = "";
         // Reset height after clearing
         textarea.style.height = "auto";
@@ -75,30 +63,19 @@ const Terminal: React.FC<TerminalProps> = ({
     textarea.style.height = `${newHeight}px`;
   };
 
-  const handleSendClick = () => {
-    const textarea = document.querySelector(
-      ".input-field",
-    ) as HTMLTextAreaElement;
-    if (textarea && textarea.value.trim()) {
-      onSendMessage(textarea.value);
-      textarea.value = "";
-      textarea.style.height = "auto";
-    }
-  };
-
   const handleAttachmentClick = () => {
     console.log("Attachment clicked");
   };
 
   const handleActionClick = () => {
-    if (agent.state === "running") {
-      onStopAgent();
+    if (state.currentThreadState === "running") {
+      state.onStopAgent(state.selectedThreadId);
     } else {
       const textarea = document.querySelector(
         ".input-field",
       ) as HTMLTextAreaElement;
       if (textarea && textarea.value.trim()) {
-        onSendMessage(textarea.value);
+        state.onSendMessage(state.selectedThreadId, textarea.value);
         textarea.value = "";
         textarea.style.height = "auto";
       }
@@ -110,8 +87,8 @@ const Terminal: React.FC<TerminalProps> = ({
       <div className="chat-header">
         <select
           className="agent-selector"
-          value={selectedAgent}
-          onChange={(e) => onAgentChange(e.target.value)}
+          value={agentName[(state.threads.get(state.selectedThreadId)?.agent_name ?? ("mc")) as string]}
+          onChange={(e) => state.onAgentChange(e.target.value as unknown as Agent)}
         >
           <option>Master of Ceremonies</option>
           <option>Flow graph agent</option>
@@ -134,15 +111,15 @@ const Terminal: React.FC<TerminalProps> = ({
       </div>
       <div
         ref={terminalContentRef}
-        className={`terminal-content ${agent.state === "running" ? "agent-running" : ""}`}
+        className={`terminal-content ${state.currentThreadState === "running" ? "agent-running" : ""}`}
       >
-        {messages.map((message) => (
+        {state.threads.get(state.selectedThreadId)?.messages.map((message) => (
           <TerminalMessage
-            key={message.message.threadId}
-            message={message.message}
+            key={message.threadId}
+            message={message}
             isFinished={true}
             isCollapsible={
-              collapsibleMessages && message.message.message_type === "thinking"
+              message.message_type === "thinking"
             }
           />
         ))}
@@ -169,21 +146,21 @@ const Terminal: React.FC<TerminalProps> = ({
           </button>
           <button
             className={
-              agent.state === "running" ? "stop-button" : "send-button"
+              state.currentThreadState === "running" ? "stop-button" : "send-button"
             }
             onClick={handleActionClick}
             aria-label={
-              agent.state === "running" ? "Stop agent" : "Send message"
+              state.currentThreadState === "running" ? "Stop agent" : "Send message"
             }
             title={
-              agent.state === "running"
+              state.currentThreadState === "running"
                 ? "Stop agent"
                 : "Send message (Shift+Enter)"
             }
           >
             <img
-              src={agent.state === "running" ? stopIcon : sendIcon}
-              alt={agent.state === "running" ? "Stop" : "Send"}
+              src={state.currentThreadState === "running" ? stopIcon : sendIcon}
+              alt={state.currentThreadState === "running" ? "Stop" : "Send"}
               width="12"
               height="12"
             />
@@ -193,8 +170,8 @@ const Terminal: React.FC<TerminalProps> = ({
       <ThreadHistoryMenu
         isOpen={isThreadHistoryOpen}
         onClose={() => setIsThreadHistoryOpen(false)}
-        onSelectThread={onSelectThread}
-        threads={threadHistory}
+        onSelectThread={state.onSelectThread}
+        threads={state.threads}
         anchorRef={threadIconRef}
       />
     </div>

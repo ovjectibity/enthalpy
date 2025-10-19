@@ -1,6 +1,6 @@
 import express from 'express';
 import { ThreadsService } from '../services/threadsService.js';
-import { Thread, ThreadMessage, Agent } from '@enthalpy/shared';
+import { ThreadMessage, Agent } from '@enthalpy/shared';
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ const isValidRole = (role: string): role is ThreadMessage['role'] =>
 const isValidMessageType = (messageType: string): messageType is ThreadMessage['message_type'] =>
   ['static', 'thinking', 'tool-use', 'enth-actions'].includes(messageType);
 
-const isValidAgentName = (agentName: string): agentName is Agent['name'] =>
+const isValidAgentName = (agentName: string): agentName is Agent =>
   ['mc', 'flow-graph', 'exp-design', 'hypotheses'].includes(agentName);
 
 // 1. GET /api/threads/project/:projectId/user/:userId - Get all threads for a given project ID & user ID

@@ -84,10 +84,11 @@ export interface Thread {
   threadId: number,
   //Assumption: ThreadMessage array is ordered by index,
   // index representing the order of messages
-  threads: ThreadMessage[],
+  messages: ThreadMessage[],
   user_id: number,
   project_id: number,
-  agent_name: Agent
+  agent_name: Agent,
+  summary?: string
 }
 
 // API Response types
@@ -149,6 +150,4 @@ export interface GetHypothesesQuery extends PaginationParams {
   endDate?: string;
 }
 
-export interface Agent {
-  name: "mc" | "flow-graph" | "exp-design" | "hypotheses";
-}
+export type Agent = "mc" | "flow-graph" | "exp-design" | "hypotheses";

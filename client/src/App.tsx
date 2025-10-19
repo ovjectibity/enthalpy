@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import "./App.css";
-import { HypothesesView, Terminal, Agent } from "./components";
+import { HypothesesView, Terminal } from "./components";
 import useThreads from "./hooks/useThreads";
+import { Agent } from "@enthalpy/shared";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
@@ -12,34 +13,34 @@ import ExperimentsIcon from "./assets/experiments-icon.svg";
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
-
-  const [selectedAgent, setSelectedAgent] = useState("Flow graph agent");
+  const [selectedAgent, setSelectedAgent] = useState("mc" as unknown as Agent);
+  const [activeThread, setActiveThread] = useState(1);
   const [activeContext, setActiveContext] = useState("Context");
-  const [agent, setAgent] = useState<Agent>({ state: "ready-for-input" });
-  const { threadsList, loading, error } = useThreads({
+  const [currentThreadState, setCurrentThreadState] = useState<"running" | "ready-for-input">("ready-for-input");
+  const { threads, loading, error } = useThreads({
     projectId: 1,
     userId: 1
   });
-  const [threadHistory] = useState([
-    {
-      id: "thread-1",
-      title: "Onboarding Flow Analysis",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      messageCount: 12,
-    },
-    {
-      id: "thread-2",
-      title: "Payment Process Optimization",
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      messageCount: 8,
-    },
-    {
-      id: "thread-3",
-      title: "Mobile UX Enhancement Discussion",
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      messageCount: 15,
-    },
-  ]);
+  // const [threadHistory] = useState([
+  //   {
+  //     id: "thread-1",
+  //     title: "Onboarding Flow Analysis",
+  //     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  //     messageCount: 12,
+  //   },
+  //   {
+  //     id: "thread-2",
+  //     title: "Payment Process Optimization",
+  //     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+  //     messageCount: 8,
+  //   },
+  //   {
+  //     id: "thread-3",
+  //     title: "Mobile UX Enhancement Discussion",
+  //     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+  //     messageCount: 15,
+  //   },
+  // ]);
   const [chatWidth, setChatWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -157,27 +158,29 @@ const App: React.FC = () => {
         {/* Right Panel - Terminal Interface */}
         <div className="right-panel" style={{ width: chatWidth }}>
           <Terminal
-            selectedAgent={selectedAgent}
-            onAgentChange={setSelectedAgent}
-            messages={threadsList.map(thread => ({ message: thread, isFinished: true }))}
-            agent={agent}
-            threadHistory={threadHistory}
-            collapsibleMessages={true}
-            onSelectThread={(threadId: string) => {
-              console.log("Selected thread:", threadId);
-              // Here you would load the selected thread's messages
+            currentThreadState={currentThreadState}
+            selectedThreadId={activeThread}
+            onAgentChange={(agent: Agent): number => {
+              console.log("Changed agent to:", agent);
+              // TODO: Here use the last available thread for the selected agent
+              return 1;
             }}
-            onSendMessage={(message: string) => {
+            threads={threads}
+            onSelectThread={(threadId: number) => {
+              console.log("Selected thread:", threadId);
+              // TODO: Here you would load the selected thread's messages
+            }}
+            onSendMessage={(threadId:number, message: string) => {
               console.log("Sending message:", message);
-              setAgent({ state: "running" });
+              setCurrentThreadState("running");
 
               // Simulate agent processing - after 3 seconds, set back to ready
               setTimeout(() => {
-                setAgent({ state: "ready-for-input" });
+                setCurrentThreadState("ready-for-input");
               }, 3000);
             }}
             onStopAgent={() => {
-              setAgent({ state: "ready-for-input" });
+              setCurrentThreadState("ready-for-input");
             }}
           />
         </div>

@@ -5,7 +5,7 @@ import { MongoDBConnections } from './mongoConnect.js';
 export interface CreateThreadData {
   project_id: number;
   user_id: number;
-  agent_name: Agent['name'];
+  agent_name: Agent;
 }
 
 export interface AppendMessageData {
@@ -73,7 +73,7 @@ export class ThreadsService {
           const firstMessage = messages[0];
           threads.push({
             threadId: threadId,
-            threads: messages,
+            messages: messages,
             user_id: firstMessage.user_id,
             project_id: firstMessage.project_id,
             agent_name: firstMessage.agent_name
@@ -132,14 +132,12 @@ export class ThreadsService {
         message_type: messageData.message_type,
         message: messageData.message,
         timestamp: messageData.timestamp || new Date(),
-        agent_name: {
-          name: lastMessage.agent_name
-        }
+        agent_name: lastMessage.agent_name
       };
 
       //Add to the list of actively maintained threads
       if(this.activeThreads.get(threadId)) {
-        this.activeThreads.get(threadId)?.threads.push(threadMessageData);
+        this.activeThreads.get(threadId)?.messages.push(threadMessageData);
       } else {
         throw new Error("Could not find any thread to append the message to.");
       }
@@ -177,10 +175,10 @@ export class ThreadsService {
       // Create the new thread with an initial empty structure
       const thread: Thread = {
         threadId: newThreadId,
-        threads: [],
+        messages: [],
         user_id: threadData.user_id,
         project_id: threadData.project_id,
-        agent_name: { name: threadData.agent_name } as Agent
+        agent_name: threadData.agent_name
       };
 
       //Add to the list of actively maintained threads
@@ -205,7 +203,7 @@ export class ThreadsService {
   static async getThreadsByProjectUserAndAgent(
     projectId: number,
     userId: number,
-    agentName: Agent['name']
+    agentName: Agent
   ): Promise<ApiResponse<Thread[]>> {
     try {
       // Ensure MongoDB connection
@@ -241,7 +239,7 @@ export class ThreadsService {
           const firstMessage = messages[0];
           threads.push({
             threadId: threadId,
-            threads: messages,
+            messages: messages,
             user_id: firstMessage.user_id,
             project_id: firstMessage.project_id,
             agent_name: firstMessage.agent_name

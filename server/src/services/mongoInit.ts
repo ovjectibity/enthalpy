@@ -29,9 +29,7 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'Hello, I need help with my project setup. Can you guide me through the initial configuration?',
           timestamp: new Date('2024-01-15T10:00:00Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 2,
@@ -42,9 +40,7 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'The user is asking for help with project setup. I should provide a comprehensive guide covering the key configuration steps.',
           timestamp: new Date('2024-01-15T10:00:30Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 3,
@@ -55,9 +51,7 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'I\'d be happy to help you with your project setup! Let\'s start with the basic configuration. First, we\'ll need to set up your environment variables and database connections.',
           timestamp: new Date('2024-01-15T10:01:00Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 4,
@@ -68,9 +62,7 @@ export class MongoDBInitializer {
           message_type: 'tool-use',
           message: 'Creating configuration template file...',
           timestamp: new Date('2024-01-15T10:01:15Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 5,
@@ -81,9 +73,7 @@ export class MongoDBInitializer {
           message_type: 'enth-actions',
           message: 'Configuration template created successfully at /config/template.env',
           timestamp: new Date('2024-01-15T10:01:30Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 6,
@@ -94,9 +84,7 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'I\'m working on a data analysis project and need help with MongoDB queries. Can you help me optimize my aggregation pipeline?',
           timestamp: new Date('2024-01-15T14:30:00Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 7,
@@ -107,9 +95,7 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'The user needs help with MongoDB aggregation pipeline optimization. I should ask about their current pipeline and the performance issues they\'re experiencing.',
           timestamp: new Date('2024-01-15T14:30:15Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 8,
@@ -120,9 +106,7 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'Absolutely! I can help you optimize your MongoDB aggregation pipeline. Could you share your current pipeline code and tell me what performance issues you\'re experiencing?',
           timestamp: new Date('2024-01-15T14:30:30Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 9,
@@ -133,9 +117,7 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'Starting a new machine learning experiment to predict user engagement patterns.',
           timestamp: new Date('2024-01-16T09:00:00Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 10,
@@ -146,9 +128,7 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'This is an interesting ML project. I should help them establish a proper experimental framework and data pipeline for user engagement prediction.',
           timestamp: new Date('2024-01-16T09:00:20Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 11,
@@ -159,9 +139,7 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'That sounds like a fascinating project! Predicting user engagement is crucial for product optimization. Let\'s start by defining your features and target variables. What engagement metrics are you looking to predict?',
           timestamp: new Date('2024-01-16T09:00:45Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 12,
@@ -172,9 +150,7 @@ export class MongoDBInitializer {
           message_type: 'tool-use',
           message: 'Setting up ML experiment tracking environment...',
           timestamp: new Date('2024-01-16T09:01:00Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 13,
@@ -185,9 +161,7 @@ export class MongoDBInitializer {
           message_type: 'enth-actions',
           message: 'ML experiment tracking environment initialized with MLflow. Experiment ID: exp_001_user_engagement',
           timestamp: new Date('2024-01-16T09:01:30Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 14,
@@ -198,9 +172,7 @@ export class MongoDBInitializer {
           message_type: 'static',
           message: 'I need to implement real-time notifications for my web application. What\'s the best approach?',
           timestamp: new Date('2024-01-16T11:15:00Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         },
         {
           threadId: 15,
@@ -211,9 +183,7 @@ export class MongoDBInitializer {
           message_type: 'thinking',
           message: 'For real-time notifications, I should consider WebSockets, Server-Sent Events, or push notifications. The choice depends on their specific requirements and architecture.',
           timestamp: new Date('2024-01-16T11:15:25Z'),
-          agent_name: {
-            name: "mc"
-          }
+          agent_name: "mc"
         }
       ];
 
