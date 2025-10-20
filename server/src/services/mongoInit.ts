@@ -19,9 +19,9 @@ export class MongoDBInitializer {
       }
 
       // Create sample threads data
-      const sampleThreads: ThreadMessage[] = [
+      const sampleThreads = [
         {
-          threadId: 1,
+          thread_idx: 1,
           index: 0,
           user_id: 1,
           project_id: 1,
@@ -32,7 +32,7 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 2,
+          thread_idx: 1,
           index: 1,
           user_id: 1,
           project_id: 1,
@@ -43,7 +43,7 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 3,
+          thread_idx: 1,
           index: 2,
           user_id: 1,
           project_id: 1,
@@ -54,7 +54,7 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 4,
+          thread_idx: 1,
           index: 3,
           user_id: 1,
           project_id: 1,
@@ -65,7 +65,7 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 5,
+          thread_idx: 1,
           index: 4,
           user_id: 1,
           project_id: 1,
@@ -76,10 +76,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 6,
-          index: 0,
-          user_id: 2,
-          project_id: 2,
+          thread_idx: 1,
+          index: 5,
+          user_id: 1,
+          project_id: 1,
           role: 'user',
           message_type: 'static',
           message: 'I\'m working on a data analysis project and need help with MongoDB queries. Can you help me optimize my aggregation pipeline?',
@@ -87,10 +87,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 7,
-          index: 1,
-          user_id: 2,
-          project_id: 2,
+          thread_idx: 1,
+          index: 6,
+          user_id: 1,
+          project_id: 1,
           role: 'agent',
           message_type: 'thinking',
           message: 'The user needs help with MongoDB aggregation pipeline optimization. I should ask about their current pipeline and the performance issues they\'re experiencing.',
@@ -98,10 +98,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 8,
-          index: 2,
-          user_id: 2,
-          project_id: 2,
+          thread_idx: 2,
+          index: 7,
+          user_id: 1,
+          project_id: 1,
           role: 'agent',
           message_type: 'static',
           message: 'Absolutely! I can help you optimize your MongoDB aggregation pipeline. Could you share your current pipeline code and tell me what performance issues you\'re experiencing?',
@@ -109,10 +109,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 9,
-          index: 0,
-          user_id: 3,
-          project_id: 3,
+          thread_idx: 2,
+          index: 8,
+          user_id: 1,
+          project_id: 1,
           role: 'user',
           message_type: 'static',
           message: 'Starting a new machine learning experiment to predict user engagement patterns.',
@@ -120,10 +120,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 10,
-          index: 1,
-          user_id: 3,
-          project_id: 3,
+          thread_idx: 2,
+          index: 9,
+          user_id: 1,
+          project_id: 1,
           role: 'agent',
           message_type: 'thinking',
           message: 'This is an interesting ML project. I should help them establish a proper experimental framework and data pipeline for user engagement prediction.',
@@ -131,10 +131,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 11,
-          index: 2,
-          user_id: 3,
-          project_id: 3,
+          thread_idx: 2,
+          index: 10,
+          user_id: 1,
+          project_id: 1,
           role: 'agent',
           message_type: 'static',
           message: 'That sounds like a fascinating project! Predicting user engagement is crucial for product optimization. Let\'s start by defining your features and target variables. What engagement metrics are you looking to predict?',
@@ -142,10 +142,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 12,
-          index: 3,
-          user_id: 3,
-          project_id: 3,
+          thread_idx: 3,
+          index: 11,
+          user_id: 1,
+          project_id: 1,
           role: 'agent',
           message_type: 'tool-use',
           message: 'Setting up ML experiment tracking environment...',
@@ -153,10 +153,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 13,
-          index: 4,
-          user_id: 3,
-          project_id: 3,
+          thread_idx: 4,
+          index: 12,
+          user_id: 1,
+          project_id: 1,
           role: 'tool_result',
           message_type: 'enth-actions',
           message: 'ML experiment tracking environment initialized with MLflow. Experiment ID: exp_001_user_engagement',
@@ -164,10 +164,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 14,
-          index: 0,
+          thread_idx: 4,
+          index: 13,
           user_id: 1,
-          project_id: 4,
+          project_id: 1,
           role: 'user',
           message_type: 'static',
           message: 'I need to implement real-time notifications for my web application. What\'s the best approach?',
@@ -175,10 +175,10 @@ export class MongoDBInitializer {
           agent_name: "mc"
         },
         {
-          threadId: 15,
-          index: 1,
+          thread_idx: 4,
+          index: 14,
           user_id: 1,
-          project_id: 4,
+          project_id: 1,
           role: 'agent',
           message_type: 'thinking',
           message: 'For real-time notifications, I should consider WebSockets, Server-Sent Events, or push notifications. The choice depends on their specific requirements and architecture.',

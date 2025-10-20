@@ -58,8 +58,8 @@ const ThreadHistoryMenu: React.FC<ThreadHistoryMenuProps> = (state: ThreadHistor
           <h3>Thread History</h3>
         </div>
         <div className="thread-history-list">
-          {state.threads.values.length > 0 ? (
-            Array.from(state.threads.values()).map((thread) => (
+          {state.threads.size > 0 ? (
+            Array.from(state.threads.entries()).map(([index,thread]:[number,Thread]) => (
               <div
                 key={thread.threadId}
                 className="thread-history-item"
@@ -68,7 +68,7 @@ const ThreadHistoryMenu: React.FC<ThreadHistoryMenuProps> = (state: ThreadHistor
                 <div className="thread-title">{thread.summary}</div>
                 <div className="thread-meta">
                   <span className="thread-timestamp">
-                    {thread.messages[thread.messages.length - 1].timestamp.toDateString()}
+                    {thread.messages[thread.messages.length - 1].timestamp.toString()}
                   </span>
                   <span className="thread-message-count">
                     {thread.messages.length} messages

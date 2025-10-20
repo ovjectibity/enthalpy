@@ -45,7 +45,7 @@ const useThreads = (options: UseThreadsOptions): UseThreadsResult => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/threads/user/${userId}/project/${projectId}?page=${page}&limit=${limit}&sortBy=timestamp&sortOrder=desc`);
+      const response = await fetch(`/api/threads/project/${projectId}/user/${userId}?page=${page}&limit=${limit}&sortBy=timestamp&sortOrder=desc`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch threads: ${response.statusText}`);
