@@ -8,9 +8,13 @@ import { threadsRouter } from "./routes/threads.js";
 import { MongoDBConnections } from "./services/mongoConnect.js";
 import { MongoDBInitializer } from "./services/mongoInit.js";
 import { Server } from 'socket.io';
+import http from "http";
 
 const app = express();
 const port = process.env.APP_PORT;
+const server = http.createServer(app);
+const io = new Server(server); // attach socket.io to the server
+const agentchat = io.of("/agent");
 console.log("Running app at port", port);
 
 // Initialize MongoDB connection
@@ -95,3 +99,34 @@ process.on('SIGTERM', async () => {
   }
   process.exit(0);
 });
+
+//Hierarchy here: User ID > Project ID > Agent
+// Agent type to be handled via the event name
+// Project ID to be handled via the event data json
+// User ID to be handled via middleware
+agentchat.use((socket, next) => {
+  if(socket.handshake.auth.role === "user") {
+    socket.data.userId = socket.handshake.auth.userId;
+    next();
+  }
+  else next(new Error("Not a user"));
+});
+
+agentchat.on("connection", (socket) => {
+  console.log("Client connected for agent chat:", socket.id);
+  socket.on("user_message", (msg) => {
+    console.log("Message received:", msg);
+    if(msg.projectId) {
+      //TODO: Interface with the agent service
+    } else {
+      console.log("No project_id with the message sent, not doing anything")
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+    socket.disconnect();
+  });
+});
+
+server.listen(process.env.AGENT_CHAT_PORT, () => console.log("Listening on http://localhost:${AGENT_CHAT_PORT}"));

@@ -21,26 +21,6 @@ const App: React.FC = () => {
     projectId: 1,
     userId: 1
   });
-  // const [threadHistory] = useState([
-  //   {
-  //     id: "thread-1",
-  //     title: "Onboarding Flow Analysis",
-  //     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  //     messageCount: 12,
-  //   },
-  //   {
-  //     id: "thread-2",
-  //     title: "Payment Process Optimization",
-  //     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-  //     messageCount: 8,
-  //   },
-  //   {
-  //     id: "thread-3",
-  //     title: "Mobile UX Enhancement Discussion",
-  //     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  //     messageCount: 15,
-  //   },
-  // ]);
   const [chatWidth, setChatWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
 
