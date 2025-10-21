@@ -5,12 +5,8 @@ import {
   GetHypothesesQuery,
   PaginatedResponse,
   ApiResponse,
-  Objective,
-  Experiment,
-  Metric,
-  Feedback,
 } from "@enthalpy/shared";
-import { queryUtilities, ormUtilities } from "./orm.js";
+import { queryUtilities } from "./orm.js";
 
 export class HypothesesService {
   static async getHypothesesByUser(

@@ -6,7 +6,8 @@ import { fileURLToPath } from "url"; // Import for ES Modules
 import hypothesesRoutes from "./routes/hypotheses.js";
 import { threadsRouter } from "./routes/threads.js";
 import { MongoDBConnections } from "./services/mongoConnect.js";
-import {MongoDBInitializer} from "./services/mongoInit.js"
+import { MongoDBInitializer } from "./services/mongoInit.js";
+import { Server } from 'socket.io';
 
 const app = express();
 const port = process.env.APP_PORT;
@@ -41,20 +42,6 @@ const __dirname = path.dirname(__filename);
 // Routes
 app.use("/api/hypotheses", hypothesesRoutes);
 app.use("/api/threads", threadsRouter);
-
-// app.get("/generate_flow_graph", (_req, res) => {
-//   const tools = new Map<string, Tool>();
-//   tools.set("computer", new ComputerTool());
-//   let gphgen = new FlowGraphGenerator(tools);
-//   gphgen.generateFlowGraph();
-//   res.json({
-//     response: "Flow graph generation initiated",
-//   });
-// });
-
-// app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../../client/build/index.html'));
-// });
 
 app.use(express.static(path.join(__dirname, '../client_dist/build')));
 
