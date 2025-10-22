@@ -8,6 +8,7 @@ import { threadsRouter } from "./routes/threads.js";
 import { MongoDBConnections } from "./services/mongoConnect.js";
 import { MongoDBInitializer } from "./services/mongoInit.js";
 import { Server } from 'socket.io';
+import { AgentService, UserOutputMessage } from "./services/agent.js";
 import http from "http";
 
 const app = express();
@@ -102,7 +103,7 @@ process.on('SIGTERM', async () => {
 
 //Hierarchy here: User ID > Project ID > Agent
 // Agent type to be handled via the event name
-// Project ID to be handled via the event data json
+// TODO: Project ID to be handled via the event data json
 // User ID to be handled via middleware
 agentchat.use((socket, next) => {
   if(socket.handshake.auth.role === "user") {
@@ -114,10 +115,17 @@ agentchat.use((socket, next) => {
 
 agentchat.on("connection", (socket) => {
   console.log("Client connected for agent chat:", socket.id);
+  const aserv = new AgentService();
+  aserv.registerOutputCallback("mc",(msg: UserOutputMessage) => {
+    let wrappedMsg = (msg as any);
+    wrappedMsg.agentName = "mc";
+    socket.emit("agent_message",wrappedMsg);
+  });
+
   socket.on("user_message", (msg) => {
     console.log("Message received:", msg);
     if(msg.projectId) {
-      //TODO: Interface with the agent service
+      aserv.ingestUserInput(msg);
     } else {
       console.log("No project_id with the message sent, not doing anything")
     }
