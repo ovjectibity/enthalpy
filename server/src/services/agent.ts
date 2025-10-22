@@ -130,7 +130,7 @@ class ContextGatheringNode extends WorkflowNode {
   }
 
   updateContext(ctx: WorkflowContext) {
-    //TODO: 1. keep the system prompt, message history & the LLM provider
+    // 1. keep the system prompt, message history & the LLM provider
     // 2. Update with some workflow context telling
     // the llm about the context gathering process
     ctx.messages.push({
@@ -153,15 +153,28 @@ class ContextGatheringNode extends WorkflowNode {
     if(this.state !== "idle") {
       console.log("ContextGatheringNode ${this.name} not in idle state, doing nothing for run call");
       return;
-    } else if(this.state) {
+    } else {
       //Update the context before the process
       this.updateContext(ctx);
-      //TODO: Should we trigger a pre-defined response here?
+      //Trigger a pre-defined response here by asking the LLM to summarise it.
+      // TODO: This can perhaps be optimised via some automated way of create
+      // the user output without LLM call
+      ctx.messages.push({
+        role: "user",
+        message: {
+          workflowContent: [{
+            content: prompts["gather-context-from-user"],
+            type: "workflow-instruction"
+          }]
+        }
+      });
+      this.state = "waiting_on_user_input";
+      //TODO: LLM provider call needed here
     }
   }
 
   ingestUserInput(msg: any): void {
-
+    //Check the workflow node state here before proceeding
   }
 }
 
