@@ -205,8 +205,23 @@ class ContextGatheringNode extends WorkflowNode {
           if(m.workflowContent && m.workflowContent.type === "workflow_context") {
             //Add to the context if available
             //TODO: Validation of provided context here
-            let gatheredContext = JSON.parse(m.workflowContent);
+            let gatheredContext = JSON.parse(m.workflowContent.content);
             this.scrapeContext(gatheredContext);
+          } else if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
+            //TODO: The stop condition is expected to be the last block, add this to prompt
+            let stopCondition = JSON.parse(m.workflowContent.content);
+            if(stopCondition.stop && stopCondition.stopReason) {
+              this.state = "closed";
+              //TODO: Handle changing of active node here
+              // Surface gathered context + record stopReason
+              console.log("Exiting the ContextGatheringNode ${this.name} due to ${stopCondition.stopReason}");
+              ctx.gatheredContext.push({
+                nodeType: "ContextGatheringNode",
+                nodeName: this.name,
+                context: this.gatheredContext
+              });
+              this.children.forEach(child => child.run(ctx));
+            }
           }
           if(m.userContent) {
             //Surface message to the user:
@@ -296,8 +311,15 @@ class WorkflowContext {
   numIterations: number = 5;
   model?: LLMProvider;
   userOutputCb?: (msg: string) => void;
+  gatheredContext: {
+    nodeType: string,
+    nodeName: string,
+    context: any
+    }[] = [];
 }
 
+// Same schema to be used for both input to the LLM
+// and for the output the LLM generates
 interface ModelMessage {
   role: string;
   messages: {
@@ -307,6 +329,7 @@ interface ModelMessage {
     workflowContent?: {
       type: "output_for_user" | "workflow_context" | "workflow_instruction",
       // TODO: Rich text support
+      // TODO: Add further structure here, to be handled by the provider.
       content: string
     }[]
   }
