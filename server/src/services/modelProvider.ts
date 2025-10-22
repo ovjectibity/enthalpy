@@ -7,18 +7,20 @@ import {
 
 export interface LLMProvider {
   providerName: string,
+  modelName: string;
   initConnection: () => void,
-  input: (msg: any) => Promise<any>
+  input: (msg: any,cb: (msg: any) => void) => Promise<any>
 }
 
 export class ClaudeIntf implements LLMProvider {
   providerName: string = "claude"
+  modelName: string = "claude-haiku"
 
   initConnection() {
 
   }
 
-  async input(msg: any): Promise<any> {
+  async input(msg: any, cb: (msg: any) => void): Promise<any> {
     return msg;
   }
 }
