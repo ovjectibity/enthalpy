@@ -1,9 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
-import {
-  Tool as AnthTool,
-  ContentBlock,
-  MessageParam,
-} from "@anthropic-ai/sdk/resources";
+import { ClaudeIntf, LLMProvider } from "./modelProvider";
 
 // Workflows are defined by 2 loops -
 // L0 loop - workflow progress nodes, with each having a specific end output
@@ -39,25 +34,18 @@ export class AgentService {
   }
 }
 
-class WorkflowContext {
-  systemPrompt: string = "";
-  messages = new Array<Message>();
-  numIterations: number = 5;
-  llm?: LLMProvider;
-  userOutputCb?: (msg: string) => void;
-}
-
 class Agent {
   name: string;
   workNodes = new Array<WorkflowNode>();
   state: WorkflowContext;
+  currentNode?: WorkflowNode;
 
   constructor(name: string) {
     this.name = name;
     this.state = new WorkflowContext();
   }
 
-  ingestUserInput(msg: any, cb: (msg: string) => void) {
+  ingestUserInput(msg: any) {
     this.currentNode?.ingestUserInput(msg);
   }
 
@@ -67,8 +55,6 @@ class Agent {
 }
 
 class MCAgent extends Agent {
-  currentNode?: WorkflowNode;
-
   constructor() {
     super("mc");
     this.currentNode = MCAgent.createIntroNode();
@@ -82,7 +68,11 @@ class MCAgent extends Agent {
   }
 
   static createObjectiveGatheringNode(parent: WorkflowNode): WorkflowNode {
-    let objNode = new ObjectiveGatheringNode("objective-gathering");
+    let objNode = new ContextGatheringNode("objective-gathering",[{
+      contextName: "objective",
+      contextContext: prompts["objective-gathering-context"],
+      allowedInput: new Set(["string"])
+    }],parent);
     return objNode;
   }
 
@@ -91,8 +81,8 @@ class MCAgent extends Agent {
     return introNode;
   }
 
-  ingestUserInput(msg: any, cb: (msg: string) => void) {
-
+  ingestUserInput(msg: any) {
+    this.currentNode?.ingestUserInput(msg);
   }
 }
 
@@ -127,18 +117,47 @@ class WorkflowNode {
 
 // This state is responsible for obtaining some context
 // Anything asked to the agent at this state basically
-// results in the agent should result in it asking for the objective
+// results in the agent should result in it asking for this context
+// Context is gathered in some specified order
 // Once it is obtained, proceed to the next node by adding it to the context
+//TODO: who's responsible for updating the context?, is it inside or outside
 class ContextGatheringNode extends WorkflowNode {
-  constructor(name: string,parent?: WorkflowNode) {
+  contexts: ContextSchema[];
+
+  constructor(name: string,needed: ContextSchema[], parent?: WorkflowNode) {
     super(name, parent);
+    this.contexts = needed;
   }
 
-  run(state: WorkflowContext) {
+  updateContext(ctx: WorkflowContext) {
+    //TODO: 1. keep the system prompt, message history & the LLM provider
+    // 2. Update with some workflow context telling
+    // the llm about the context gathering process
+    ctx.messages.push({
+      role: "user",
+      message: {
+        workflowContent: [{
+          content: prompts["context-gathering-meta-instruction"],
+          type: "workflow-instruction"
+        },
+        {
+          //TODO: Add the extra instruction on the schema here
+          content: JSON.stringify(this.contexts),
+          type: "workflow-instruction"
+        }]
+      }
+    });
+  }
+
+  run(ctx: WorkflowContext) {
     if(this.state !== "idle") {
-      console.log("ObjectiveGatheringNode ${this.name} not in idle state, doing nothing for run call");
+      console.log("ContextGatheringNode ${this.name} not in idle state, doing nothing for run call");
       return;
-    } else if(this.state)
+    } else if(this.state) {
+      //Update the context before the process
+      this.updateContext(ctx);
+      //TODO: Should we trigger a pre-defined response here?
+    }
   }
 
   ingestUserInput(msg: any): void {
@@ -167,10 +186,10 @@ class SimpleOutputNode extends WorkflowNode {
     ctx.messages.push({
       role: "user",
       message: {
-        project_context: {
-          output_context: this.output,
-          output_to_user: true
-        }
+        workflowContent: [{
+          content: this.output,
+          type: "output-for-user"
+        }]
       }
     });
     this.state = "closed";
@@ -178,17 +197,29 @@ class SimpleOutputNode extends WorkflowNode {
   }
 }
 
-class LLMProvider {
-
+class WorkflowContext {
+  systemPrompt: string = "";
+  messages = new Array<Message>();
+  numIterations: number = 5;
+  llm?: LLMProvider;
+  userOutputCb?: (msg: string) => void;
 }
 
 interface Message {
   role: string;
   message: {
-    user_content?: string,
-    project_context?: {
-      output_context: string,
-      output_to_user: boolean
-    }
+    userContent?: string,
+    workflowContent?: {
+      type: "output-for-user" | "workflow-context" | "workflow-instruction",
+      content: string
+    }[]
   }
 };
+
+interface ContextSchema {
+  //Objective, documents,
+  // Type, string OR documents
+  contextName: string,
+  contextContext: string,
+  allowedInput: Set<"string" | "pdf" | "doc" | "png" | "jpg">
+}
