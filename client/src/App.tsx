@@ -153,7 +153,7 @@ const App: React.FC = () => {
             onSendMessage={(threadId:number, message: string) => {
               console.log("Sending message:", message);
               setCurrentThreadState("running");
-
+              //TODO: Send the message through socket conn
               // Simulate agent processing - after 3 seconds, set back to ready
               setTimeout(() => {
                 setCurrentThreadState("ready-for-input");

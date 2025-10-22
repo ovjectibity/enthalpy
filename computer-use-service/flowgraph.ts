@@ -2,7 +2,6 @@ import {
   Tool as AnthTool,
   ToolUseBlock,
   ContentBlock,
-  MessageParam,
 } from "@anthropic-ai/sdk/resources";
 import { Model, ContextManager } from "./model.js";
 import { Tool } from "./tools.js";
