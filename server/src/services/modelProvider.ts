@@ -4,6 +4,7 @@ import {
   ContentBlock,
   MessageParam,
   ContentBlockParam,
+  Model,
 } from "@anthropic-ai/sdk/resources";
 import { ModelMessage } from "./agent"
 
@@ -63,7 +64,6 @@ export class ClaudeIntf implements LLMIntf {
 
   async input(msg: ModelMessage): Promise<any> {
     this.messages.push(msg);
-
     const message = await this.client.messages
       .create({
         max_tokens: this.maxTokens,
@@ -76,10 +76,26 @@ export class ClaudeIntf implements LLMIntf {
         console.log(error);
       });
     console.log("Got this message from the claude model", message);
+    //TODO: translate the content blocks to ModelMessage format
     if (message === undefined || message === null) {
-      return Promise.resolve(new Array<ContentBlock>());
+      return Promise.resolve({
+        role: "assistant",
+        messages: []
+      });
     } else {
-      return message.content;
+      let msg: ModelMessage = {
+        role: "assistant",
+        messages: []
+      };
+      let contents = message.content as Array<ContentBlock>;
+      contents.forEach((content: ContentBlock) => {
+        if(content.type === "text") {
+          if (content.text) {
+            msg.messages.push(JSON.parse(content.text));
+          }
+        }
+      });
+      return msg;
     }
   }
 }
