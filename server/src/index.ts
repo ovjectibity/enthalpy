@@ -129,4 +129,5 @@ agentchat.on("connection", (socket) => {
   });
 });
 
-server.listen(process.env.AGENT_CHAT_PORT, () => console.log("Listening on http://localhost:${AGENT_CHAT_PORT}"));
+server.listen(process.env.AGENT_CHAT_PORT,
+  () => console.log("Listening on http://localhost:${process.env.AGENT_CHAT_PORT}"));
