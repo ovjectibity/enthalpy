@@ -8,10 +8,10 @@ const router = express.Router();
 const isValidRole = (role: string): role is ThreadMessage['role'] =>
   ['agent', 'user', 'tool_result'].includes(role);
 
-const isValidMessageType = (messageType: string): messageType is ThreadMessage['message_type'] =>
+const isValidMessageType = (messageType: string): messageType is ThreadMessage['messageType'] =>
   ['static', 'thinking', 'tool-use', 'enth-actions'].includes(messageType);
 
-const isValidAgentName = (agentName: string): agentName is Agent =>
+const isValidAgentName = (agentName: string): boolean =>
   ['mc', 'flow-graph', 'exp-design', 'hypotheses'].includes(agentName);
 
 // 1. GET /api/threads/project/:projectId/user/:userId - Get all threads for a given project ID & user ID
@@ -78,9 +78,12 @@ router.post('/:threadId/messages', async (req, res) => {
 
     const messageData = {
       role: req.body.role,
-      message_type: req.body.message_type,
+      messageType: req.body.message_type,
       message: req.body.message,
-      timestamp: req.body.timestamp ? new Date(req.body.timestamp) : undefined
+      timestamp: req.body.timestamp ? new Date(req.body.timestamp) : undefined,
+      threadId: threadId,
+      projectId: 1, //TODO: Handle projects here
+      agentName: "mc" as Agent, //TODO: Handle agent names here, via the DB
     };
 
     const result = await ThreadsService.appendMessageToThread(threadId, messageData);
@@ -128,9 +131,9 @@ router.post('/', async (req, res) => {
     }
 
     const threadData = {
-      project_id: projectId,
-      user_id: userId,
-      agent_name: req.body.agent_name,
+      projectId: projectId,
+      userId: userId,
+      agentName: req.body.agent_name,
       role: req.body.role || 'agent', // default to agent if not specified
       agent: req.body.agent || 'static' // default message type if not specified
     };
@@ -167,7 +170,7 @@ router.get('/project/:projectId/user/:userId/agent/:agentName', async (req, res)
       });
     }
 
-    const result = await ThreadsService.getThreadsByProjectUserAndAgent(projectId, userId, agentName);
+    const result = await ThreadsService.getThreadsByProjectUserAndAgent(projectId, userId, agentName as Agent);
     res.status(result.success ? 200 : 500).json(result);
   } catch (error) {
     console.error('Error in GET /threads/project/:projectId/user/:userId/agent/:agentName:', error);

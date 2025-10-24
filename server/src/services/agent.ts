@@ -2,14 +2,14 @@ import { ClaudeIntf, LLMIntf } from "./modelProvider";
 // Workflows are defined by 2 loops -
 // L0 loop - workflow progress nodes, with each having a specific end output
 // L1 loop - with multiple LLM iterations towards achieving that output
-const prompts = require("../prompts/mcprompts.json");
+import { prompts } from "../prompts/mcprompts";
 
 type WorkflowNodeState = "waiting_on_llm" |
                           "waiting_on_user" |
                           "idle" |
                           "closed";
 
-export class AgentService {
+class AgentService {
   agentMap: Map<string,Agent>;
 
   public constructor() {
@@ -22,9 +22,9 @@ export class AgentService {
   }
 
   public ingestUserInput(msg: any) {
-    if(msg.agent_name && this.agentMap.get(msg.agent_name)) {
-      this.agentMap.get(msg.agent_name)?.ingestUserInput(msg);
-    } else if (msg.agent_name) {
+    if(msg.agentName && this.agentMap.get(msg.agentName)) {
+      this.agentMap.get(msg.agentName)?.ingestUserInput(msg);
+    } else if (msg.agentName) {
       console.log("No ${msg.agent_name} agent available, doing nothing.");
     } else {
       console.log("No agent name provided to AgentService, doing nothing.");
@@ -32,7 +32,7 @@ export class AgentService {
   }
 
   //Callback independent of the user input cb needed to handle independent output from the agent
-  public registerOutputCallback(agentName: string, cb: (msg: UserOutputMessage) => void) {
+  public registerOutputCallback(agentName: string, cb: (msg: string) => void) {
     this.agentMap.get(agentName)?.registerUserOutputCallback(cb);
   }
 }
@@ -51,7 +51,7 @@ abstract class Agent {
     this.ctx.currentNode?.ingestUserInput(this.ctx,msg);
   }
 
-  public registerUserOutputCallback(cb: (msg: UserOutputMessage) => void) {
+  public registerUserOutputCallback(cb: (msg: string) => void) {
     this.ctx.userOutputCb = cb;
   }
 
@@ -235,10 +235,7 @@ class ContextGatheringNode extends WorkflowNode {
           }
           if(m.userContent) {
             //Surface message to the user:
-            ctx.userOutputCb ? ctx.userOutputCb({
-              type: "string",
-              content: m.userContent
-            }) : null;
+            ctx.userOutputCb ? ctx.userOutputCb(m.userContent) : null;
           }
         });
       }
@@ -291,10 +288,7 @@ class SimpleOutputNode extends WorkflowNode {
       console.log("SimpleOutputNode ${this.name} not in idle state, doing nothing for run call");
     }
     if(ctx.userOutputCb) {
-      ctx.userOutputCb({
-        type: "string",
-        content: this.output
-      });
+      ctx.userOutputCb(this.output);
     }
     //Add the output provided to the project message,
     // so that it can be traced later by the LLM if needed
@@ -321,7 +315,7 @@ class WorkflowContext {
   messages = new Array<ModelMessage>();
   numIterations: number = 5;
   model?: LLMIntf;
-  userOutputCb?: (msg: UserOutputMessage) => void;
+  userOutputCb?: (msg: string) => void;
   currentNode?: WorkflowNode;
   gatheredContext: {
     nodeType: string,
@@ -334,14 +328,9 @@ class WorkflowContext {
   }
 }
 
-export interface UserOutputMessage {
-  type: "string",
-  content: string
-}
-
 // Same schema to be used for both input to the LLM
 // and for the output the LLM generates
-export interface ModelMessage {
+interface ModelMessage {
   role: "user" | "assistant";
   messages: {
       //TODO: Extra info here as a JSON??
@@ -363,3 +352,5 @@ interface ContextSchema {
   contextContext: string,
   allowedInput: Set<"string" | "pdf" | "doc" | "png" | "jpg">
 }
+
+export {AgentService, ModelMessage};

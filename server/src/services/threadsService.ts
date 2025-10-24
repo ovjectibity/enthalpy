@@ -1,19 +1,6 @@
-import { ThreadMessage, Thread, ApiResponse, Agent } from '@enthalpy/shared';
+import { ThreadMessage, Agent, ApiResponse, Thread, CreateThreadData, AppendMessageData } from '@enthalpy/shared';
 import { ThreadMessageModel, documentToThreads } from './threadsModel.js';
 import { MongoDBConnections } from './mongoConnect.js';
-
-export interface CreateThreadData {
-  project_id: number;
-  user_id: number;
-  agent_name: Agent;
-}
-
-export interface AppendMessageData {
-  role: ThreadMessage['role'];
-  message_type: ThreadMessage['message_type'];
-  message: string;
-  timestamp?: Date;
-}
 
 export class ThreadsService {
   static activeThreads: Map<number,Thread> = new Map<number,Thread>();
@@ -74,9 +61,9 @@ export class ThreadsService {
           threads.push({
             threadId: threadId,
             messages: messages,
-            user_id: firstMessage.user_id,
-            project_id: firstMessage.project_id,
-            agent_name: firstMessage.agent_name
+            userId: firstMessage.userId,
+            projectId: firstMessage.projectId,
+            agentName: firstMessage.agentName
           });
         }
       }
@@ -126,13 +113,13 @@ export class ThreadsService {
       const threadMessageData: ThreadMessage = {
         threadId: threadId,
         index: nextIndex,
-        user_id: lastMessage.user_id,
-        project_id: lastMessage.project_id,
+        userId: lastMessage.user_id,
+        projectId: lastMessage.project_id,
         role: messageData.role,
-        message_type: messageData.message_type,
+        messageType: messageData.messageType,
         message: messageData.message,
         timestamp: messageData.timestamp || new Date(),
-        agent_name: lastMessage.agent_name
+        agentName: lastMessage.agent_name
       };
 
       //Add to the list of actively maintained threads
@@ -176,9 +163,9 @@ export class ThreadsService {
       const thread: Thread = {
         threadId: newThreadId,
         messages: [],
-        user_id: threadData.user_id,
-        project_id: threadData.project_id,
-        agent_name: threadData.agent_name
+        userId: threadData.userId,
+        projectId: threadData.projectId,
+        agentName: threadData.agentName
       };
 
       //Add to the list of actively maintained threads
@@ -213,8 +200,8 @@ export class ThreadsService {
 
       // Find all ThreadMessages for this project, user, and agent
       const threadMessages = await ThreadMessageModel.find({
-        project_id: projectId,
-        user_id: userId,
+        projectId: projectId,
+        userId: userId,
         'agent_name.name': agentName
       })
       .sort({ thread_id: 1, index: 1 })
@@ -240,9 +227,9 @@ export class ThreadsService {
           threads.push({
             threadId: threadId,
             messages: messages,
-            user_id: firstMessage.user_id,
-            project_id: firstMessage.project_id,
-            agent_name: firstMessage.agent_name
+            userId: firstMessage.userId,
+            projectId: firstMessage.projectId,
+            agentName: firstMessage.agentName
           });
         }
       }

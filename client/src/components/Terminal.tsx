@@ -5,7 +5,7 @@ import attachmentIcon from "../assets/attachment-icon.svg";
 import threadHistoryIcon from "../assets/thread-history-icon.svg";
 import ThreadHistoryMenu from "./ThreadHistoryMenu";
 import {TerminalMessage} from "./TerminalMessage";
-import { Thread, Agent } from "@enthalpy/shared";
+import { Agent, Thread, ThreadMessage } from "@enthalpy/shared";
 
 interface TerminalProps {
   onAgentChange: (agent: Agent) => number;
@@ -87,8 +87,8 @@ const Terminal: React.FC<TerminalProps> = (state: TerminalProps) => {
       <div className="chat-header">
         <select
           className="agent-selector"
-          value={agentName[(state.threads.get(state.selectedThreadId)?.agent_name ?? ("mc")) as string]}
-          onChange={(e) => state.onAgentChange(e.target.value as unknown as Agent)}
+          value={agentName[(state.threads.get(state.selectedThreadId)?.agentName ?? ("mc")) as string]}
+          onChange={(e) => state.onAgentChange(e.target.value as Agent)}
         >
           <option>Master of Ceremonies</option>
           <option>Flow graph agent</option>
@@ -119,7 +119,7 @@ const Terminal: React.FC<TerminalProps> = (state: TerminalProps) => {
             message={message}
             isFinished={true}
             isCollapsible={
-              message.message_type === "thinking"
+              message.messageType === "thinking"
             }
           />
         ))}

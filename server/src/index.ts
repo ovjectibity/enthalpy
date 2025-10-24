@@ -3,19 +3,28 @@ import path from "path";
 import { fileURLToPath } from "url"; // Import for ES Modules
 // import cors from "cors"; // TODO: Add after installing dependency
 // import { ComputerTool, Tool } fro../../computer-use-service/tools.js.js";
-import hypothesesRoutes from "./routes/hypotheses.js";
-import { threadsRouter } from "./routes/threads.js";
-import { MongoDBConnections } from "./services/mongoConnect.js";
-import { MongoDBInitializer } from "./services/mongoInit.js";
-import { Server } from 'socket.io';
-import { AgentService, UserOutputMessage } from "./services/agent.js";
+import hypothesesRoutes from "./routes/hypotheses";
+import { threadsRouter } from "./routes/threads";
+import { MongoDBConnections } from "./services/mongoConnect";
+import { MongoDBInitializer } from "./services/mongoInit";
+import { Namespace, Server } from 'socket.io';
+import { AgentService } from "./services/agent";
+import { ThreadsService } from "./services/threadsService";
+import { 
+  ThreadMessage, 
+  AgentClientToServerEvents, 
+  AgentServerToClientEvents, 
+  ThreadActivation, 
+  AppendMessageData
+} from "@enthalpy/shared";
 import http from "http";
+import { wrap } from "module";
 
 const app = express();
 const port = process.env.APP_PORT;
 const server = http.createServer(app);
 const io = new Server(server); // attach socket.io to the server
-const agentchat = io.of("/agent");
+const agentchat: Namespace<AgentClientToServerEvents,AgentServerToClientEvents> = io.of("/agent");
 console.log("Running app at port", port);
 
 // Initialize MongoDB connection
@@ -104,6 +113,7 @@ process.on('SIGTERM', async () => {
 //Hierarchy here: User ID > Project ID > Agent
 // Agent type to be handled via the event name
 // TODO: Project ID to be handled via the event data json
+// TODO: Handle thread ID via the event data json
 // User ID to be handled via middleware
 agentchat.use((socket, next) => {
   if(socket.handshake.auth.role === "user") {
@@ -116,18 +126,37 @@ agentchat.use((socket, next) => {
 agentchat.on("connection", (socket) => {
   console.log("Client connected for agent chat:", socket.id);
   const aserv = new AgentService();
-  aserv.registerOutputCallback("mc",(msg: UserOutputMessage) => {
-    let wrappedMsg = (msg as any);
-    wrappedMsg.agentName = "mc";
-    socket.emit("agent_message",wrappedMsg);
-  });
 
-  socket.on("user_message", (msg) => {
+  socket.on("activate_thread",(msg: ThreadActivation) => {
+    let agentName = msg.agentName;
+    let threadId = msg.threadId;
+    aserv.registerOutputCallback(agentName,
+      async (msg: string) => {
+          let wrappedMsg = await ThreadsService.appendMessageToThread(threadId,
+          {
+            agentName: agentName,
+            message: msg,
+            role: "agent", //TODO: Handle other types here
+            messageType: "static", //TODO: Handle other types here,
+            threadId: threadId,
+            projectId: 1 //TODO: Handle projectId here
+          });
+          if(wrappedMsg.data) {
+            socket.emit("agent_message",wrappedMsg.data);
+          } else {
+            console.log("Error inserting agent thread message to mongo DB", wrappedMsg);
+          }
+      });
+  })
+
+  socket.on("user_message", async (msg: AppendMessageData) => {
     console.log("Message received:", msg);
-    if(msg.projectId) {
+    let wrappedMsg = await ThreadsService.appendMessageToThread(msg.threadId,msg);
+    if(wrappedMsg.data) {
+      socket.emit("add_user_message",wrappedMsg.data);
       aserv.ingestUserInput(msg);
     } else {
-      console.log("No project_id with the message sent, not doing anything")
+      console.log("Error inserting user thread message to mongo DB", wrappedMsg);
     }
   });
 

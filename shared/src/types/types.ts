@@ -71,13 +71,14 @@ export interface Hypothesis {
 export interface ThreadMessage {
   threadId: number,
   index: number,
-  user_id: number,
-  project_id: number,
-  role: "agent" | "user" | "tool_result"
-  message_type: "static" | "thinking" | "tool-use" | "enth-actions";
-  message: string
-  timestamp: Date;
-  agent_name: Agent;
+  userId: number,
+  projectId: number,
+  role: "agent" | "user" | "tool_result",
+  messageType: "static" | "thinking" | "tool-use" | "enth-actions",
+  //TODO: Handling for rich text here
+  message: string,
+  timestamp: Date,
+  agentName: Agent
 }
 
 export interface Thread {
@@ -85,9 +86,9 @@ export interface Thread {
   //Assumption: ThreadMessage array is ordered by index,
   // index representing the order of messages
   messages: ThreadMessage[],
-  user_id: number,
-  project_id: number,
-  agent_name: Agent,
+  userId: number,
+  projectId: number,
+  agentName: Agent,
   summary?: string
 }
 
@@ -148,6 +149,39 @@ export interface GetHypothesesQuery extends PaginationParams {
   objectiveId?: number;
   startDate?: string;
   endDate?: string;
+}
+
+export interface ThreadActivation {
+  threadId: number,
+  agentName: Agent,
+  projectId: number
+}
+
+export interface CreateThreadData {
+  projectId: number;
+  userId: number;
+  agentName: Agent;
+}
+
+export interface AppendMessageData {
+  role: ThreadMessage['role'];
+  messageType: ThreadMessage['messageType'];
+  agentName: Agent,
+  message: string;
+  timestamp?: Date;
+  threadId: number,
+  projectId: number
+}
+
+export interface AgentServerToClientEvents {
+  agent_message: (msg: ThreadMessage) => void;
+  add_user_message: (msg: ThreadMessage) => void;
+  connectError: (err: Error) => void;
+}
+
+export interface AgentClientToServerEvents {
+  user_message: (msg: AppendMessageData) => void;
+  activate_thread: (msg: ThreadActivation) => void
 }
 
 export type Agent = "mc" | "flow-graph" | "exp-design" | "hypotheses";

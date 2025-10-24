@@ -2,7 +2,14 @@ import React, { useState } from "react";
 import "./App.css";
 import { HypothesesView, Terminal } from "./components";
 import useThreads from "./hooks/useThreads";
-import { Agent } from "@enthalpy/shared";
+import { 
+  Agent, 
+  AgentServerToClientEvents, 
+  AgentClientToServerEvents, 
+  AppendMessageData, 
+  ThreadMessage 
+} from "@enthalpy/shared";
+import {io, Socket} from "socket.io-client";
 import ContextIcon from "./assets/context-icon.svg";
 import HypothesesIcon from "./assets/hypotheses-icon.svg";
 import JourneyMapsIcon from "./assets/journey-maps-icon.svg";
@@ -13,13 +20,13 @@ import ExperimentsIcon from "./assets/experiments-icon.svg";
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
-  const [selectedAgent, setSelectedAgent] = useState("mc" as unknown as Agent);
+  const [selectedAgent, setSelectedAgent] = useState("mc" as Agent);
   const [activeThread, setActiveThread] = useState(1);
   const [activeContext, setActiveContext] = useState("Context");
   const [currentThreadState, setCurrentThreadState] = useState<"running" | "ready-for-input">("ready-for-input");
   const { threads, loading, error } = useThreads({
-    projectId: 1,
-    userId: 1
+    projectId: 1, //TODO: Handle different projects
+    userId: 1 //TODO: Handle different user IDs
   });
   const [chatWidth, setChatWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
@@ -71,6 +78,42 @@ const App: React.FC = () => {
       };
     }
   }, [isDragging]);
+
+  const socket: Socket<AgentServerToClientEvents, AgentClientToServerEvents> =
+    io("http://localhost:3000/agent", {
+    // transports: ['websocket'], // Force WebSocket
+    auth: { role: "user" },
+  });
+
+  socket.on("connect", () => {
+    socket.emit("activate_thread",{
+      threadId: activeThread,
+      agentName: selectedAgent,
+      projectId: 1 //TODO: Handle different projects
+    });
+  });
+
+  // Listen for events from server
+  socket.on("agent_message", (msg: ThreadMessage) => {
+    console.log("Message from agent:", msg);
+    if(threads.get(msg.threadId)) {
+      threads.get(msg.threadId)?.messages.push(msg);
+    }
+    setCurrentThreadState("ready-for-input");
+  });
+
+  // Listen for events from server
+  socket.on("add_user_message", (msg: ThreadMessage) => {
+    console.log("Finalise user message from agent:", msg);
+    if(threads.get(msg.threadId)) {
+      threads.get(msg.threadId)?.messages.push(msg);
+    }
+  });
+
+  // Handle connection errors
+  socket.on("connect_error", (err: Error) => {
+    console.error("Connection failed:", err);
+  });
 
   return (
     <div className="app">
@@ -150,14 +193,17 @@ const App: React.FC = () => {
               console.log("Selected thread:", threadId);
               // TODO: Here you would load the selected thread's messages
             }}
-            onSendMessage={(threadId:number, message: string) => {
+            onSendMessage={(threadId: number, message: string) => {
               console.log("Sending message:", message);
+              socket.emit("user_message",{
+                message: message,
+                threadId: activeThread,
+                agentName: selectedAgent,
+                role: "user",
+                messageType: "static",
+                projectId: 1 //TODO: Handle different projects
+              });
               setCurrentThreadState("running");
-              //TODO: Send the message through socket conn
-              // Simulate agent processing - after 3 seconds, set back to ready
-              setTimeout(() => {
-                setCurrentThreadState("ready-for-input");
-              }, 3000);
             }}
             onStopAgent={() => {
               setCurrentThreadState("ready-for-input");

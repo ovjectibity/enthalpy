@@ -15,7 +15,7 @@ export const TerminalMessage: React.FC<TerminalMessageProps> = ({
 }) => {
   // Only make "thinking" messages collapsible and collapsed by default
   const shouldBeCollapsible =
-    isCollapsible && message.message_type === "thinking";
+    isCollapsible && message.messageType === "thinking";
   const [isCollapsed, setIsCollapsed] = useState(shouldBeCollapsible);
 
   const handleToggleCollapse = () => {
@@ -36,7 +36,7 @@ export const TerminalMessage: React.FC<TerminalMessageProps> = ({
         <div
           className={`message ${message.role} ${
             isFinished ? "finished" : "in-progress"
-          } ${message.message_type}`}
+          } ${message.messageType}`}
         >
           <div className="message-text">
             {message.message}
@@ -53,7 +53,7 @@ export const TerminalMessage: React.FC<TerminalMessageProps> = ({
       <div
         className={`message ${message.role} ${
           isFinished ? "finished" : "in-progress"
-        } ${message.message_type} collapsible`}
+        } ${message.messageType} collapsible`}
       >
         <div className="message-header" onClick={handleToggleCollapse}>
           <img
@@ -64,7 +64,7 @@ export const TerminalMessage: React.FC<TerminalMessageProps> = ({
             className={`collapse-icon ${isCollapsed ? "" : "expanded"}`}
           />
           <span className="message-type-label">
-            {message.message_type.replace("-", " ")}
+            {message.messageType.replace("-", " ")}
           </span>
         </div>
         <div
