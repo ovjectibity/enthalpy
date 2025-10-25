@@ -70,9 +70,9 @@ class MCAgent extends Agent {
   constructor() {
     super("mc");
     let introNode = MCAgent.createIntroNode();
-    // let objNode = MCAgent.createObjectiveGatheringNode(introNode);
+    let objNode = MCAgent.createObjectiveGatheringNode(introNode);
     this.workNodes.push(introNode);
-    // this.workNodes.push(objNode);
+    this.workNodes.push(objNode);
     this.ctx.currentNode = introNode;
   }
 
@@ -170,7 +170,7 @@ class ContextGatheringNode extends WorkflowNode {
         messages: [{
           workflowContent: {
             //TODO: this prompt should also include the format in which the output is to be provided
-            content: prompts["gather-context-from-user"],
+            content: prompts["prompt-user-to-gather-context-from-user"],
             type: "workflow_instruction"
           }
         }]
@@ -196,7 +196,7 @@ class ContextGatheringNode extends WorkflowNode {
     })
   }
 
-  processLLMOutput(ctx: WorkflowContext, msg: any) {
+  processLLMOutput(ctx: WorkflowContext, msg: ModelMessage) {
     //TODO: What to do for the other states
     // msg here should conform to the ModelMessage schema.
     //Check the workflow node state here before proceeding
@@ -212,12 +212,17 @@ class ContextGatheringNode extends WorkflowNode {
       // or if the LLM wants this node to stop or
       // if any message needs to be surfaced to the user
       if(msg.role && msg.role === "assistant" && msg.messages) {
+        ctx.messages.push(msg);
         msg.messages.forEach((m: any) => {
           if(m.workflowContent && m.workflowContent.type === "workflow_context") {
             //Add to the context if available
             //TODO: Validation of provided context here
-            let gatheredContext = JSON.parse(m.workflowContent.content);
-            this.scrapeContext(gatheredContext);
+            try {
+              let gatheredContext = JSON.parse(m.workflowContent.content);
+              this.scrapeContext(gatheredContext);
+            } catch(error) {
+              console.log("Failure when processing the LLM gathered context",error);
+            }
           } else if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
             //TODO: The stop condition is expected to be the last block, add this to prompt
             let stopCondition = JSON.parse(m.workflowContent.content);
@@ -318,7 +323,7 @@ class SimpleOutputNode extends WorkflowNode {
 
 class WorkflowContext {
   systemPrompt: string = "";
-  messages = new Array<ModelMessage>();
+  messages: Array<ModelMessage> = new Array<ModelMessage>();
   numIterations: number = 5;
   model?: LLMIntf;
   userOutputCb?: (msg: string) => void;
