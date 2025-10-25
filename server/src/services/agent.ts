@@ -3,7 +3,7 @@ import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
 // L0 loop - workflow progress nodes, with each having a specific end output
 // L1 loop - with multiple LLM iterations towards achieving that output
 import { prompts } from "../prompts/mcprompts.js";
-import { hypothesesContextGatheringSchema } from "../prompts/hypothesesContextGatheringSchema";
+import { hypothesesContextGatheringSchema } from "../prompts/hypothesesContextGatheringSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
 
 type WorkflowNodeState = "waiting_on_llm" |
