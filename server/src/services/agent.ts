@@ -374,19 +374,12 @@ interface ModelMessage {
     }[]
 };
 
-interface ContextsHypothesesContext {
-  name2: string //"objective" | "metrics" | "product",
-  // contexts: {
-    
-  // }
-}
-
 interface Contexts<T> {
   contexts: T[]
 }
 
 interface HypothesesContext {
-  name: string //"objective" | "metrics" | "product",
+  name: "objective" | "metrics" | "product",
   content: string
 }
 

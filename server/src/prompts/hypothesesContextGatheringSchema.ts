@@ -7,8 +7,8 @@ export const hypothesesContextGatheringSchema = {
                 "type": "object",
                 "properties": {
                     "name": {
-                        "type": "string"
-                        // "enum": ["objective","product","metrics"],
+                        "type": "string",
+                        "enum": ["objective","product","metrics"],
                     },
                     "content": {
                         "type": "string",
