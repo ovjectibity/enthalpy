@@ -3,6 +3,8 @@ import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
 // L0 loop - workflow progress nodes, with each having a specific end output
 // L1 loop - with multiple LLM iterations towards achieving that output
 import { prompts } from "../prompts/mcprompts.js";
+import { hypothesesContextGatheringSchema } from "../prompts/hypothesesContextGatheringSchema";
+import Ajv, { JSONSchemaType } from "ajv";
 
 type WorkflowNodeState = "waiting_on_llm" |
                           "waiting_on_user" |
@@ -78,15 +80,13 @@ class MCAgent extends Agent {
 
   static createIntroNode(): WorkflowNode {
     let introNode = new SimpleOutputNode("intro", prompts["intro-prompt"]);
-    return introNode;
+    return introNode; 
   }
 
   static createObjectiveGatheringNode(parent: WorkflowNode): WorkflowNode {
-    let objNode = new ContextGatheringNode("objective-gathering",[{
-      contextName: "objective",
-      contextContext: prompts["objective-gathering-context"],
-      allowedInput: new Set(["string"])
-    }],parent);
+    const schema: JSONSchemaType<Contexts<HypothesesContext>> = hypothesesContextGatheringSchema;
+    let objNode = new ContextGatheringNode<HypothesesContext>(
+      "objective-gathering",schema,parent);
     return objNode;
   }
 }
@@ -122,14 +122,19 @@ abstract class WorkflowNode {
 // results in the agent should result in it asking for this context
 // Context is gathered in some specified order
 // Once it is obtained, proceed to the next node by adding it to the context
-class ContextGatheringNode extends WorkflowNode {
-  neededContext: ContextSchema[];
-  gatheredContext: any;
+class ContextGatheringNode<T> extends WorkflowNode {
+  neededContextSchema: JSONSchemaType<Contexts<T>>;
+  gatheredContext: Contexts<T>;
+  schemaValidation: any;
 
-  constructor(name: string,needed: ContextSchema[], parent?: WorkflowNode) {
+  constructor(name: string, needed: JSONSchemaType<Contexts<T>>, parent?: WorkflowNode) {
     super(name, parent);
-    this.neededContext = needed;
-    this.gatheredContext = {};
+    this.neededContextSchema = needed;
+    this.gatheredContext = {
+      contexts: []
+    };
+    const ajv = new Ajv();
+    this.schemaValidation = ajv.compile(needed);
   }
 
   updateContext(ctx: WorkflowContext) {
@@ -147,8 +152,19 @@ class ContextGatheringNode extends WorkflowNode {
         },
         {
           workflowContent: {
-            //TODO: Add the extra instruction on the schema here
-            content: JSON.stringify(this.neededContext),
+            content: prompts["model-message-schema"],
+            type: "workflow_instruction"
+          }
+        },
+        {
+          workflowContent: {
+            content: prompts["context-gathering-schema-instruction"],
+            type: "workflow_instruction"
+          }
+        },
+        {
+          workflowContent: {
+            content: JSON.stringify(this.neededContextSchema),
             type: "workflow_instruction"
           }
         }
@@ -189,11 +205,12 @@ class ContextGatheringNode extends WorkflowNode {
   }
 
   scrapeContext(gatheredContext: any) {
-    this.neededContext.forEach(nc => {
-      if(gatheredContext[nc.contextName]) {
-        this.gatheredContext[nc.contextName] = gatheredContext[nc.contextName];
-      }
-    })
+    if(this.schemaValidation(gatheredContext)) {
+      let vgc = gatheredContext.contexts as Contexts<T>;
+      this.gatheredContext.contexts.push(...vgc.contexts);
+    } else {
+      console.log("Schema validation did not pass when trying to scrape LLM provided gathered context");
+    }
   }
 
   async processLLMOutput(ctx: WorkflowContext, msg: ModelMessage) {
@@ -357,12 +374,20 @@ interface ModelMessage {
     }[]
 };
 
-interface ContextSchema {
-  //Objective, documents,
-  // Type, string OR documents
-  contextName: string,
-  contextContext: string,
-  allowedInput: Set<"string" | "pdf" | "doc" | "png" | "jpg">
+interface ContextsHypothesesContext {
+  name2: string //"objective" | "metrics" | "product",
+  // contexts: {
+    
+  // }
+}
+
+interface Contexts<T> {
+  contexts: T[]
+}
+
+interface HypothesesContext {
+  name: string //"objective" | "metrics" | "product",
+  content: string
 }
 
 export {AgentService, ModelMessage};
