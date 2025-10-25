@@ -36,7 +36,7 @@ class AgentService {
   }
 
   //Callback independent of the user input cb needed to handle independent output from the agent
-  public registerOutputCallback(agentName: string, cb: (msg: string) => void) {
+  public registerOutputCallback(agentName: string, cb: (msg: string) => Promise<void>) {
     this.agentMap.get(agentName)?.registerUserOutputCallback(cb);
   }
 }
@@ -55,7 +55,7 @@ abstract class Agent {
     this.ctx.currentNode?.ingestUserInput(this.ctx,msg);
   }
 
-  public registerUserOutputCallback(cb: (msg: string) => void) {
+  public registerUserOutputCallback(cb: (msg: string) => Promise<void>) {
     this.ctx.userOutputCb = cb;
   }
 
@@ -183,7 +183,7 @@ class ContextGatheringNode extends WorkflowNode {
         // TODO: the LLM should be able to help this node proceed (even this can be perhaps optimised)
         this.state = "waiting_on_llm";
         let modelResponse = await ctx.model?.input(ctx.messages);
-        this.processLLMOutput(ctx, modelResponse);
+        await this.processLLMOutput(ctx, modelResponse);
       }
     }
   }
@@ -196,7 +196,7 @@ class ContextGatheringNode extends WorkflowNode {
     })
   }
 
-  processLLMOutput(ctx: WorkflowContext, msg: ModelMessage) {
+  async processLLMOutput(ctx: WorkflowContext, msg: ModelMessage) {
     //TODO: What to do for the other states
     // msg here should conform to the ModelMessage schema.
     //Check the workflow node state here before proceeding
@@ -213,7 +213,7 @@ class ContextGatheringNode extends WorkflowNode {
       // if any message needs to be surfaced to the user
       if(msg.role && msg.role === "assistant" && msg.messages) {
         ctx.messages.push(msg);
-        msg.messages.forEach((m: any) => {
+        for(let m of msg.messages) {
           if(m.workflowContent && m.workflowContent.type === "workflow_context") {
             //Add to the context if available
             //TODO: Validation of provided context here
@@ -223,7 +223,8 @@ class ContextGatheringNode extends WorkflowNode {
             } catch(error) {
               console.log("Failure when processing the LLM gathered context",error);
             }
-          } else if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
+          }
+          if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
             //TODO: The stop condition is expected to be the last block, add this to prompt
             let stopCondition = JSON.parse(m.workflowContent.content);
             if(stopCondition.stop && stopCondition.stopReason) {
@@ -242,11 +243,11 @@ class ContextGatheringNode extends WorkflowNode {
               }
             }
           }
-          if(m.userContent) {
+          if(m.userContent && ctx.userOutputCb) {
             //Surface message to the user:
-            ctx.userOutputCb ? ctx.userOutputCb(m.userContent) : null;
+             await ctx.userOutputCb(m.userContent);
           }
-        });
+        }
       }
     } else if(this.state === "closed") {
       //Do nothing
@@ -274,7 +275,7 @@ class ContextGatheringNode extends WorkflowNode {
         // TODO: the LLM should be able to help this node proceed (even this can be perhaps optimised)
         this.state = "waiting_on_llm";
         let modelResponse = await ctx.model?.input(ctx.messages);
-        this.processLLMOutput(ctx, modelResponse);
+        await this.processLLMOutput(ctx, modelResponse);
       }
     } else if(this.state === "waiting_on_llm") {
       //TODO: interrupt LLM in case of user input
@@ -298,7 +299,7 @@ class SimpleOutputNode extends WorkflowNode {
       return;
     }
     if(ctx.userOutputCb) {
-      ctx.userOutputCb(this.output);
+      await ctx.userOutputCb(this.output);
     }
     //Add the output provided to the project message,
     // so that it can be traced later by the LLM if needed
@@ -307,7 +308,7 @@ class SimpleOutputNode extends WorkflowNode {
       messages: [{
         workflowContent: {
           content: this.output,
-          type: "output_for_user"
+          type: "output_to_user"
         }
       }]
     });
@@ -326,7 +327,7 @@ class WorkflowContext {
   messages: Array<ModelMessage> = new Array<ModelMessage>();
   numIterations: number = 5;
   model?: LLMIntf;
-  userOutputCb?: (msg: string) => void;
+  userOutputCb?: (msg: string) => Promise<void>;
   currentNode?: WorkflowNode;
   gatheredContext: {
     nodeType: string,
@@ -348,7 +349,7 @@ interface ModelMessage {
       // TODO: Rich text support
       userContent?: string,
       workflowContent?: {
-        type: "output_for_user" | "workflow_context" | "workflow_instruction",
+        type: "output_to_user" | "workflow_context" | "workflow_instruction",
         // TODO: Rich text support
         // TODO: Add further structure here, to be handled by the provider.
         content: string
