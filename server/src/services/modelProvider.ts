@@ -33,12 +33,6 @@ export class ClaudeIntf implements LLMIntf {
     });
   }
 
-  // async generateResponse(
-  //   tools: AnthTool[],
-  //   messages: Array<MessageParam>,
-  // ): Promise<Array<ContentBlock>> {
-  // }
-
   static translateToAnthropicMessage(msg: ModelMessage): MessageParam {
     let blocks = Array<ContentBlockParam>();
     msg.messages.forEach(m => {

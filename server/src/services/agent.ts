@@ -1,8 +1,8 @@
-import { ClaudeIntf, LLMIntf } from "./modelProvider";
+import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
 // Workflows are defined by 2 loops -
 // L0 loop - workflow progress nodes, with each having a specific end output
 // L1 loop - with multiple LLM iterations towards achieving that output
-import { prompts } from "../prompts/mcprompts";
+import { prompts } from "../prompts/mcprompts.js";
 
 type WorkflowNodeState = "waiting_on_llm" |
                           "waiting_on_user" |
@@ -19,6 +19,10 @@ class AgentService {
 
   initiateAgents() {
     this.agentMap.set("mc", new MCAgent());
+  }
+
+  initAgentWorkflow(agentName: string) {
+    this.agentMap.get(agentName)?.initAgentWorkflow();
   }
 
   public ingestUserInput(msg: any) {
@@ -66,9 +70,9 @@ class MCAgent extends Agent {
   constructor() {
     super("mc");
     let introNode = MCAgent.createIntroNode();
-    let objNode = MCAgent.createObjectiveGatheringNode(introNode);
+    // let objNode = MCAgent.createObjectiveGatheringNode(introNode);
     this.workNodes.push(introNode);
-    this.workNodes.push(objNode);
+    // this.workNodes.push(objNode);
     this.ctx.currentNode = introNode;
   }
 
@@ -286,6 +290,7 @@ class SimpleOutputNode extends WorkflowNode {
   async run(ctx: WorkflowContext) {
     if(this.state !== "idle") {
       console.log("SimpleOutputNode ${this.name} not in idle state, doing nothing for run call");
+      return;
     }
     if(ctx.userOutputCb) {
       ctx.userOutputCb(this.output);
@@ -303,6 +308,7 @@ class SimpleOutputNode extends WorkflowNode {
     });
     this.state = "closed";
     if(this.children.length > 0) {
+      console.log("Running the next node after the intro node: ", this.children[0].name);
       //Just run for the first next node
       ctx.currentNode = this.children[0];
       this.children[0].run(ctx);

@@ -18,10 +18,16 @@ import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
 import ExperimentsIcon from "./assets/experiments-icon.svg";
 
+const socket: Socket<AgentServerToClientEvents, AgentClientToServerEvents> =
+  io("http://localhost:3000/agent", {
+  // transports: ['websocket'], // Force WebSocket
+  auth: { role: "user" },
+});
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Design");
   const [selectedAgent, setSelectedAgent] = useState("mc" as Agent);
-  const [activeThread, setActiveThread] = useState(1);
+  const [activeThread, setActiveThread] = useState(1); //TODO: Handle initiation
   const [activeContext, setActiveContext] = useState("Context");
   const [currentThreadState, setCurrentThreadState] = useState<"running" | "ready-for-input">("ready-for-input");
   const { threads, loading, error } = useThreads({
@@ -78,12 +84,6 @@ const App: React.FC = () => {
       };
     }
   }, [isDragging]);
-
-  const socket: Socket<AgentServerToClientEvents, AgentClientToServerEvents> =
-    io("http://localhost:3000/agent", {
-    // transports: ['websocket'], // Force WebSocket
-    auth: { role: "user" },
-  });
 
   socket.on("connect", () => {
     socket.emit("activate_thread",{

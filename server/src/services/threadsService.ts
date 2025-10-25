@@ -6,6 +6,7 @@ export class ThreadsService {
   static activeThreads: Map<number,Thread> = new Map<number,Thread>();
 
   // Static function to initialize activeThreads array for given userID & projectID
+  // TODO: This needs to be treated as a cache
   static async initializeActiveThreads(
     projectId: number,
     userId: number
@@ -94,7 +95,7 @@ export class ThreadsService {
       }
 
       // Find existing thread to get context
-      const existingMessages = await ThreadMessageModel.find({ thread_id: threadId })
+      const existingMessages = await ThreadMessageModel.find()
         .sort({ index: -1 })
         .limit(1)
         .lean()
@@ -103,7 +104,7 @@ export class ThreadsService {
       if (existingMessages.length === 0) {
         return {
           success: false,
-          error: 'Thread not found'
+          error: 'No threads found'
         };
       }
 
@@ -129,7 +130,7 @@ export class ThreadsService {
         throw new Error("Could not find any thread to append the message to.");
       }
 
-      const newMessage = new ThreadMessageModel(threadMessageData);
+      const newMessage = new ThreadMessageModel(ThreadMessageModel.toDocuments(threadMessageData));
       await newMessage.save();
 
       return {
@@ -156,7 +157,7 @@ export class ThreadsService {
       }
 
       // Generate unique IDs
-      const lastThread = await ThreadMessageModel.findOne().sort({ thread_id: -1 }).exec();
+      const lastThread = await ThreadMessageModel.findOne().sort({ thread_idx: -1 }).exec();
       const newThreadId = lastThread ? lastThread.thread_id + 1 : 1;
 
       // Create the new thread with an initial empty structure
@@ -200,9 +201,9 @@ export class ThreadsService {
 
       // Find all ThreadMessages for this project, user, and agent
       const threadMessages = await ThreadMessageModel.find({
-        projectId: projectId,
-        userId: userId,
-        'agent_name.name': agentName
+        project_id: projectId,
+        user_id: userId,
+        agent_name: agentName
       })
       .sort({ thread_id: 1, index: 1 })
       .lean()

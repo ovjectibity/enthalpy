@@ -18,6 +18,7 @@ export interface IThreadMessageDocument extends Document {
 // Interface for static methods
 interface IThreadMessageModel extends Model<IThreadMessageDocument> {
   toThreads(doc: any): ThreadMessage;
+  toDocuments(msg: ThreadMessage): any;
 }
 
 const ThreadMessageSchema = new Schema<IThreadMessageDocument>({
@@ -98,7 +99,22 @@ ThreadMessageSchema.statics.toThreads = function(doc: any): ThreadMessage {
   };
 };
 
+ThreadMessageSchema.statics.toDocuments = function(msg: ThreadMessage): any {
+  return {
+    thread_idx: msg.threadId,
+    index: msg.index,
+    user_id: msg.userId,
+    project_id: msg.projectId,
+    role: msg.role,
+    message_type: msg.messageType,
+    message: msg.message,
+    timestamp: msg.timestamp,
+    agent_name: msg.agentName
+  };
+};
+
 export const ThreadMessageModel = mongoose.model<IThreadMessageDocument, IThreadMessageModel>('Threads', ThreadMessageSchema);
 
 // Export utility function for converting lean query results
 export const documentToThreads = (doc: any): ThreadMessage => ThreadMessageModel.toThreads(doc);
+export const threadsToDocuments = (msg: ThreadMessage): any => ThreadMessageModel.toDocuments(msg);
