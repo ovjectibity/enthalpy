@@ -5,7 +5,7 @@ export const prompts = {
   "intro-prompt": "This is the intro.",
   "context-gathering-meta-instruction": "this is the context gathering context.",
   "model-message-schema": JSON.stringify(modelMessageSchema),
-  "context-gathering-schema-instruction": "Now in the subsequent workflow_instruction message I will provide you with a JSON schema which should give you the complex context on the context that needs to be gathered from the user, what its interpretation is and in which format it needs to be conveyed to me further. As and when you have different fields in this schema send them to me structured as a workflow_context message from your end. ",
+  "context-gathering-schema-instruction": "Now in the subsequent workflow_instruction message I will provide you with a JSON schema which should give you the complex context on the context that needs to be gathered from the user, what its interpretation is and in which format it needs to be conveyed to me further. As and when you have different fields in this schema send them to me structured as a workflow_context message from your end. Once you are done gathering all the context items, send a workflow_instruction with a JSON formatted message with a `stop: true` field & a `stopReason: All context gathered` field. ",
   "objective-gathering-context": "this is the objective gathering context.",
   "prompt-user-to-gather-context-from-user": "this is gather-context-from-user."
 }
