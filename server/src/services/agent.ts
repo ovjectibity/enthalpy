@@ -146,7 +146,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
     this.schemaValidation = ajv.compile(needed);
   }
 
-  updateWorkflowContext(ctx: WorkflowContext) {
+  updateMessagesContext(ctx: WorkflowContext) {
     // 1. keep the system prompt, message history & the LLM provider
     // 2. Update with some workflow context telling
     // the llm about the context gathering process
@@ -174,7 +174,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
       console.log(`ContextGatheringNode ${this.name} not in idle state, doing nothing for run call`);
     } else {
       //Update the context before the process
-      this.updateWorkflowContext(ctx);
+      this.updateMessagesContext(ctx);
       //Trigger a pre-defined response here by asking the LLM to summarise it.
       // TODO: This can perhaps be optimised via some automated way of create
       // the user output without LLM call
@@ -247,7 +247,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
               this.state = "closed";
               //TODO: Handle changing of active node here
               // Surface gathered context + record stopReason
-              console.log("Exiting the ContextGatheringNode ${this.name} due to ${stopCondition.stopReason}");
+              console.log(`Exiting the ContextGatheringNode ${this.name} due to ${stopCondition.stopReason}`);
               ctx.gatheredContext.push({
                 nodeType: "ContextGatheringNode",
                 nodeName: this.name,
@@ -301,33 +301,174 @@ class ContextGatheringNode<T> extends WorkflowNode {
   }
 }
 
-class AssetGenerationNode<T> extends WorkflowNode {
+class AssetGenerationNode<T,U> extends WorkflowNode {
+  //TODO: Adherence logic for the dependent contexts
+  dependentContexts: Contexts<U>
   neededAssetsSchema: JSONSchemaType<Assets<T>>;
   generatedAssets: Assets<T>;
+  neededAssetsSchemaValidator: any;
 
-  constructor(name: string, needed: JSONSchemaType<Assets<T>>, parent?: WorkflowNode) {
+  constructor(name: string, 
+    needed: JSONSchemaType<Assets<T>>, 
+    dependentContexts: Contexts<U>, 
+    parent?: WorkflowNode) {
     super(name,parent);
     this.neededAssetsSchema = needed;
     this.generatedAssets = {
       assets: []
     };
+    this.dependentContexts = dependentContexts;
+    const ajv = new Ajv();
+    this.neededAssetsSchemaValidator = ajv.compile(needed);
   }
 
-  updateWorkflowContext(ctx: WorkflowContext) {
-    //TODO: Pass workflow context to the LLM here
-
+  updateMessagesContext(ctx: WorkflowContext) {
+    // 1. keep the system prompt, message history & the LLM provider
+    // 2. Update with some workflow context telling
+    // the llm about the context gathering process
+    ctx.messages.push({
+      role: "user",
+      messages: [
+        {
+          workflowContent: {
+            content: prompts["assets-generation-meta-instruction"],
+            type: "workflow_instruction"
+          }
+        },
+        {
+          workflowContent: {
+            content: JSON.stringify(this.neededAssetsSchema),
+            type: "workflow_instruction"
+          }
+        }
+      ]
+    });
   }
 
-  async run(state: WorkflowContext) {
+  checkForDependentContexts(ctx: WorkflowContext) {
+    //TODO: Check if the dependent context items are available
+  }
+
+  scrapeAssets(generatedAssets: any) {
+    if(this.neededAssetsSchemaValidator(generatedAssets)) {
+      let vga = generatedAssets.assets as Assets<T>;
+      //TODO: Possible accumulation of duplicates here, 
+      // Should we override duplicates?
+      this.generatedAssets.assets.push(...vga.assets);
+    } else {
+      console.log("Schema validation did not pass when trying to scrape LLM provided gathered context");
+    }
+  }
+
+  async run(ctx: WorkflowContext) {
     if(this.state !== "idle") {
       console.log(`AssetGenerationNode ${this.name} not in idle state, doing nothing for run call`);
     } else {
+      //Update the context before the process
+      this.updateMessagesContext(ctx);
+      // Check if the dependent context items are available: 
+      this.checkForDependentContexts(ctx);
+      //Trigger a pre-defined response here by asking the LLM to summarise it.
+      // TODO: This can perhaps be optimised via some automated way of create
+      // the user output without LLM call
+      ctx.messages.push({
+        role: "user",
+        messages: [{
+          workflowContent: {
+            //TODO: this prompt should also include the format in which the output is to be provided
+            content: prompts["prompt-asset-generation"],
+            type: "workflow_instruction"
+          }
+        }]
+      });
+      if(!ctx.model) {
+        return Promise.reject(new Error("No model available for the AssetGenerationNode."));
+      } else {
+        //TODO: LLM provider call needed here
+        // Once the output from the user is available,
+        // TODO: the LLM should be able to help this node proceed (even this can be perhaps optimised)
+        this.state = "waiting_on_llm";
+        let modelResponse = await ctx.model?.input(ctx.messages);
+        await this.processLLMOutput(ctx, modelResponse);
+      }
+    }
+  }
 
+  async processLLMOutput(ctx: WorkflowContext, msg: ModelMessage) {
+    //TODO: What to do for the other states
+    if(this.state === "idle") {
+      //TODO: Do nothing, but something might be wrong here
+    } else if(this.state === "waiting_on_user") {
+      //TODO: this shouldn't happen, throw error
+      throw new Error("Waiting on user in ContextGatheringNode ${this.name}.");
+    } else if(this.state === "waiting_on_llm") {
+      if(msg.role && msg.role === "assistant" && msg.messages) {
+        ctx.messages.push(msg);
+        for(let m of msg.messages) {
+          if(m.workflowContent && m.workflowContent.type === "workflow_context") {
+            //Add to the context if available
+            //TODO: Validation of provided context here
+            try {
+              let generatedAssets = JSON.parse(m.workflowContent.content);
+              this.scrapeAssets(generatedAssets);
+            } catch(error) {
+              console.log("Failure when processing the LLM gathered context",error);
+            }
+          }
+          if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
+            //TODO: The stop condition is expected to be the last block, add this to prompt
+            let stopCondition = JSON.parse(m.workflowContent.content);
+            if(stopCondition.stop && stopCondition.stopReason) {
+              this.state = "closed";
+              //TODO: Handle changing of active node here
+              // Surface gathered context + record stopReason
+              console.log(`Exiting the AssetGenerationNode ${this.name} due to ${stopCondition.stopReason}`);
+              ctx.gatheredContext.push({
+                nodeType: "AssetGenerationNode",
+                nodeName: this.name,
+                context: this.generatedAssets
+              });
+              //TODO: Implement branching workflows: 
+              if(this.children.length > 0) {
+                ctx.currentNode = this.children[0];
+                this.children[0].run(ctx);
+              }
+            }
+          }
+          if(m.userContent && ctx.userOutputCb) {
+            //Surface message to the user:
+             await ctx.userOutputCb(m.userContent);
+          }
+        }
+      }
+    } else if(this.state === "closed") {
+      //Do nothing
     }
   }
 
   async ingestUserInput(ctx: WorkflowContext, msg: string) {
-
+    //TODO: What to do for the other states?
+    if(this.state === "idle") {
+      //TODO: Do nothing, but something might be wrong here
+    } else if(this.state === "waiting_on_user") {
+      ctx.messages.push({
+        role: "user",
+        messages: [{
+          userContent: msg
+        }]
+      });
+      if(!ctx.model) {
+        throw new Error("No model available for the ContextGatheringNode.");
+      } else {
+        this.state = "waiting_on_llm";
+        let modelResponse = await ctx.model?.input(ctx.messages);
+        await this.processLLMOutput(ctx, modelResponse);
+      }
+    } else if(this.state === "waiting_on_llm") {
+      //TODO: interrupt LLM in case of user input
+    } else if(this.state === "closed") {
+      //Do nothing
+    }
   }
 }
 
