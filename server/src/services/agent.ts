@@ -123,8 +123,7 @@ abstract class WorkflowNode {
 
   abstract run(state: WorkflowContext): void;
 
-  ingestUserInput(ctx: WorkflowContext, msg: string) {
-  };
+  abstract ingestUserInput(ctx: WorkflowContext, msg: string): void;
 }
 
 // This state is responsible for obtaining some context
@@ -147,7 +146,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
     this.schemaValidation = ajv.compile(needed);
   }
 
-  updateContext(ctx: WorkflowContext) {
+  updateWorkflowContext(ctx: WorkflowContext) {
     // 1. keep the system prompt, message history & the LLM provider
     // 2. Update with some workflow context telling
     // the llm about the context gathering process
@@ -157,18 +156,6 @@ class ContextGatheringNode<T> extends WorkflowNode {
         {
           workflowContent: {
             content: prompts["context-gathering-meta-instruction"],
-            type: "workflow_instruction"
-          }
-        },
-        {
-          workflowContent: {
-            content: prompts["model-message-schema"],
-            type: "workflow_instruction"
-          }
-        },
-        {
-          workflowContent: {
-            content: prompts["context-gathering-schema-instruction"],
             type: "workflow_instruction"
           }
         },
@@ -184,10 +171,10 @@ class ContextGatheringNode<T> extends WorkflowNode {
 
   async run(ctx: WorkflowContext) {
     if(this.state !== "idle") {
-      console.log("ContextGatheringNode ${this.name} not in idle state, doing nothing for run call");
+      console.log(`ContextGatheringNode ${this.name} not in idle state, doing nothing for run call`);
     } else {
       //Update the context before the process
-      this.updateContext(ctx);
+      this.updateWorkflowContext(ctx);
       //Trigger a pre-defined response here by asking the LLM to summarise it.
       // TODO: This can perhaps be optimised via some automated way of create
       // the user output without LLM call
@@ -326,7 +313,20 @@ class AssetGenerationNode<T> extends WorkflowNode {
     };
   }
 
+  updateWorkflowContext(ctx: WorkflowContext) {
+    //TODO: Pass workflow context to the LLM here
+
+  }
+
   async run(state: WorkflowContext) {
+    if(this.state !== "idle") {
+      console.log(`AssetGenerationNode ${this.name} not in idle state, doing nothing for run call`);
+    } else {
+
+    }
+  }
+
+  async ingestUserInput(ctx: WorkflowContext, msg: string) {
 
   }
 }
@@ -366,6 +366,10 @@ class SimpleOutputNode extends WorkflowNode {
       this.children[0].run(ctx);
     }
   }
+
+  ingestUserInput(ctx: WorkflowContext, msg: string) {
+    //Doing nothing
+  }
 }
 
 class WorkflowContext {
@@ -383,6 +387,29 @@ class WorkflowContext {
 
   constructor() {
     this.model = new ClaudeIntf();
+    
+  }
+
+  addContextOnWorkflows() {
+    this.messages.push(
+      {
+        role: "user",
+        messages: [
+          {
+            workflowContent: {
+              content: prompts["base-workflow-instruction"],
+              type: "workflow_instruction"
+            }
+          },
+          {
+            workflowContent: {
+              content: prompts["model-message-schema"],
+              type: "workflow_instruction"
+            }
+          }
+        ]
+      }
+    )
   }
 }
 
