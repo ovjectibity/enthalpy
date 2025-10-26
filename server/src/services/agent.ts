@@ -4,6 +4,7 @@ import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
 // L1 loop - with multiple LLM iterations towards achieving that output
 import { prompts } from "../prompts/mcprompts.js";
 import { objectiveContextGatheringSchema } from "../prompts/objectiveContextGatheringSchema.js";
+import { productContextGatheringSchema } from "../prompts/productContextGatheringSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
 
 type WorkflowNodeState = "waiting_on_llm" |
@@ -73,13 +74,15 @@ class MCAgent extends Agent {
     super("mc");
     let introNode = MCAgent.createIntroNode();
     let objNode = MCAgent.createObjectiveGatheringNode(introNode);
+    let prdCtxNode = MCAgent.createProductGatheringNode(objNode);
     this.workNodes.push(introNode);
     this.workNodes.push(objNode);
+    this.workNodes.push(prdCtxNode);
     this.ctx.currentNode = introNode;
   }
 
   static createIntroNode(): WorkflowNode {
-    let introNode = new SimpleOutputNode("intro", prompts["intro-prompt"]);
+    let introNode = new SimpleOutputNode("project-intro", prompts["project-intro-prompt"]);
     return introNode; 
   }
 
@@ -88,6 +91,13 @@ class MCAgent extends Agent {
     let objNode = new ContextGatheringNode<ObjectiveContext>(
       "objective-gathering",schema,parent);
     return objNode;
+  }
+
+  static createProductGatheringNode(parent: WorkflowNode): WorkflowNode {
+    const schema: JSONSchemaType<Contexts<ProductContext>> = productContextGatheringSchema;
+    let prdCtxNode = new ContextGatheringNode<ProductContext>(
+      "product-context-gathering",schema,parent);
+    return prdCtxNode;
   }
 }
 
@@ -207,6 +217,8 @@ class ContextGatheringNode<T> extends WorkflowNode {
   scrapeContext(gatheredContext: any) {
     if(this.schemaValidation(gatheredContext)) {
       let vgc = gatheredContext.contexts as Contexts<T>;
+      //TODO: Possible accumulation of duplicates here, 
+      // Should we override duplicates?
       this.gatheredContext.contexts.push(...vgc.contexts);
     } else {
       console.log("Schema validation did not pass when trying to scrape LLM provided gathered context");
@@ -302,6 +314,23 @@ class ContextGatheringNode<T> extends WorkflowNode {
   }
 }
 
+class AssetGenerationNode<T> extends WorkflowNode {
+  neededAssetsSchema: JSONSchemaType<Assets<T>>;
+  generatedAssets: Assets<T>;
+
+  constructor(name: string, needed: JSONSchemaType<Assets<T>>, parent?: WorkflowNode) {
+    super(name,parent);
+    this.neededAssetsSchema = needed;
+    this.generatedAssets = {
+      assets: []
+    };
+  }
+
+  async run(state: WorkflowContext) {
+
+  }
+}
+
 class SimpleOutputNode extends WorkflowNode {
   output: string = "";
 
@@ -383,8 +412,9 @@ interface ObjectiveContext {
 }
 
 interface ProductContext {
-  type: "product-page-url" | "product-documentation" | "product-context-document",
+  type: "product-page-url" | "product-documentation" | "product-context-document" | "product-name",
   content: "string",
+  description?: "string",
   format: "url" | "text" | "doc"
 }
 
@@ -394,15 +424,22 @@ interface TelemetryContext {
   databaseName: string,
   fields: {
     fieldName: string,
-    type: string,
+    dataType: string,
     semantics: string
-  }
+  }[]
 }
 
-interface MetricsContext {
-  metricName: string,
-  metricDescription: string,
-  metricFormula: string,
+interface Assets<T> {
+  assets: T[]
+}
+
+interface MetricContext {
+  name: string,
+  description: string,
+  formula: string,
+  priority: "P0" | "P1" | "P2" | "P3",
+  leadType: "leading" | "lagging",
+  metricTimeframe?: "day" | "week" | "month" | "quarter"
 }
 
 export {AgentService, ModelMessage};
