@@ -3,7 +3,7 @@ import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
 // L0 loop - workflow progress nodes, with each having a specific end output
 // L1 loop - with multiple LLM iterations towards achieving that output
 import { prompts } from "../prompts/mcprompts.js";
-import { hypothesesContextGatheringSchema } from "../prompts/hypothesesContextGatheringSchema.js";
+import { objectiveContextGatheringSchema } from "../prompts/objectiveContextGatheringSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
 
 type WorkflowNodeState = "waiting_on_llm" |
@@ -84,8 +84,8 @@ class MCAgent extends Agent {
   }
 
   static createObjectiveGatheringNode(parent: WorkflowNode): WorkflowNode {
-    const schema: JSONSchemaType<Contexts<HypothesesContext>> = hypothesesContextGatheringSchema;
-    let objNode = new ContextGatheringNode<HypothesesContext>(
+    const schema: JSONSchemaType<Contexts<ObjectiveContext>> = objectiveContextGatheringSchema;
+    let objNode = new ContextGatheringNode<ObjectiveContext>(
       "objective-gathering",schema,parent);
     return objNode;
   }
@@ -378,9 +378,31 @@ interface Contexts<T> {
   contexts: T[]
 }
 
-interface HypothesesContext {
-  name: "objective" | "metrics" | "product",
+interface ObjectiveContext {
   content: string
+}
+
+interface ProductContext {
+  type: "product-page-url" | "product-documentation" | "product-context-document",
+  content: "string",
+  format: "url" | "text" | "doc"
+}
+
+interface TelemetryContext {
+  semantics: string,
+  tableName: string,
+  databaseName: string,
+  fields: {
+    fieldName: string,
+    type: string,
+    semantics: string
+  }
+}
+
+interface MetricsContext {
+  metricName: string,
+  metricDescription: string,
+  metricFormula: string,
 }
 
 export {AgentService, ModelMessage};
