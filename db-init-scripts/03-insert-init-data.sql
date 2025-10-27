@@ -60,17 +60,6 @@ INSERT INTO assets.projects (user_id, description) VALUES
 (2, 'Project Gamma: Churn Reduction Strategy'),
 (3, 'Project Delta: Conversion Optimization');
 
--- Insert dummy context data
-INSERT INTO assets.context (user_id, project_id, title, description, type) VALUES
-(1, 1, 'Mobile App Usage Trends', 'Analysis of user behavior patterns on mobile applications across different demographics', 'Market Research'),
-(1, 1, 'Customer Satisfaction Survey Results', 'Quarterly customer satisfaction metrics and feedback analysis', 'Survey Data'),
-(2, 3, 'Competitor Analysis Q4 2024', 'Comprehensive analysis of competitor strategies and market positioning', 'Competitive Intelligence'),
-(1, 2, 'User Journey Mapping', 'End-to-end user experience mapping for web and mobile platforms', 'UX Research'),
-(3, 4, 'Revenue Impact Analysis', 'Financial impact assessment of product changes and feature rollouts', 'Financial Analysis'),
-(4, 1, 'Technical Performance Metrics', 'System performance, uptime, and scalability measurements', 'Technical Metrics'),
-(5, 1, 'Market Segmentation Study', 'Customer segmentation based on behavior, demographics, and preferences', 'Market Research'),
-(6, 1, 'Product Usage Analytics', 'Detailed analytics on feature adoption and user engagement', 'Product Analytics');
-
 -- Insert dummy objectives data
 INSERT INTO assets.objectives (user_id, project_id, title, description) VALUES
 (1, 1, 'Increase User Engagement', 'Improve daily active users by 25% through enhanced user experience and feature optimization'),
@@ -184,7 +173,6 @@ SELECT 'Accounts: ' || COUNT(*) as count FROM common.account;
 
 SELECT 'ASSETS DATABASE SUMMARY:' as info;
 SELECT 'Projects: ' || COUNT(*) as count FROM assets.projects;
-SELECT 'Context: ' || COUNT(*) as count FROM assets.context;
 SELECT 'Objectives: ' || COUNT(*) as count FROM assets.objectives;
 SELECT 'Metrics: ' || COUNT(*) as count FROM assets.metrics;
 SELECT 'Hypotheses: ' || COUNT(*) as count FROM assets.hypotheses;

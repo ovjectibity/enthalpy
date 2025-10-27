@@ -17,6 +17,7 @@ export interface Objective {
 
 export interface Experiment {
   id: number;
+  project_id: number;
   name: string;
   key: string;
   status:
@@ -33,9 +34,9 @@ export interface Experiment {
 
 export interface Metric {
   id: number;
+  project_id: number;
   name: string;
   formula: string;
-  category: "Acquisition" | "Activation" | "Retention" | "Referral" | "Revenue";
   description?: string;
   hypothesisId: string;
   createdAt: Date;
@@ -44,6 +45,7 @@ export interface Metric {
 
 export interface Feedback {
   id: number;
+  project_id: number;
   rating: "positive" | "negative";
   comment?: string;
   assetType: "hypothesis" | "experiment" | "objective" | "metric";
@@ -55,6 +57,7 @@ export interface Feedback {
 
 export interface Hypothesis {
   id: number;
+  project_id: number;
   userId: number,
   title: string;
   action: string;
@@ -90,6 +93,46 @@ export interface Thread {
   projectId: number,
   agentName: Agent,
   summary?: string
+}
+
+export interface ObjectiveContext {
+  index: number,
+  userId: number,
+  projectId: number,
+  createdAt: Date,
+  content: string
+}
+
+export interface ProductContext {
+  index: number,
+  userId: number,
+  projectId: number,
+  createdAt: Date,
+  type: "product-page-url" | "product-documentation" | "product-context-document" | "product-name",
+  content: "string",
+  description?: "string",
+  format: "url" | "text" | "doc"
+}
+
+export interface TelemetryContext {
+  semantics: string,
+  tableName: string,
+  databaseName: string,
+  fields: {
+    fieldName: string,
+    dataType: string,
+    semantics: string
+  }[]
+}
+
+//TODO: Merge with metrics asset: 
+export interface MetricContext {
+  name: string,
+  description: string,
+  formula: string,
+  priority: "P0" | "P1" | "P2" | "P3",
+  leadType: "leading" | "lagging",
+  metricTimeframe?: "day" | "week" | "month" | "quarter"
 }
 
 // API Response types

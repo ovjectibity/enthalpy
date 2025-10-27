@@ -6,11 +6,15 @@ import { prompts } from "../prompts/mcprompts.js";
 import { objectiveContextGatheringSchema } from "../prompts/objectiveContextGatheringSchema.js";
 import { productContextGatheringSchema } from "../prompts/productContextGatheringSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
+import {ObjectiveContext as ObjectiveContextM, 
+  ProductContext as ProductContextM} from "@enthalpy/shared";
 
 type WorkflowNodeState = "waiting_on_llm" |
                           "waiting_on_user" |
                           "idle" |
                           "closed";
+type ObjectiveContext = Omit<ObjectiveContextM, "index" | "userId" | "projectId" | "createdAt">;
+type ProductContext = Omit<ProductContextM, "index" | "userId" | "projectId" | "createdAt">;
 
 class AgentService {
   agentMap: Map<string,Agent>;
@@ -575,39 +579,8 @@ interface Contexts<T> {
   contexts: T[]
 }
 
-interface ObjectiveContext {
-  content: string
-}
-
-interface ProductContext {
-  type: "product-page-url" | "product-documentation" | "product-context-document" | "product-name",
-  content: "string",
-  description?: "string",
-  format: "url" | "text" | "doc"
-}
-
-interface TelemetryContext {
-  semantics: string,
-  tableName: string,
-  databaseName: string,
-  fields: {
-    fieldName: string,
-    dataType: string,
-    semantics: string
-  }[]
-}
-
 interface Assets<T> {
   assets: T[]
-}
-
-interface MetricContext {
-  name: string,
-  description: string,
-  formula: string,
-  priority: "P0" | "P1" | "P2" | "P3",
-  leadType: "leading" | "lagging",
-  metricTimeframe?: "day" | "week" | "month" | "quarter"
 }
 
 export {AgentService, ModelMessage};
