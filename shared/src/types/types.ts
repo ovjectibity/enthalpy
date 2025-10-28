@@ -37,10 +37,12 @@ export interface Metric {
   project_id: number;
   name: string;
   formula: string;
-  description?: string;
+  description: string;
   hypothesisId: string;
   createdAt: Date;
   updatedAt: Date;
+  priority?: string;
+  metricTimeframe?: string;
 }
 
 export interface Feedback {
@@ -123,16 +125,6 @@ export interface TelemetryContext {
     dataType: string,
     semantics: string
   }[]
-}
-
-//TODO: Merge with metrics asset: 
-export interface MetricContext {
-  name: string,
-  description: string,
-  formula: string,
-  priority: "P0" | "P1" | "P2" | "P3",
-  leadType: "leading" | "lagging",
-  metricTimeframe?: "day" | "week" | "month" | "quarter"
 }
 
 // API Response types
