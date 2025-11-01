@@ -55,6 +55,7 @@ export const ormUtilities = {
 
     return {
       id: Number(row.id),
+      projectId: Number(row.project_id),
       name: String(row.title), // SQL uses 'title', interface uses 'name'
       key: String(row.id), // Using id as key since no separate key field in SQL
       status: statusMap[row.status] || "PENDING_DESIGN",
@@ -72,18 +73,19 @@ export const ormUtilities = {
    * Convert PostgreSQL metrics row to Metric interface
    */
   toMetric(row: any): Metric {
-    // Default category since SQL doesn't have this field
-    const defaultCategory: Metric["category"] = "Acquisition";
-
     return {
+      userId: Number(row.user_id),
+      projectId: Number(row.project_id), 
       id: Number(row.id),
       name: String(row.title), // SQL uses 'title', interface uses 'name'
       formula: String(row.formula),
-      category: defaultCategory, // SQL schema doesn't have category field
-      description: row.description ? String(row.description) : undefined,
-      hypothesisId: "", // SQL schema doesn't have direct hypothesis link
+      description: row.description ? String(row.description) : "",
+      hypothesesId: "", // SQL schema doesn't have direct hypothesis link
+      priority: String(row.priority),
+      metricTimeframe: String(row.metricTimeframe),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.last_updated_at),
+
     };
   },
 
@@ -93,6 +95,7 @@ export const ormUtilities = {
   toHypothesis(row: any): Hypothesis {
     return {
       id: Number(row.id),
+      projectId: Number(row.project_id), 
       title: String(row.title),
       action: String(row.action),
       rationale: String(row.rationale),

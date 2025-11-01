@@ -156,6 +156,7 @@ export class HypothesesService {
         action: data.action,
         rationale: data.rationale,
         expectedOutcome: data.expectedOutcome,
+        projectId: 1, 
         userId,
         objectives: [], // Would populate from objectiveIds in real implementation
         experiments: [],

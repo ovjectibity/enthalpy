@@ -8,6 +8,7 @@ export const prompts = {
   "model-message-schema": JSON.stringify(modelMessageSchema),
   "objective-description": "this is the objective gathering context.",
   "prompt-user-to-gather-context-from-user": "Ask the user for the required context now.",
-  "assets-generation-meta-instruction": "<this is the assets generation context>",
-  "prompt-asset-generation": "<this is urging the agent to generate the asset>"
+  "assets-gen-meta-instruction": "<this is the assets generation context>",
+  "prompt-asset-gen": "<this is urging the agent to generate the asset>",
+  "assets-gen-available-context-meta-instruction": "<this is the assets gen available contexts meta inst>"
 }

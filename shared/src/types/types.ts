@@ -17,7 +17,7 @@ export interface Objective {
 
 export interface Experiment {
   id: number;
-  project_id: number;
+  projectId: number;
   name: string;
   key: string;
   status:
@@ -34,20 +34,21 @@ export interface Experiment {
 
 export interface Metric {
   id: number;
-  project_id: number;
+  userId: number;
+  projectId: number;
   name: string;
   formula: string;
   description: string;
-  hypothesisId: string;
+  hypothesesId?: string;
   createdAt: Date;
   updatedAt: Date;
-  priority?: string;
-  metricTimeframe?: string;
+  priority: string;
+  metricTimeframe: string;
 }
 
 export interface Feedback {
   id: number;
-  project_id: number;
+  projectId: number;
   rating: "positive" | "negative";
   comment?: string;
   assetType: "hypothesis" | "experiment" | "objective" | "metric";
@@ -59,7 +60,7 @@ export interface Feedback {
 
 export interface Hypothesis {
   id: number;
-  project_id: number;
+  projectId: number;
   userId: number,
   title: string;
   action: string;

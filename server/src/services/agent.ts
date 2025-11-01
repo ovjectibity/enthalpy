@@ -5,9 +5,13 @@ import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
 import { prompts } from "../prompts/mcprompts.js";
 import { objectiveContextGatheringSchema } from "../prompts/objectiveContextGatheringSchema.js";
 import { productContextGatheringSchema } from "../prompts/productContextGatheringSchema.js";
+import { metricAssetGenerationSchema } from "../prompts/metricAssetGenerationSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
-import {ObjectiveContext as ObjectiveContextM, 
-  ProductContext as ProductContextM} from "@enthalpy/shared";
+import {
+  ObjectiveContext as ObjectiveContextM, 
+  ProductContext as ProductContextM,
+  Metric as MetricM
+} from "@enthalpy/shared";
 
 type WorkflowNodeState = "waiting_on_llm" |
                           "waiting_on_user" |
@@ -15,6 +19,7 @@ type WorkflowNodeState = "waiting_on_llm" |
                           "closed";
 type ObjectiveContext = Omit<ObjectiveContextM, "index" | "userId" | "projectId" | "createdAt">;
 type ProductContext = Omit<ProductContextM, "index" | "userId" | "projectId" | "createdAt">;
+type Metric = Omit<MetricM, "id" | "userId" | "projectId" | "createdAt" | "updatedAt" | "hypothesesId">;
 
 class AgentService {
   agentMap: Map<string,Agent>;
@@ -103,6 +108,13 @@ class MCAgent extends Agent {
       "product-context-gathering",schema,parent);
     return prdCtxNode;
   }
+
+  static createMetricsGenerationNode(parent: WorkflowNode): WorkflowNode {
+    const schema: JSONSchemaType<Assets<Metric>> = metricAssetGenerationSchema;
+    let prdCtxNode = new AssetGenerationNode<Metric>(
+      "metrics-generation",schema,parent);
+    return prdCtxNode;
+  }
 }
 
 abstract class WorkflowNode {
@@ -186,7 +198,6 @@ class ContextGatheringNode<T> extends WorkflowNode {
         role: "user",
         messages: [{
           workflowContent: {
-            //TODO: this prompt should also include the format in which the output is to be provided
             content: prompts["prompt-user-to-gather-context-from-user"],
             type: "workflow_instruction"
           }
@@ -240,6 +251,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
             try {
               let gatheredContext = JSON.parse(m.workflowContent.content);
               this.scrapeContext(gatheredContext);
+              //TODO: Add context items to the DB
             } catch(error) {
               console.log("Failure when processing the LLM gathered context",error);
             }
@@ -265,7 +277,10 @@ class ContextGatheringNode<T> extends WorkflowNode {
           }
           if(m.userContent && ctx.userOutputCb) {
             //Surface message to the user:
-             await ctx.userOutputCb(m.userContent);
+            await ctx.userOutputCb(m.userContent);
+            //Assume that if a message is surfaced to the user
+            //then we're now waiting on them
+            this.state = "waiting_on_user"
           }
         }
       }
@@ -305,16 +320,17 @@ class ContextGatheringNode<T> extends WorkflowNode {
   }
 }
 
-class AssetGenerationNode<T,U> extends WorkflowNode {
+//TODO: there might be multiple contexts needed, hence the single U is not valid
+class AssetGenerationNode<T> extends WorkflowNode {
   //TODO: Adherence logic for the dependent contexts
-  dependentContexts: Contexts<U>
+  dependentContexts: any;
   neededAssetsSchema: JSONSchemaType<Assets<T>>;
   generatedAssets: Assets<T>;
   neededAssetsSchemaValidator: any;
 
   constructor(name: string, 
     needed: JSONSchemaType<Assets<T>>, 
-    dependentContexts: Contexts<U>, 
+    dependentContexts: any, 
     parent?: WorkflowNode) {
     super(name,parent);
     this.neededAssetsSchema = needed;
@@ -327,15 +343,12 @@ class AssetGenerationNode<T,U> extends WorkflowNode {
   }
 
   updateMessagesContext(ctx: WorkflowContext) {
-    // 1. keep the system prompt, message history & the LLM provider
-    // 2. Update with some workflow context telling
-    // the llm about the context gathering process
     ctx.messages.push({
       role: "user",
       messages: [
         {
           workflowContent: {
-            content: prompts["assets-generation-meta-instruction"],
+            content: prompts["assets-gen-meta-instruction"],
             type: "workflow_instruction"
           }
         },
@@ -344,13 +357,21 @@ class AssetGenerationNode<T,U> extends WorkflowNode {
             content: JSON.stringify(this.neededAssetsSchema),
             type: "workflow_instruction"
           }
-        }
+        },
+        {
+          workflowContent: {
+            content: prompts["assets-gen-available-context-meta-instruction"],
+            type: "workflow_instruction"
+          }
+        },
+        {
+          workflowContent: {
+            content: JSON.stringify(this.dependentContexts),
+            type: "workflow_instruction"
+          }
+        },
       ]
     });
-  }
-
-  checkForDependentContexts(ctx: WorkflowContext) {
-    //TODO: Check if the dependent context items are available
   }
 
   scrapeAssets(generatedAssets: any) {
@@ -360,7 +381,7 @@ class AssetGenerationNode<T,U> extends WorkflowNode {
       // Should we override duplicates?
       this.generatedAssets.assets.push(...vga.assets);
     } else {
-      console.log("Schema validation did not pass when trying to scrape LLM provided gathered context");
+      console.log("Schema validation did not pass when trying to scrape LLM provided generated assets");
     }
   }
 
@@ -370,8 +391,6 @@ class AssetGenerationNode<T,U> extends WorkflowNode {
     } else {
       //Update the context before the process
       this.updateMessagesContext(ctx);
-      // Check if the dependent context items are available: 
-      this.checkForDependentContexts(ctx);
       //Trigger a pre-defined response here by asking the LLM to summarise it.
       // TODO: This can perhaps be optimised via some automated way of create
       // the user output without LLM call
@@ -379,8 +398,7 @@ class AssetGenerationNode<T,U> extends WorkflowNode {
         role: "user",
         messages: [{
           workflowContent: {
-            //TODO: this prompt should also include the format in which the output is to be provided
-            content: prompts["prompt-asset-generation"],
+            content: prompts["prompt-asset-gen"],
             type: "workflow_instruction"
           }
         }]
@@ -409,17 +427,16 @@ class AssetGenerationNode<T,U> extends WorkflowNode {
       if(msg.role && msg.role === "assistant" && msg.messages) {
         ctx.messages.push(msg);
         for(let m of msg.messages) {
-          if(m.workflowContent && m.workflowContent.type === "workflow_context") {
+          if(m.workflowContent && m.workflowContent.type === "workflow_gen_asset") {
             //Add to the context if available
             //TODO: Validation of provided context here
             try {
               let generatedAssets = JSON.parse(m.workflowContent.content);
               this.scrapeAssets(generatedAssets);
             } catch(error) {
-              console.log("Failure when processing the LLM gathered context",error);
+              console.log("Failure when processing the LLM generated assets",error);
             }
-          }
-          if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
+          } else if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
             //TODO: The stop condition is expected to be the last block, add this to prompt
             let stopCondition = JSON.parse(m.workflowContent.content);
             if(stopCondition.stop && stopCondition.stopReason) {
@@ -442,6 +459,9 @@ class AssetGenerationNode<T,U> extends WorkflowNode {
           if(m.userContent && ctx.userOutputCb) {
             //Surface message to the user:
              await ctx.userOutputCb(m.userContent);
+            //Assume that if a message is surfaced to the user
+            //then we're waiting on them
+            this.state = "waiting_on_user"
           }
         }
       }
@@ -567,7 +587,8 @@ interface ModelMessage {
       // TODO: Rich text support
       userContent?: string,
       workflowContent?: {
-        type: "output_to_user" | "workflow_context" | "workflow_instruction",
+        type: "output_to_user" | "workflow_context" | 
+              "workflow_instruction" | "workflow_gen_asset",
         // TODO: Rich text support
         // TODO: Add further structure here, to be handled by the provider.
         content: string
