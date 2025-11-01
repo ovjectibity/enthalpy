@@ -73,39 +73,40 @@ export class ClaudeIntf implements LLMIntf {
   }
 
   async input(msgs: Array<ModelMessage>): Promise<ModelMessage> {
-    const message = await this.client.messages
-      .create({
-        max_tokens: this.maxTokens,
-        messages: ClaudeIntf.translateToAnthropicMessages(msgs),
-        model: this.model,
-        system: prompts["system-prompt"]
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    console.log("Got this message from the claude model", message);
-    //TODO: translate the content blocks to ModelMessage format
-    if (message === undefined || message === null) {
-      return Promise.resolve({
-        role: "assistant",
-        messages: []
-      });
-    } else {
-      let msg: ModelMessage = {
-        role: "assistant",
-        messages: []
-      };
-      let contents = message.content as Array<ContentBlock>;
-      contents.forEach((content: ContentBlock) => {
-        if(content.type === "text") {
-          if (content.text) {
-            let modified = content.text.substring(8).substring(0,-3);
-            console.log(modified);
-            msg.messages.push(JSON.parse(modified));
-          }
-        }
-      });
-      return msg;
-    }
+    return this.input_test();
+    // const message = await this.client.messages
+    //   .create({
+    //     max_tokens: this.maxTokens,
+    //     messages: ClaudeIntf.translateToAnthropicMessages(msgs),
+    //     model: this.model,
+    //     system: prompts["system-prompt"]
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
+    // console.log("Got this message from the claude model", message);
+    // //TODO: translate the content blocks to ModelMessage format
+    // if (message === undefined || message === null) {
+    //   return Promise.resolve({
+    //     role: "assistant",
+    //     messages: []
+    //   });
+    // } else {
+    //   let msg: ModelMessage = {
+    //     role: "assistant",
+    //     messages: []
+    //   };
+    //   let contents = message.content as Array<ContentBlock>;
+    //   contents.forEach((content: ContentBlock) => {
+    //     if(content.type === "text") {
+    //       if (content.text) {
+    //         let modified = content.text.substring(8).substring(0,-3);
+    //         console.log(modified);
+    //         msg.messages.push(JSON.parse(modified));
+    //       }
+    //     }
+    //   });
+    //   return msg;
+    // }
   }
 }

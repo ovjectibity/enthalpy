@@ -1,7 +1,7 @@
 import React from "react";
-import { Input } from "@base-ui-components/react/input";
 import MasterDetail from "./MasterDetail";
 import HyperlistView from "./HyperlistView";
+import InlineEditableText from "./InlineEditableText";
 import useHypotheses from "../hooks/useHypotheses";
 
 const FeedbackComponent = require("./FeedbackComponent").default;
@@ -36,32 +36,35 @@ const HypothesesView: React.FC = () => {
             <h2 className="detail-title">{item.title}</h2>
 
             <div className="detail-section">
-              <label className="detail-label">Action</label>
-              <Input
-                className="detail-input"
+              <InlineEditableText
+                label="Action"
                 value={item.action}
                 placeholder="What action will you take?"
-                readOnly
+                multiline={true}
+                onSave={(value) => console.log("Action saved:", value)}
+                onDiscard={() => console.log("Action edit discarded")}
               />
             </div>
 
             <div className="detail-section">
-              <label className="detail-label">Expected Outcome</label>
-              <Input
-                className="detail-input"
+              <InlineEditableText
+                label="Expected Outcome"
                 value={item.expectedOutcome}
                 placeholder="What do you expect to happen?"
-                readOnly
+                multiline={true}
+                onSave={(value) => console.log("Expected Outcome saved:", value)}
+                onDiscard={() => console.log("Expected Outcome edit discarded")}
               />
             </div>
 
             <div className="detail-section">
-              <label className="detail-label">Rationale</label>
-              <Input
-                className="detail-input"
+              <InlineEditableText
+                label="Rationale"
                 value={item.rationale}
                 placeholder="Why do you believe this will work?"
-                readOnly
+                multiline={true}
+                onSave={(value) => console.log("Rationale saved:", value)}
+                onDiscard={() => console.log("Rationale edit discarded")}
               />
             </div>
 

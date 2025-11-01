@@ -3,19 +3,86 @@ import { ThreadMessageModel } from './threadsModel.js';
 import { ProductContextModel } from './productContextModel.js';
 
 export class MongoDBInitializer {
-  static async initializeDatabase(seedCollection: boolean): Promise<void> {
+  static async seedProductContextCollection() {
+    // Check if productContext collection already has data
     try {
-      console.log('Starting MongoDB initialization...');
-
-      // Initialize connection
-      await MongoDBConnections.initializeConnection();
-      console.log('MongoDB connection established');
-
-      // Check if threads collection already has data
-      const existingThreadsCount = await ThreadMessageModel.countDocuments();
       const existingProductContextCount = await ProductContextModel.countDocuments();
-      if ((existingThreadsCount > 0 && existingProductContextCount > 0) || seedCollection === false) {
-        console.log(`Threads collection already has ${existingThreadsCount} documents. Product context collection already has ${existingProductContextCount} documents. Skipping initialization.`);
+      if (existingProductContextCount > 0) {
+        console.log(`Product context collection already has ${existingProductContextCount} documents. Skipping initialization.`);
+        return;
+      }
+
+      // Create sample product context data
+      const sampleProductContext = [
+        {
+          index: 0,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T09:00:00Z'),
+          type: 'product-name',
+          content: 'Enthalpy Analytics Platform',
+          description: 'AI-powered experimentation and hypothesis testing platform',
+          format: 'text'
+        },
+        {
+          index: 1,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T09:15:00Z'),
+          type: 'product-page-url',
+          content: 'https://enthalpy.example.com',
+          description: 'Main product landing page',
+          format: 'url'
+        },
+        {
+          index: 2,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T10:00:00Z'),
+          type: 'product-documentation',
+          content: 'https://docs.enthalpy.example.com',
+          description: 'Official product documentation',
+          format: 'url'
+        },
+        {
+          index: 3,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T11:00:00Z'),
+          type: 'product-context-document',
+          content: 'Enthalpy is designed to help data scientists and product teams run experiments, generate hypotheses, and track metrics efficiently. The platform integrates with various data sources and provides AI-powered insights.',
+          description: 'Product overview and key features',
+          format: 'text'
+        }
+      ];
+
+      console.log(`Inserting ${sampleProductContext.length} sample product context entries...`);
+
+      // Insert product context sample data
+      await ProductContextModel.insertMany(sampleProductContext);
+
+      console.log('Sample product context entries inserted successfully');
+
+      // Create additional indexes if needed
+      await ProductContextModel.createIndexes();
+      console.log('Database indexes created');
+
+      // Verify the insertion
+      const insertedProductContextCount = await ProductContextModel.countDocuments();
+      console.log(`MongoDB initialization completed. Total product context entries: ${insertedProductContextCount}`);
+
+    } catch (error) {
+      console.error('Error during MongoDB initialization:', error);
+      throw error;
+    }
+  }
+
+  static async seedThreadsCollection() {
+    // Check if threads collection already has data
+    try {
+      const existingThreadsCount = await ThreadMessageModel.countDocuments();
+      if (existingThreadsCount > 0) {
+        console.log(`Threads collection already has ${existingThreadsCount} documents. Skipping initialization.`);
         return;
       }
 
@@ -188,50 +255,6 @@ export class MongoDBInitializer {
         }
       ];
 
-      // Create sample product context data
-      const sampleProductContext = [
-        {
-          index: 0,
-          user_id: 1,
-          project_id: 1,
-          created_at: new Date('2024-01-10T09:00:00Z'),
-          type: 'product-name',
-          content: 'Enthalpy Analytics Platform',
-          description: 'AI-powered experimentation and hypothesis testing platform',
-          format: 'text'
-        },
-        {
-          index: 1,
-          user_id: 1,
-          project_id: 1,
-          created_at: new Date('2024-01-10T09:15:00Z'),
-          type: 'product-page-url',
-          content: 'https://enthalpy.example.com',
-          description: 'Main product landing page',
-          format: 'url'
-        },
-        {
-          index: 2,
-          user_id: 1,
-          project_id: 1,
-          created_at: new Date('2024-01-10T10:00:00Z'),
-          type: 'product-documentation',
-          content: 'https://docs.enthalpy.example.com',
-          description: 'Official product documentation',
-          format: 'url'
-        },
-        {
-          index: 3,
-          user_id: 1,
-          project_id: 1,
-          created_at: new Date('2024-01-10T11:00:00Z'),
-          type: 'product-context-document',
-          content: 'Enthalpy is designed to help data scientists and product teams run experiments, generate hypotheses, and track metrics efficiently. The platform integrates with various data sources and provides AI-powered insights.',
-          description: 'Product overview and key features',
-          format: 'text'
-        }
-      ];
-
       console.log(`Inserting ${sampleThreads.length} sample threads...`);
 
       // Insert sample data
@@ -239,23 +262,31 @@ export class MongoDBInitializer {
 
       console.log('Sample threads inserted successfully');
 
-      console.log(`Inserting ${sampleProductContext.length} sample product context entries...`);
-
-      // Insert product context sample data
-      await ProductContextModel.insertMany(sampleProductContext);
-
-      console.log('Sample product context entries inserted successfully');
-
       // Create additional indexes if needed
       await ThreadMessageModel.createIndexes();
-      await ProductContextModel.createIndexes();
       console.log('Database indexes created');
 
       // Verify the insertion
       const insertedThreadsCount = await ThreadMessageModel.countDocuments();
-      const insertedProductContextCount = await ProductContextModel.countDocuments();
-      console.log(`MongoDB initialization completed. Total threads in collection: ${insertedThreadsCount}. Total product context entries: ${insertedProductContextCount}`);
+      console.log(`MongoDB initialization completed. Total threads in collection: ${insertedThreadsCount}.`);
 
+    } catch (error) {
+      console.error('Error during MongoDB initialization:', error);
+      throw error;
+    }
+  }
+
+  static async initializeDatabase(seedCollection: boolean): Promise<void> {
+    try {
+      console.log('Starting MongoDB initialization...');
+
+      // Initialize connection
+      await MongoDBConnections.initializeConnection();
+      console.log('MongoDB connection established');
+      if(seedCollection) {
+        MongoDBInitializer.seedThreadsCollection();
+        MongoDBInitializer.seedProductContextCollection();
+      }
     } catch (error) {
       console.error('Error during MongoDB initialization:', error);
       throw error;
