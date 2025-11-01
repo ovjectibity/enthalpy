@@ -112,8 +112,8 @@ export interface ProductContext {
   projectId: number,
   createdAt: Date,
   type: "product-page-url" | "product-documentation" | "product-context-document" | "product-name",
-  content: "string",
-  description?: "string",
+  content: string,
+  description?: string,
   format: "url" | "text" | "doc"
 }
 

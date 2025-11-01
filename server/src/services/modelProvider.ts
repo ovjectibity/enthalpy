@@ -6,7 +6,8 @@ import {
   ContentBlockParam,
   Model,
 } from "@anthropic-ai/sdk/resources";
-import { ModelMessage } from "./agent"
+import { ModelMessage } from "./agent";
+import { prompts } from "../prompts/mcprompts.js";
 
 export interface LLMIntf {
   providerName: string,
@@ -54,8 +55,7 @@ export class ClaudeIntf implements LLMIntf {
     return anthMsgs;
   }
 
-  async input(msgs: Array<ModelMessage>): Promise<ModelMessage> {
-    // TODO/CLEANUP: Temporary test return:
+  async input_test(): Promise<ModelMessage> {
     return {
         role: "assistant",
         messages: [
@@ -70,38 +70,42 @@ export class ClaudeIntf implements LLMIntf {
             }
           }]
       };
-    // const message = await this.client.messages
-    //   .create({
-    //     max_tokens: this.maxTokens,
-    //     messages: ClaudeIntf.translateToAnthropicMessages(msgs),
-    //     model: this.model,
-    //     //TODO: provide system prompt here:
-    //     system: ""
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //   });
-    // console.log("Got this message from the claude model", message);
-    // //TODO: translate the content blocks to ModelMessage format
-    // if (message === undefined || message === null) {
-    //   return Promise.resolve({
-    //     role: "assistant",
-    //     messages: []
-    //   });
-    // } else {
-    //   let msg: ModelMessage = {
-    //     role: "assistant",
-    //     messages: []
-    //   };
-    //   let contents = message.content as Array<ContentBlock>;
-    //   contents.forEach((content: ContentBlock) => {
-    //     if(content.type === "text") {
-    //       if (content.text) {
-    //         msg.messages.push(JSON.parse(content.text));
-    //       }
-    //     }
-    //   });
-    //   return msg;
-    // }
+  }
+
+  async input(msgs: Array<ModelMessage>): Promise<ModelMessage> {
+    const message = await this.client.messages
+      .create({
+        max_tokens: this.maxTokens,
+        messages: ClaudeIntf.translateToAnthropicMessages(msgs),
+        model: this.model,
+        system: prompts["system-prompt"]
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    console.log("Got this message from the claude model", message);
+    //TODO: translate the content blocks to ModelMessage format
+    if (message === undefined || message === null) {
+      return Promise.resolve({
+        role: "assistant",
+        messages: []
+      });
+    } else {
+      let msg: ModelMessage = {
+        role: "assistant",
+        messages: []
+      };
+      let contents = message.content as Array<ContentBlock>;
+      contents.forEach((content: ContentBlock) => {
+        if(content.type === "text") {
+          if (content.text) {
+            let modified = content.text.substring(8).substring(0,-3);
+            console.log(modified);
+            msg.messages.push(JSON.parse(modified));
+          }
+        }
+      });
+      return msg;
+    }
   }
 }

@@ -8,7 +8,7 @@ import { productContextGatheringSchema } from "../prompts/productContextGatherin
 import { metricAssetGenerationSchema } from "../prompts/metricAssetGenerationSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
 import {
-  ObjectiveContext as ObjectiveContextM, 
+  ObjectiveContext as ObjectiveContextM,
   ProductContext as ProductContextM,
   Metric as MetricM
 } from "@enthalpy/shared";
@@ -71,6 +71,10 @@ abstract class Agent {
     this.ctx.userOutputCb = cb;
   }
 
+  public registerModelProvidedStoreCallback(cb: (toStore: any) => Promise<void>) {
+    this.ctx.modelProvidedStoreCb = cb;
+  }
+
   initAgentWorkflow() {
     if(this.ctx.currentNode) {
       this.ctx.currentNode.run(this.ctx);
@@ -92,7 +96,7 @@ class MCAgent extends Agent {
 
   static createIntroNode(): WorkflowNode {
     let introNode = new SimpleOutputNode("project-intro", prompts["project-intro-prompt"]);
-    return introNode; 
+    return introNode;
   }
 
   static createObjectiveGatheringNode(parent: WorkflowNode): WorkflowNode {
@@ -219,7 +223,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
   scrapeContext(gatheredContext: any) {
     if(this.schemaValidation(gatheredContext)) {
       let vgc = gatheredContext.contexts as Contexts<T>;
-      //TODO: Possible accumulation of duplicates here, 
+      //TODO: Possible accumulation of duplicates here,
       // Should we override duplicates?
       this.gatheredContext.contexts.push(...vgc.contexts);
     } else {
@@ -320,17 +324,15 @@ class ContextGatheringNode<T> extends WorkflowNode {
   }
 }
 
-//TODO: there might be multiple contexts needed, hence the single U is not valid
 class AssetGenerationNode<T> extends WorkflowNode {
-  //TODO: Adherence logic for the dependent contexts
   dependentContexts: any;
   neededAssetsSchema: JSONSchemaType<Assets<T>>;
   generatedAssets: Assets<T>;
   neededAssetsSchemaValidator: any;
 
-  constructor(name: string, 
-    needed: JSONSchemaType<Assets<T>>, 
-    dependentContexts: any, 
+  constructor(name: string,
+    needed: JSONSchemaType<Assets<T>>,
+    dependentContexts: any,
     parent?: WorkflowNode) {
     super(name,parent);
     this.neededAssetsSchema = needed;
@@ -377,7 +379,7 @@ class AssetGenerationNode<T> extends WorkflowNode {
   scrapeAssets(generatedAssets: any) {
     if(this.neededAssetsSchemaValidator(generatedAssets)) {
       let vga = generatedAssets.assets as Assets<T>;
-      //TODO: Possible accumulation of duplicates here, 
+      //TODO: Possible accumulation of duplicates here,
       // Should we override duplicates?
       this.generatedAssets.assets.push(...vga.assets);
     } else {
@@ -449,7 +451,7 @@ class AssetGenerationNode<T> extends WorkflowNode {
                 nodeName: this.name,
                 context: this.generatedAssets
               });
-              //TODO: Implement branching workflows: 
+              //TODO: Implement branching workflows:
               if(this.children.length > 0) {
                 ctx.currentNode = this.children[0];
                 this.children[0].run(ctx);
@@ -543,6 +545,7 @@ class WorkflowContext {
   numIterations: number = 5;
   model?: LLMIntf;
   userOutputCb?: (msg: string) => Promise<void>;
+  modelProvidedStoreCb?: (toStore: any) => Promise<void>;
   currentNode?: WorkflowNode;
   gatheredContext: {
     nodeType: string,
@@ -552,7 +555,8 @@ class WorkflowContext {
 
   constructor() {
     this.model = new ClaudeIntf();
-    
+    //Add base instructions
+    this.addContextOnWorkflows();
   }
 
   addContextOnWorkflows() {
@@ -587,7 +591,7 @@ interface ModelMessage {
       // TODO: Rich text support
       userContent?: string,
       workflowContent?: {
-        type: "output_to_user" | "workflow_context" | 
+        type: "output_to_user" | "workflow_context" |
               "workflow_instruction" | "workflow_gen_asset",
         // TODO: Rich text support
         // TODO: Add further structure here, to be handled by the provider.
