@@ -209,6 +209,14 @@ export interface AppendMessageData {
   projectId: number
 }
 
+export interface Contexts<T> {
+  contexts: T[]
+}
+
+export interface Assets<T> {
+  assets: T[]
+}
+
 export interface AgentServerToClientEvents {
   agent_message: (msg: ThreadMessage) => void;
   add_user_message: (msg: ThreadMessage) => void;
@@ -221,3 +229,7 @@ export interface AgentClientToServerEvents {
 }
 
 export type Agent = "mc" | "flow-graph" | "exp-design" | "hypotheses";
+
+export type ObjectiveContextO = Omit<ObjectiveContext, "index" | "userId" | "projectId" | "createdAt">;
+export type ProductContextO = Omit<ProductContext, "index" | "userId" | "projectId" | "createdAt">;
+export type MetricO = Omit<Metric, "id" | "userId" | "projectId" | "createdAt" | "updatedAt" | "hypothesesId">;

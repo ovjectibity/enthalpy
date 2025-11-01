@@ -50,15 +50,31 @@ export class ProductContextService {
         await MongoDBConnections.initializeConnection();
       }
 
+      // Find the current max index in the collection
+      const maxIndexDoc = await ProductContextModel.findOne()
+        .sort({ index: -1 })
+        .select('index')
+        .lean()
+        .exec();
+
+      // Start from max index + 1, or 0 if collection is empty
+      let nextIndex = maxIndexDoc ? maxIndexDoc.index + 1 : 0;
+
+      // Replace all indices with unique incremental indices
+      const contextsWithNewIndices = contexts.map(ctx => ({
+        ...ctx,
+        index: nextIndex++
+      }));
+
       // Convert ProductContext array to MongoDB documents
-      const documentsToInsert = contexts.map(ctx => ProductContextModel.toDocuments(ctx));
+      const documentsToInsert = contextsWithNewIndices.map(ctx => ProductContextModel.toDocuments(ctx));
 
       // Insert the documents
       await ProductContextModel.insertMany(documentsToInsert);
 
       return {
         success: true,
-        data: contexts,
+        data: contextsWithNewIndices,
         message: 'Product contexts added successfully'
       };
 

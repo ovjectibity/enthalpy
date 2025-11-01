@@ -8,18 +8,17 @@ import { productContextGatheringSchema } from "../prompts/productContextGatherin
 import { metricAssetGenerationSchema } from "../prompts/metricAssetGenerationSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
 import {
-  ObjectiveContext as ObjectiveContextM,
-  ProductContext as ProductContextM,
-  Metric as MetricM
+  ObjectiveContextO as ObjectiveContext,
+  ProductContextO as ProductContext,
+  MetricO as Metric,
+  Contexts,
+  Assets
 } from "@enthalpy/shared";
 
 type WorkflowNodeState = "waiting_on_llm" |
                           "waiting_on_user" |
                           "idle" |
                           "closed";
-type ObjectiveContext = Omit<ObjectiveContextM, "index" | "userId" | "projectId" | "createdAt">;
-type ProductContext = Omit<ProductContextM, "index" | "userId" | "projectId" | "createdAt">;
-type Metric = Omit<MetricM, "id" | "userId" | "projectId" | "createdAt" | "updatedAt" | "hypothesesId">;
 
 class AgentService {
   agentMap: Map<string,Agent>;
@@ -51,6 +50,12 @@ class AgentService {
   public registerOutputCallback(agentName: string, cb: (msg: string) => Promise<void>) {
     this.agentMap.get(agentName)?.registerUserOutputCallback(cb);
   }
+
+  public registerModelProvidedStoreCallback(
+    agentName: string, 
+    cb: (productContexts: Contexts<ProductContext>) => Promise<void>) {
+    this.agentMap.get(agentName)?.registerFinaliseProductContext(cb);
+  }
 }
 
 abstract class Agent {
@@ -71,42 +76,44 @@ abstract class Agent {
     this.ctx.userOutputCb = cb;
   }
 
-  public registerModelProvidedStoreCallback(cb: (toStore: any) => Promise<void>) {
-    this.ctx.modelProvidedStoreCb = cb;
+  public registerFinaliseProductContext(cb: (productContexts: Contexts<ProductContext>) => Promise<void>): void {
+    //This needs to be handled by the specific agent
   }
 
-  initAgentWorkflow() {
-    if(this.ctx.currentNode) {
-      this.ctx.currentNode.run(this.ctx);
-    }
-  }
+  abstract initAgentWorkflow(): void;
 }
 
-class MCAgent extends Agent {
+class MCAgent extends Agent { 
+  introNode: SimpleOutputNode;
+  objNode: ContextGatheringNode<ObjectiveContext>;
+  prdCtxNode: ContextGatheringNode<ProductContext>;
+
   constructor() {
     super("mc");
-    let introNode = MCAgent.createIntroNode();
-    let objNode = MCAgent.createObjectiveGatheringNode(introNode);
-    let prdCtxNode = MCAgent.createProductGatheringNode(objNode);
-    this.workNodes.push(introNode);
-    this.workNodes.push(objNode);
-    this.workNodes.push(prdCtxNode);
-    this.ctx.currentNode = introNode;
+    this.introNode = MCAgent.createIntroNode();
+    this.objNode = MCAgent.createObjectiveGatheringNode(this.introNode);
+    this.prdCtxNode = MCAgent.createProductGatheringNode(this.objNode);
+    this.workNodes.push(this.introNode);
+    this.workNodes.push(this.objNode);
+    this.workNodes.push(this.prdCtxNode);
+    this.ctx.currentNode = this.introNode;
   }
 
-  static createIntroNode(): WorkflowNode {
+  static createIntroNode(): SimpleOutputNode {
     let introNode = new SimpleOutputNode("project-intro", prompts["project-intro-prompt"]);
     return introNode;
   }
 
-  static createObjectiveGatheringNode(parent: WorkflowNode): WorkflowNode {
+  static createObjectiveGatheringNode(parent: WorkflowNode): 
+  ContextGatheringNode<ObjectiveContext> {
     const schema: JSONSchemaType<Contexts<ObjectiveContext>> = objectiveContextGatheringSchema;
     let objNode = new ContextGatheringNode<ObjectiveContext>(
       "objective-gathering",schema,parent);
     return objNode;
   }
 
-  static createProductGatheringNode(parent: WorkflowNode): WorkflowNode {
+  static createProductGatheringNode(parent: WorkflowNode): 
+  ContextGatheringNode<ProductContext> {
     const schema: JSONSchemaType<Contexts<ProductContext>> = productContextGatheringSchema;
     let prdCtxNode = new ContextGatheringNode<ProductContext>(
       "product-context-gathering",schema,parent);
@@ -118,6 +125,16 @@ class MCAgent extends Agent {
     let prdCtxNode = new AssetGenerationNode<Metric>(
       "metrics-generation",schema,parent);
     return prdCtxNode;
+  }
+
+  registerFinaliseProductContext(cb: (productContexts: Contexts<ProductContext>) => Promise<void>): void {
+    this.prdCtxNode.finaliseContextCb = cb;
+  }
+
+  initAgentWorkflow() {
+    if(this.ctx.currentNode) {
+      this.ctx.currentNode.run(this.ctx);
+    }
   }
 }
 
@@ -155,8 +172,13 @@ class ContextGatheringNode<T> extends WorkflowNode {
   neededContextSchema: JSONSchemaType<Contexts<T>>;
   gatheredContext: Contexts<T>;
   schemaValidation: any;
+  finaliseContextCb?: (productContexts: Contexts<T>) => Promise<void>;
 
-  constructor(name: string, needed: JSONSchemaType<Contexts<T>>, parent?: WorkflowNode) {
+  constructor(
+    name: string, 
+    needed: JSONSchemaType<Contexts<T>>, 
+    parent?: WorkflowNode,
+    finaliseContextCb?: (productContexts: Contexts<T>) => Promise<void>) {
     super(name, parent);
     this.neededContextSchema = needed;
     this.gatheredContext = {
@@ -164,6 +186,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
     };
     const ajv = new Ajv();
     this.schemaValidation = ajv.compile(needed);
+    this.finaliseContextCb = finaliseContextCb;
   }
 
   updateMessagesContext(ctx: WorkflowContext) {
@@ -268,11 +291,14 @@ class ContextGatheringNode<T> extends WorkflowNode {
               //TODO: Handle changing of active node here
               // Surface gathered context + record stopReason
               console.log(`Exiting the ContextGatheringNode ${this.name} due to ${stopCondition.stopReason}`);
-              ctx.gatheredContext.push({
+              ctx.gatheredContexts.push({
                 nodeType: "ContextGatheringNode",
                 nodeName: this.name,
                 context: this.gatheredContext
               });
+              if(this.finaliseContextCb) {
+                this.finaliseContextCb(this.gatheredContext);
+              }
               if(this.children.length > 0) {
                 ctx.currentNode = this.children[0];
                 this.children[0].run(ctx);
@@ -446,10 +472,10 @@ class AssetGenerationNode<T> extends WorkflowNode {
               //TODO: Handle changing of active node here
               // Surface gathered context + record stopReason
               console.log(`Exiting the AssetGenerationNode ${this.name} due to ${stopCondition.stopReason}`);
-              ctx.gatheredContext.push({
+              ctx.generatedAssets.push({
                 nodeType: "AssetGenerationNode",
                 nodeName: this.name,
-                context: this.generatedAssets
+                asset: this.generatedAssets
               });
               //TODO: Implement branching workflows:
               if(this.children.length > 0) {
@@ -545,12 +571,16 @@ class WorkflowContext {
   numIterations: number = 5;
   model?: LLMIntf;
   userOutputCb?: (msg: string) => Promise<void>;
-  modelProvidedStoreCb?: (toStore: any) => Promise<void>;
   currentNode?: WorkflowNode;
-  gatheredContext: {
+  gatheredContexts: {
     nodeType: string,
     nodeName: string,
     context: any
+    }[] = [];
+  generatedAssets: {
+    nodeType: string,
+    nodeName: string,
+    asset: any
     }[] = [];
 
   constructor() {
@@ -599,13 +629,5 @@ interface ModelMessage {
       }
     }[]
 };
-
-interface Contexts<T> {
-  contexts: T[]
-}
-
-interface Assets<T> {
-  assets: T[]
-}
 
 export {AgentService, ModelMessage};
