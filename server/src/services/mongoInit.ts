@@ -1,6 +1,6 @@
 import { MongoDBConnections } from './mongoConnect.js';
 import { ThreadMessageModel } from './threadsModel.js';
-import { ThreadMessage } from '@enthalpy/shared';
+import { ProductContextModel } from './productContextModel.js';
 
 export class MongoDBInitializer {
   static async initializeDatabase(seedCollection: boolean): Promise<void> {
@@ -13,8 +13,9 @@ export class MongoDBInitializer {
 
       // Check if threads collection already has data
       const existingThreadsCount = await ThreadMessageModel.countDocuments();
-      if (existingThreadsCount > 0 || seedCollection === false) {
-        console.log(`Threads collection already has ${existingThreadsCount} documents. Skipping initialization.`);
+      const existingProductContextCount = await ProductContextModel.countDocuments();
+      if ((existingThreadsCount > 0 && existingProductContextCount > 0) || seedCollection === false) {
+        console.log(`Threads collection already has ${existingThreadsCount} documents. Product context collection already has ${existingProductContextCount} documents. Skipping initialization.`);
         return;
       }
 
@@ -187,6 +188,50 @@ export class MongoDBInitializer {
         }
       ];
 
+      // Create sample product context data
+      const sampleProductContext = [
+        {
+          index: 0,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T09:00:00Z'),
+          type: 'product-name',
+          content: 'Enthalpy Analytics Platform',
+          description: 'AI-powered experimentation and hypothesis testing platform',
+          format: 'text'
+        },
+        {
+          index: 1,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T09:15:00Z'),
+          type: 'product-page-url',
+          content: 'https://enthalpy.example.com',
+          description: 'Main product landing page',
+          format: 'url'
+        },
+        {
+          index: 2,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T10:00:00Z'),
+          type: 'product-documentation',
+          content: 'https://docs.enthalpy.example.com',
+          description: 'Official product documentation',
+          format: 'url'
+        },
+        {
+          index: 3,
+          user_id: 1,
+          project_id: 1,
+          created_at: new Date('2024-01-10T11:00:00Z'),
+          type: 'product-context-document',
+          content: 'Enthalpy is designed to help data scientists and product teams run experiments, generate hypotheses, and track metrics efficiently. The platform integrates with various data sources and provides AI-powered insights.',
+          description: 'Product overview and key features',
+          format: 'text'
+        }
+      ];
+
       console.log(`Inserting ${sampleThreads.length} sample threads...`);
 
       // Insert sample data
@@ -194,13 +239,22 @@ export class MongoDBInitializer {
 
       console.log('Sample threads inserted successfully');
 
+      console.log(`Inserting ${sampleProductContext.length} sample product context entries...`);
+
+      // Insert product context sample data
+      await ProductContextModel.insertMany(sampleProductContext);
+
+      console.log('Sample product context entries inserted successfully');
+
       // Create additional indexes if needed
       await ThreadMessageModel.createIndexes();
+      await ProductContextModel.createIndexes();
       console.log('Database indexes created');
 
       // Verify the insertion
-      const insertedCount = await ThreadMessageModel.countDocuments();
-      console.log(`MongoDB initialization completed. Total threads in collection: ${insertedCount}`);
+      const insertedThreadsCount = await ThreadMessageModel.countDocuments();
+      const insertedProductContextCount = await ProductContextModel.countDocuments();
+      console.log(`MongoDB initialization completed. Total threads in collection: ${insertedThreadsCount}. Total product context entries: ${insertedProductContextCount}`);
 
     } catch (error) {
       console.error('Error during MongoDB initialization:', error);
@@ -210,18 +264,30 @@ export class MongoDBInitializer {
 
   static async resetDatabase(): Promise<void> {
     try {
-      console.log('Resetting MongoDB threads collection...');
+      console.log('Resetting MongoDB collections...');
 
       // Initialize connection
       await MongoDBConnections.initializeConnection();
 
-      // Drop the collection if it exists
+      // Drop the threads collection if it exists
       try {
         await ThreadMessageModel.collection.drop();
         console.log('Threads collection dropped');
       } catch (error: any) {
         if (error.code === 26) {
           console.log('Threads collection does not exist, skipping drop');
+        } else {
+          throw error;
+        }
+      }
+
+      // Drop the product_context collection if it exists
+      try {
+        await ProductContextModel.collection.drop();
+        console.log('Product context collection dropped');
+      } catch (error: any) {
+        if (error.code === 26) {
+          console.log('Product context collection does not exist, skipping drop');
         } else {
           throw error;
         }
@@ -266,6 +332,8 @@ export class MongoDBInitializer {
       // Get collection stats using countDocuments instead of deprecated stats()
       const threadsCount = await ThreadMessageModel.countDocuments();
       const threadsSize = await ThreadMessageModel.collection.estimatedDocumentCount();
+      const productContextCount = await ProductContextModel.countDocuments();
+      const productContextSize = await ProductContextModel.collection.estimatedDocumentCount();
 
       return {
         database: {
@@ -281,6 +349,13 @@ export class MongoDBInitializer {
           dataSize: stats.dataSize || 0,
           storageSize: stats.storageSize || 0,
           indexes: 6 // We know we created 6 indexes
+        },
+        product_context_collection: {
+          documents: productContextCount,
+          avgObjSize: productContextSize > 0 ? Math.round(stats.dataSize / productContextSize) : 0,
+          dataSize: stats.dataSize || 0,
+          storageSize: stats.storageSize || 0,
+          indexes: 5 // We know we created 5 indexes
         }
       };
 

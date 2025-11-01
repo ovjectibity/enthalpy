@@ -10,15 +10,13 @@ import { MongoDBInitializer } from "./services/mongoInit.js";
 import { Namespace, Server } from 'socket.io';
 import { AgentService } from "./services/agent.js";
 import { ThreadsService } from "./services/threadsService.js";
-import { 
-  ThreadMessage, 
-  AgentClientToServerEvents, 
-  AgentServerToClientEvents, 
-  ThreadActivation, 
+import {
+  AgentClientToServerEvents,
+  AgentServerToClientEvents,
+  ThreadActivation,
   AppendMessageData
 } from "@enthalpy/shared";
 import http from "http";
-import { wrap } from "module";
 
 const app = express();
 const port = process.env.APP_PORT;
