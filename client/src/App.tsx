@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
 import { HypothesesView, Terminal } from "./components";
+import ContextView from "./components/ContextView";
 import useThreads from "./hooks/useThreads";
 import { 
   Agent, 
@@ -166,6 +167,8 @@ const App: React.FC = () => {
           <div className="canvas-area">
             {activeContext === "Hypotheses" ? (
               <HypothesesView />
+            ) : activeContext === "Context" ? (
+              <ContextView />
             ) : (
               <div className="placeholder-text">{activeContext} Canvas</div>
             )}
