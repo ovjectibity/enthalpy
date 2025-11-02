@@ -9,6 +9,7 @@ interface InlineEditableTextProps {
   label?: string;
   minHeight?: string;
   autoFocus?: boolean;
+  disabled?: boolean;
 }
 
 const InlineEditableText: React.FC<InlineEditableTextProps> = ({
@@ -20,6 +21,7 @@ const InlineEditableText: React.FC<InlineEditableTextProps> = ({
   label,
   minHeight = "80px",
   autoFocus = true,
+  disabled = false,
 }) => {
   const [currentValue, setCurrentValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
@@ -101,6 +103,7 @@ const InlineEditableText: React.FC<InlineEditableTextProps> = ({
             onBlur={handleBlur}
             placeholder={placeholder}
             rows={1}
+            disabled={disabled}
           />
         ) : (
           <input
@@ -113,9 +116,10 @@ const InlineEditableText: React.FC<InlineEditableTextProps> = ({
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={placeholder}
+            disabled={disabled}
           />
         )}
-        {isFocused && (
+        {isFocused && !disabled && (
           <div className="inline-editable-actions">
             <button
             className="inline-editable-button save"

@@ -428,26 +428,30 @@ body {
     background: #572cbb;
 }
 
-.hypothesis-list-item {
+.master-list-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.hypothesis-title {
+.master-list-title {
     font-size: 13px;
     font-weight: 600;
     line-height: 1.4;
 }
 
-.hypothesis-preview {
+.master-list-preview {
     font-size: 12px;
     opacity: 0.7;
     line-height: 1.3;
 }
 
-.master-item.selected .hypothesis-preview {
+.master-item.selected .master-list-preview {
     opacity: 0.8;
+}
+
+.context-view-master-list {
+    width: 250px;
 }
 
 /* Hyperlist View Styles */

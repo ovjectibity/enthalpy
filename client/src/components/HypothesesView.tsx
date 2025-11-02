@@ -26,9 +26,9 @@ const HypothesesView: React.FC = () => {
       <MasterDetail
         items={hypothesesList}
         renderMasterItem={(item: any) => (
-          <div className="hypothesis-list-item">
-            <div className="hypothesis-title">{item.title}</div>
-            <div className="hypothesis-preview">{item.action}</div>
+          <div className="master-list-item">
+            <div className="master-list-title">{item.title}</div>
+            <div className="master-list-preview">{item.action}</div>
           </div>
         )}
         renderDetail={(item: any) => (
