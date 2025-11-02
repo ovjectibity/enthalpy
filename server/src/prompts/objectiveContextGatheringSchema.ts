@@ -6,11 +6,11 @@ export const objectiveContextGatheringSchema = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "content": {
+                    "description": {
                         "type": "string",
                     }
                 },
-                "required": ["content"],
+                "required": ["description"],
                 "additionalProperties": false
             } 
         }

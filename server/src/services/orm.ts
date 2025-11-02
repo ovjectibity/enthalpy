@@ -32,8 +32,9 @@ export const ormUtilities = {
   toObjective(row: any): Objective {
     return {
       id: Number(row.id),
+      projectId: Number(row.project_id),
       title: String(row.title),
-      description: row.description ? String(row.description) : undefined,
+      description: String(row.description),
       userId: Number(row.user_id),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.last_updated_at),
@@ -210,6 +211,61 @@ export const queryUtilities = {
       return ormUtilities.toObjectives(result.rows);
     } catch (error) {
       console.error("Error fetching objectives by user ID:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch objective by user ID and project ID
+   */
+  async getObjectiveByUserIdAndProjectId(
+    userId: number,
+    projectId: number
+  ): Promise<Objective | null> {
+    try {
+      const result = await commonPool.query(
+        "SELECT * FROM assets.objectives WHERE user_id = $1 AND project_id = $2 ORDER BY created_at DESC LIMIT 1",
+        [userId, projectId],
+      );
+
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      return ormUtilities.toObjective(result.rows[0]);
+    } catch (error) {
+      console.error("Error fetching objective by user ID and project ID:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Add a new objective
+   */
+  async addObjective(
+    userId: number,
+    projectId: number,
+    title: string,
+    description: string
+  ): Promise<Objective> {
+    try {
+      const result = await commonPool.query(
+        `
+        INSERT INTO assets.objectives (
+          user_id,
+          project_id,
+          title,
+          description
+        )
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+        `,
+        [userId, projectId, title, description],
+      );
+
+      return ormUtilities.toObjective(result.rows[0]);
+    } catch (error) {
+      console.error("Error adding objective:", error);
       throw error;
     }
   },

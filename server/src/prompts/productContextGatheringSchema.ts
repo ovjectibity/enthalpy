@@ -8,7 +8,7 @@ export const productContextGatheringSchema = {
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["product-page-url", "product-documentation", "product-context-document", "product-name"]
+                        "enum": ["product-page-url", "product-documentation", "product-context", "product-name"]
                     },
                     "format": {
                         "type": "string",

@@ -8,7 +8,7 @@ import { productContextGatheringSchema } from "../prompts/productContextGatherin
 import { metricAssetGenerationSchema } from "../prompts/metricAssetGenerationSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
 import {
-  ObjectiveContextO as ObjectiveContext,
+  ObjectiveO as ObjectiveContext,
   ProductContextO as ProductContext,
   MetricO as Metric,
   Contexts,
@@ -87,15 +87,18 @@ class MCAgent extends Agent {
   introNode: SimpleOutputNode;
   objNode: ContextGatheringNode<ObjectiveContext>;
   prdCtxNode: ContextGatheringNode<ProductContext>;
+  metricsGenNode: AssetGenerationNode<Metric>;
 
   constructor() {
     super("mc");
     this.introNode = MCAgent.createIntroNode();
     this.objNode = MCAgent.createObjectiveGatheringNode(this.introNode);
     this.prdCtxNode = MCAgent.createProductGatheringNode(this.objNode);
+    this.metricsGenNode = MCAgent.createMetricsGenerationNode(this.prdCtxNode);
     this.workNodes.push(this.introNode);
     this.workNodes.push(this.objNode);
     this.workNodes.push(this.prdCtxNode);
+    this.workNodes.push(this.metricsGenNode);
     this.ctx.currentNode = this.introNode;
   }
 
@@ -120,7 +123,8 @@ class MCAgent extends Agent {
     return prdCtxNode;
   }
 
-  static createMetricsGenerationNode(parent: WorkflowNode): WorkflowNode {
+  static createMetricsGenerationNode(parent: WorkflowNode): 
+  AssetGenerationNode<Metric> {
     const schema: JSONSchemaType<Assets<Metric>> = metricAssetGenerationSchema;
     let prdCtxNode = new AssetGenerationNode<Metric>(
       "metrics-generation",schema,parent);
@@ -129,6 +133,10 @@ class MCAgent extends Agent {
 
   registerFinaliseProductContext(cb: (productContexts: Contexts<ProductContext>) => Promise<void>): void {
     this.prdCtxNode.finaliseContextCb = cb;
+  }
+
+  registerFinaliseObjectiveContext(cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>): void {
+    this.objNode.finaliseContextCb = cb;
   }
 
   initAgentWorkflow() {

@@ -1,14 +1,29 @@
 import React, { useState } from "react";
 import MasterDetail from "./MasterDetail";
 import InlineEditableText from "./InlineEditableText";
+import useContext from "../hooks/useContext";
 
-const ContextView: React.FC = () => {
-  // State for objective
-  const [objective, setObjective] = useState("");
+interface ContextViewProps {
+  userId: number;
+  projectId: number;
+}
 
-  // State for product context
+const ContextView: React.FC<ContextViewProps> = ({ userId, projectId }) => {
+  const { contextData, loading, error } = useContext({ userId, projectId });
+
+  // Local state for product context (editable)
   const [productName, setProductName] = useState("");
   const [productUrl, setProductUrl] = useState("");
+
+  // Update local state when context data is loaded
+  React.useEffect(() => {
+    if (contextData.productName) {
+      setProductName(contextData.productName);
+    }
+    if (contextData.productUrl) {
+      setProductUrl(contextData.productUrl);
+    }
+  }, [contextData]);
 
   const items = [
     { id: "objective", label: "Objective" },
@@ -59,16 +74,22 @@ const ContextView: React.FC = () => {
     if (item.id === "objective") {
       return (
         <div className="context-detail-content">
-          <InlineEditableText
-            value={objective}
-            onSave={handleObjectiveSave}
-            onDiscard={handleObjectiveDiscard}
-            placeholder="Enter objective..."
-            multiline={true}
-            label="Objective"
-            autoFocus={false}
-            disabled={true}
-          />
+          {loading ? (
+            <div>Loading...</div>
+          ) : error ? (
+            <div>Error: {error}</div>
+          ) : (
+            <InlineEditableText
+              value={contextData.objective?.description || ""}
+              onSave={handleObjectiveSave}
+              onDiscard={handleObjectiveDiscard}
+              placeholder="No objective available..."
+              multiline={true}
+              label="Objective"
+              autoFocus={false}
+              disabled={true}
+            />
+          )}
         </div>
       );
     }

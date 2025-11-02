@@ -6,15 +6,6 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface Objective {
-  id: number;
-  title: string;
-  description?: string;
-  userId: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface Experiment {
   id: number;
   projectId: number;
@@ -98,12 +89,14 @@ export interface Thread {
   summary?: string
 }
 
-export interface ObjectiveContext {
-  index: number,
-  userId: number,
-  projectId: number,
-  createdAt: Date,
-  content: string
+export interface Objective {
+  id: number;
+  title: string;
+  projectId: number;
+  description: string;
+  userId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ProductContext {
@@ -230,6 +223,6 @@ export interface AgentClientToServerEvents {
 
 export type Agent = "mc" | "flow-graph" | "exp-design" | "hypotheses";
 
-export type ObjectiveContextO = Omit<ObjectiveContext, "index" | "userId" | "projectId" | "createdAt">;
+export type ObjectiveO = Omit<Objective, "id" | "title" | "userId" | "projectId" | "createdAt" | "updatedAt">;
 export type ProductContextO = Omit<ProductContext, "index" | "userId" | "projectId" | "createdAt">;
 export type MetricO = Omit<Metric, "id" | "userId" | "projectId" | "createdAt" | "updatedAt" | "hypothesesId">;

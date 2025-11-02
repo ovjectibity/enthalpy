@@ -168,7 +168,7 @@ const App: React.FC = () => {
             {activeContext === "Hypotheses" ? (
               <HypothesesView />
             ) : activeContext === "Context" ? (
-              <ContextView />
+              <ContextView userId={1} projectId={1} />
             ) : (
               <div className="placeholder-text">{activeContext} Canvas</div>
             )}
