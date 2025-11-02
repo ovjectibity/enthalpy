@@ -3,6 +3,7 @@ import React from "react";
 interface Column {
   header: string;
   accessor: string;
+  type?: "text" | "tag";
 }
 
 interface TableViewProps {
@@ -12,16 +13,26 @@ interface TableViewProps {
 
 const TableView: React.FC<TableViewProps> = ({ data, columns }) => {
   if (!data || data.length === 0) {
-    return <div>No data available</div>;
+    return <div className="table-view-empty">No data available</div>;
   }
 
+  const renderCell = (row: any, column: Column) => {
+    const value = column.accessor ? row[column.accessor] : "";
+
+    if (column.type === "tag" && value) {
+      return <span className="table-view-tag">{value}</span>;
+    }
+
+    return value;
+  };
+
   return (
-    <div className="table-container">
-      <table className="data-table">
+    <div className="table-view-container">
+      <table className="table-view">
         <thead>
-          <tr>
+          <tr className="table-view-header-row">
             {columns.map((column, index) => (
-              <th key={index} className="data-table-cell">
+              <th key={index} className="table-view-header-cell">
                 {column.header}
               </th>
             ))}
@@ -29,10 +40,10 @@ const TableView: React.FC<TableViewProps> = ({ data, columns }) => {
         </thead>
         <tbody>
           {data.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr key={rowIndex} className="table-view-row">
               {columns.map((column, colIndex) => (
-                <td key={colIndex} className="data-table-cell">
-                  {column.accessor ? row[column.accessor] : ""}
+                <td key={colIndex} className="table-view-cell">
+                  {renderCell(row, column)}
                 </td>
               ))}
             </tr>

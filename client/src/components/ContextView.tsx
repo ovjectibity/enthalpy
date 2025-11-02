@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import MasterDetail from "./MasterDetail";
 import InlineEditableText from "./InlineEditableText";
+import TableView from "./TableView";
 import useContext from "../hooks/useContext";
 
 interface ContextViewProps {
@@ -70,52 +71,77 @@ const ContextView: React.FC<ContextViewProps> = ({ userId, projectId }) => {
     console.log("Product URL discard");
   };
 
+  // Placeholder data for table
+  const tableData = [
+    { feature: "User Authentication", status: "Active", priority: "High" },
+    { feature: "Dashboard", status: "In Progress", priority: "Medium" },
+    { feature: "Analytics", status: "Planned", priority: "Low" },
+    { feature: "Notifications", status: "Active", priority: "Medium" },
+  ];
+
+  const tableColumns = [
+    { header: "Feature", accessor: "feature", type: "text" as const },
+    { header: "Status", accessor: "status", type: "tag" as const },
+    { header: "Priority", accessor: "priority", type: "text" as const },
+  ];
+
   const renderDetail = (item: any) => {
     if (item.id === "objective") {
       return (
-        <div className="context-detail-content">
+        <>
           {loading ? (
             <div>Loading...</div>
           ) : error ? (
             <div>Error: {error}</div>
           ) : (
-            <InlineEditableText
-              value={contextData.objective?.description || ""}
-              onSave={handleObjectiveSave}
-              onDiscard={handleObjectiveDiscard}
-              placeholder="No objective available..."
-              multiline={true}
-              label="Objective"
-              autoFocus={false}
-              disabled={true}
-            />
+            <div className="detail-section">
+              <InlineEditableText
+                value={contextData.objective?.description || ""}
+                onSave={handleObjectiveSave}
+                onDiscard={handleObjectiveDiscard}
+                placeholder="No objective available..."
+                multiline={true}
+                label="Objective"
+                autoFocus={false}
+                disabled={true}
+              />
+            </div>
           )}
-        </div>
+        </>
       );
     }
 
     if (item.id === "product-context") {
       return (
-        <div className="context-detail-content">
-          <InlineEditableText
-            value={productName}
-            onSave={handleProductNameSave}
-            onDiscard={handleProductNameDiscard}
-            placeholder="Enter product name..."
-            multiline={false}
-            label="Product Name"
-            autoFocus={false}
-          />
-          <InlineEditableText
-            value={productUrl}
-            onSave={handleProductUrlSave}
-            onDiscard={handleProductUrlDiscard}
-            placeholder="Enter product URL..."
-            multiline={false}
-            label="Product URL"
-            autoFocus={false}
-          />
-        </div>
+        <>
+          <div className="detail-section">
+            <InlineEditableText
+              value={productName}
+              onSave={handleProductNameSave}
+              onDiscard={handleProductNameDiscard}
+              placeholder="Enter product name..."
+              multiline={false}
+              label="Product Name"
+              autoFocus={false}
+            />
+          </div>
+
+          <div className="detail-section">
+            <InlineEditableText
+              value={productUrl}
+              onSave={handleProductUrlSave}
+              onDiscard={handleProductUrlDiscard}
+              placeholder="Enter product URL..."
+              multiline={false}
+              label="Product URL"
+              autoFocus={false}
+            />
+          </div>
+
+          <div className="detail-section">
+            <TableView data={tableData} columns={tableColumns} />
+          </div>
+        </>
       );
     }
 
