@@ -7,7 +7,7 @@ import {
   Agent, 
   AgentServerToClientEvents, 
   AgentClientToServerEvents, 
-  ThreadMessage 
+  ThreadMessage
 } from "@enthalpy/shared";
 import {io, Socket} from "socket.io-client";
 import ContextIcon from "./assets/context-icon.svg";
@@ -18,9 +18,9 @@ import ObjectivesIcon from "./assets/objectives-icon.svg";
 import SettingsIcon from "./assets/settings-icon.svg";
 import ExperimentsIcon from "./assets/experiments-icon.svg";
 
-const socket: Socket<AgentServerToClientEvents, AgentClientToServerEvents> =
+const agent_socket: Socket<AgentServerToClientEvents, AgentClientToServerEvents> =
   io("http://localhost:3000/agent", {
-  // transports: ['websocket'], // Force WebSocket
+  transports: ['websocket'], // Force WebSocket
   auth: { role: "user" },
 });
 
@@ -30,6 +30,7 @@ const App: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState("mc" as Agent);
   const [activeThread, setActiveThread] = useState(1); //TODO: Handle initiation
   const [activeContext, setActiveContext] = useState("Context");
+  const [contextUpdateIndex, setContextUpdateIndex] = useState(0);
   const [currentThreadState, setCurrentThreadState] = useState<"running" | "ready-for-input">("ready-for-input");
   const { threads, loading, error } = useThreads({
     projectId: 1, //TODO: Handle different projects
@@ -88,7 +89,7 @@ const App: React.FC = () => {
 
   React.useEffect(() => {
     const connectH = () => {
-      socket.emit("activate_thread",{
+      agent_socket.emit("activate_thread",{
         threadId: activeThread,
         agentName: selectedAgent,
         projectId: 1 //TODO: Handle different projects
@@ -111,16 +112,24 @@ const App: React.FC = () => {
       }
       setAgentMessage(msg.index);
     };
-    socket.on("connect", connectH);
-    socket.on("agent_message", agentMH);
-    socket.on("add_user_message", addUserMessageH);
-    socket.on("connect_error", connectErrorH);
+    const updateCB = (msg: string) => {
+      if(msg === "contexts") {
+        setContextUpdateIndex(contextUpdateIndex+1);
+      }
+    }
+
+    agent_socket.on("update_state", updateCB);
+    agent_socket.on("connect", connectH);
+    agent_socket.on("agent_message", agentMH);
+    agent_socket.on("add_user_message", addUserMessageH);
+    agent_socket.on("connect_error", connectErrorH);
 
     return () => {
-      socket.off("connect", connectH);
-      socket.off("agent_message", agentMH);
-      socket.off("add_user_message", addUserMessageH);
-      socket.off("connect_error", connectErrorH);
+      agent_socket.on("update_state", updateCB);
+      agent_socket.off("connect", connectH);
+      agent_socket.off("agent_message", agentMH);
+      agent_socket.off("add_user_message", addUserMessageH);
+      agent_socket.off("connect_error", connectErrorH);
     }
   });
 
@@ -176,7 +185,7 @@ const App: React.FC = () => {
             {activeContext === "Hypotheses" ? (
               <HypothesesView />
             ) : activeContext === "Context" ? (
-              <ContextView userId={1} projectId={1} />
+              <ContextView userId={1} projectId={1} updateIndex={contextUpdateIndex} />
             ) : (
               <div className="placeholder-text">{activeContext} Canvas</div>
             )}
@@ -207,7 +216,7 @@ const App: React.FC = () => {
             }}
             onSendMessage={(threadId: number, message: string) => {
               console.log("Sending message:", message);
-              socket.emit("user_message",{
+              agent_socket.emit("user_message",{
                 message: message,
                 threadId: activeThread,
                 agentName: selectedAgent,

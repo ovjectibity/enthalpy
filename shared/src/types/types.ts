@@ -214,6 +214,7 @@ export interface AgentServerToClientEvents {
   agent_message: (msg: ThreadMessage) => void;
   add_user_message: (msg: ThreadMessage) => void;
   connectError: (err: Error) => void;
+  update_state: (msg: string) => void;
 }
 
 export interface AgentClientToServerEvents {

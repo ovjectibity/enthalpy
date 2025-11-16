@@ -62,14 +62,14 @@ INSERT INTO assets.projects (user_id, description) VALUES
 
 -- Insert dummy objectives data
 INSERT INTO assets.objectives (user_id, project_id, title, description) VALUES
-(1, 1, 'Increase User Engagement', 'Improve daily active users by 25% through enhanced user experience and feature optimization'),
+-- (1, 1, 'Increase User Engagement', 'Improve daily active users by 25% through enhanced user experience and feature optimization'),
 (2, 3, 'Reduce Customer Churn', 'Decrease monthly churn rate from 8% to 5% by improving onboarding and support'),
 (3, 4, 'Optimize Conversion Funnel', 'Increase conversion rate from trial to paid subscription by 15%'),
-(4, 1, 'Improve App Performance', 'Reduce app load time by 30% and crash rate by 50%'),
-(5, 1, 'Expand Market Reach', 'Enter two new geographic markets and acquire 10,000 new users'),
-(6, 1, 'Enhance Customer Satisfaction', 'Achieve Net Promoter Score of 8.0 or higher'),
+-- (4, 1, 'Improve App Performance', 'Reduce app load time by 30% and crash rate by 50%'),
+-- (5, 1, 'Expand Market Reach', 'Enter two new geographic markets and acquire 10,000 new users'),
+-- (6, 1, 'Enhance Customer Satisfaction', 'Achieve Net Promoter Score of 8.0 or higher'),
 (7, 2, 'Streamline User Onboarding', 'Reduce onboarding completion time by 40% while maintaining quality'),
-(8, 1, 'Increase Revenue Per User', 'Improve average revenue per user (ARPU) by 20% through upselling');
+-- (8, 1, 'Increase Revenue Per User', 'Improve average revenue per user (ARPU) by 20% through upselling');
 
 -- Insert dummy metrics data
 INSERT INTO assets.metrics (user_id, project_id, title, description, formula) VALUES

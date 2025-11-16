@@ -51,10 +51,16 @@ class AgentService {
     this.agentMap.get(agentName)?.registerUserOutputCallback(cb);
   }
 
-  public registerModelProvidedStoreCallback(
+  public registerModelProvidedProductContextCallback(
     agentName: string, 
     cb: (productContexts: Contexts<ProductContext>) => Promise<void>) {
     this.agentMap.get(agentName)?.registerFinaliseProductContext(cb);
+  }
+
+  public registerModelProvidedObjectiveCallback(
+    agentName: string, 
+    cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>) {
+    this.agentMap.get(agentName)?.registerFinaliseObjectiveContext(cb);
   }
 }
 
@@ -77,6 +83,10 @@ abstract class Agent {
   }
 
   public registerFinaliseProductContext(cb: (productContexts: Contexts<ProductContext>) => Promise<void>): void {
+    //This needs to be handled by the specific agent
+  }
+
+  public registerFinaliseObjectiveContext(cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>): void {
     //This needs to be handled by the specific agent
   }
 
@@ -309,6 +319,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
                 context: this.gatheredContext
               });
               if(this.finaliseContextCb) {
+                console.log(`Finalising gathered context for the ${this.name} node`);
                 this.finaliseContextCb(this.gatheredContext);
               }
               if(this.children.length > 0) {

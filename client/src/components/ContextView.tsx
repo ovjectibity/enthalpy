@@ -7,6 +7,7 @@ import useContext from "../hooks/useContext";
 interface ContextViewProps {
   userId: number;
   projectId: number;
+  updateIndex: number;
 }
 
 const ContextView: React.FC<ContextViewProps> = ({ userId, projectId }) => {
