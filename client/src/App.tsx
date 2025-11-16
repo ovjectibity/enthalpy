@@ -7,7 +7,6 @@ import {
   Agent, 
   AgentServerToClientEvents, 
   AgentClientToServerEvents, 
-  AppendMessageData, 
   ThreadMessage 
 } from "@enthalpy/shared";
 import {io, Socket} from "socket.io-client";
@@ -26,6 +25,7 @@ const socket: Socket<AgentServerToClientEvents, AgentClientToServerEvents> =
 });
 
 const App: React.FC = () => {
+  const [agentMessage, setAgentMessage] = useState(0);
   const [activeTab, setActiveTab] = useState("Design");
   const [selectedAgent, setSelectedAgent] = useState("mc" as Agent);
   const [activeThread, setActiveThread] = useState(1); //TODO: Handle initiation
@@ -86,34 +86,42 @@ const App: React.FC = () => {
     }
   }, [isDragging]);
 
-  socket.on("connect", () => {
-    socket.emit("activate_thread",{
-      threadId: activeThread,
-      agentName: selectedAgent,
-      projectId: 1 //TODO: Handle different projects
-    });
-  });
+  React.useEffect(() => {
+    const connectH = () => {
+      socket.emit("activate_thread",{
+        threadId: activeThread,
+        agentName: selectedAgent,
+        projectId: 1 //TODO: Handle different projects
+      });
+    };
+    const addUserMessageH = (msg: ThreadMessage) => {
+      console.log("Finalise user message from agent:", msg);
+      if(threads.get(msg.threadId)) {
+        threads.get(msg.threadId)?.messages.push(msg);
+      }
+    };
+    const connectErrorH = (err: Error) => {
+      console.error("Connection failed:", err);
+    };
+    const agentMH = (msg: ThreadMessage) => {
+      console.log("Message from agent:", msg);
+      if(threads.has(msg.threadId)) {
+        console.log("Adding the agent message to threads map");
+        threads.get(msg.threadId)?.messages.push(msg);
+      }
+      setAgentMessage(msg.index);
+    };
+    socket.on("connect", connectH);
+    socket.on("agent_message", agentMH);
+    socket.on("add_user_message", addUserMessageH);
+    socket.on("connect_error", connectErrorH);
 
-  // Listen for events from server
-  socket.on("agent_message", (msg: ThreadMessage) => {
-    console.log("Message from agent:", msg);
-    if(threads.get(msg.threadId)) {
-      threads.get(msg.threadId)?.messages.push(msg);
+    return () => {
+      socket.off("connect", connectH);
+      socket.off("agent_message", agentMH);
+      socket.off("add_user_message", addUserMessageH);
+      socket.off("connect_error", connectErrorH);
     }
-    setCurrentThreadState("ready-for-input");
-  });
-
-  // Listen for events from server
-  socket.on("add_user_message", (msg: ThreadMessage) => {
-    console.log("Finalise user message from agent:", msg);
-    if(threads.get(msg.threadId)) {
-      threads.get(msg.threadId)?.messages.push(msg);
-    }
-  });
-
-  // Handle connection errors
-  socket.on("connect_error", (err: Error) => {
-    console.error("Connection failed:", err);
   });
 
   return (
@@ -184,6 +192,7 @@ const App: React.FC = () => {
         {/* Right Panel - Terminal Interface */}
         <div className="right-panel" style={{ width: chatWidth }}>
           <Terminal
+            newAgentMessage={agentMessage}
             currentThreadState={currentThreadState}
             selectedThreadId={activeThread}
             onAgentChange={(agent: Agent): number => {

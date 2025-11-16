@@ -15,6 +15,7 @@ interface TerminalProps {
   selectedThreadId: number;
   threads: Map<number, Thread>;
   currentThreadState: "running" | "ready-for-input";
+  newAgentMessage: number;
 }
 
 const Terminal: React.FC<TerminalProps> = (state: TerminalProps) => {

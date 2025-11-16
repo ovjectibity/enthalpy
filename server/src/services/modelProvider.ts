@@ -1,13 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import {
-  Tool as AnthTool,
   ContentBlock,
   MessageParam,
   ContentBlockParam,
-  Model,
 } from "@anthropic-ai/sdk/resources";
+import Ajv, { JSONSchemaType } from 'ajv';
 import { ModelMessage } from "./agent";
-import { prompts } from "../prompts/mcprompts.js";
+import { prompts } from "../contexts/mcprompts.js";
+import { modelMessageSchema } from "../contexts/modelMessageSchema.js";
 
 export interface LLMIntf {
   providerName: string,
@@ -21,6 +21,7 @@ export class ClaudeIntf implements LLMIntf {
   // model: string = "claude-sonnet-4-5-20250929";
   maxTokens: number = 1024;
   client: Anthropic;
+  validate: any;
 
   constructor() {
     if (process.env.ANTHROPIC_KEY === undefined) {
@@ -29,6 +30,9 @@ export class ClaudeIntf implements LLMIntf {
     this.client = new Anthropic({
       apiKey: process.env.ANTHROPIC_KEY,
     });
+    const schema: JSONSchemaType<ModelMessage> = modelMessageSchema;
+    const ajv = new Ajv();
+    this.validate = ajv.compile(schema);
   }
 
   static translateToAnthropicMessage(msg: ModelMessage): MessageParam {
@@ -49,7 +53,7 @@ export class ClaudeIntf implements LLMIntf {
     Array<MessageParam> {
     let anthMsgs = Array<MessageParam>();
     msgs.forEach((msg2: ModelMessage) => {
-      console.log("DEBUGGING: model message2: ",  JSON.stringify(msg2));
+      // console.log("DEBUGGING: model message2: ",  JSON.stringify(msg2));
       anthMsgs.push(ClaudeIntf.translateToAnthropicMessage(msg2));
     });
     return anthMsgs;
@@ -73,40 +77,49 @@ export class ClaudeIntf implements LLMIntf {
   }
 
   async input(msgs: Array<ModelMessage>): Promise<ModelMessage> {
-    return this.input_test();
-    // const message = await this.client.messages
-    //   .create({
-    //     max_tokens: this.maxTokens,
-    //     messages: ClaudeIntf.translateToAnthropicMessages(msgs),
-    //     model: this.model,
-    //     system: prompts["system-prompt"]
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //   });
+    // return this.input_test();
+    // console.log("Sending these input messages: ",msgs);
+    const message = await this.client.messages
+      .create({
+        max_tokens: this.maxTokens,
+        messages: ClaudeIntf.translateToAnthropicMessages(msgs),
+        model: this.model,
+        system: prompts["system-prompt"]
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     // console.log("Got this message from the claude model", message);
-    // //TODO: translate the content blocks to ModelMessage format
-    // if (message === undefined || message === null) {
-    //   return Promise.resolve({
-    //     role: "assistant",
-    //     messages: []
-    //   });
-    // } else {
-    //   let msg: ModelMessage = {
-    //     role: "assistant",
-    //     messages: []
-    //   };
-    //   let contents = message.content as Array<ContentBlock>;
-    //   contents.forEach((content: ContentBlock) => {
-    //     if(content.type === "text") {
-    //       if (content.text) {
-    //         let modified = content.text.substring(8).substring(0,-3);
-    //         console.log(modified);
-    //         msg.messages.push(JSON.parse(modified));
-    //       }
-    //     }
-    //   });
-    //   return msg;
-    // }
+    //TODO: translate the content blocks to ModelMessage format
+    if (message === undefined || message === null) {
+      return Promise.resolve({
+        role: "assistant",
+        messages: []
+      });
+    } else {
+      let msg: ModelMessage = {
+        role: "assistant",
+        messages: []
+      };
+      let contents = message.content as Array<ContentBlock>;
+      contents.forEach((content: ContentBlock) => {
+        if(content.type === "text") {
+          if (content.text) {
+            let modified = content.text.replace(/^```json|```$/g,"");
+            // console.log(modified);
+            let modifiedp: any = JSON.parse(modified);
+            if(this.validate(modifiedp)) {
+              // console.log("Model output conforms to the schema, got this messages array: ", 
+                // modifiedp.messages);
+              let modifiedpv: ModelMessage = modifiedp as ModelMessage;
+              msg.messages = msg.messages.concat(modifiedpv.messages);
+            } else {
+              console.log("Model output message does not conform to the schema");
+            }
+          }
+        }
+      });
+      return msg;
+    }
   }
 }

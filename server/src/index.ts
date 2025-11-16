@@ -137,17 +137,24 @@ agentchat.use((socket, next) => {
 agentchat.on("connection", (socket) => {
   console.log("Client connected for agent chat:", socket.id);
   const aserv = new AgentService();
+  const threadMap = new Map<number,string>();
 
   socket.on("activate_thread",async (msg: ThreadActivation) => {
     console.log("Got thread activation",msg);
-    //TODO: Skip in case thread is already activated
+    if(msg.agentName && threadMap.has(msg.threadId)) {
+      //TODO: Handle threads via IDs rather than agent name.
+      console.log(`Skipping thread activation for the ${msg.agentName} thread`);
+      return;
+    } else {
+      threadMap.set(msg.threadId,msg.agentName);
+    }
     let agentName = msg.agentName;
     let threadId = msg.threadId;
     //TODO: Handle projects & users here
     await ThreadsService.initializeActiveThreads(1,1);
     aserv.registerOutputCallback(agentName,
       async (msg: string) => {
-          console.log("Sending agent message: ",msg);
+          // console.log("Sending agent message: ",msg);
           let wrappedMsg = await ThreadsService.appendMessageToThread(threadId,
           {
             agentName: agentName,

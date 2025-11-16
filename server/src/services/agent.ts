@@ -2,10 +2,10 @@ import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
 // Workflows are defined by 2 loops -
 // L0 loop - workflow progress nodes, with each having a specific end output
 // L1 loop - with multiple LLM iterations towards achieving that output
-import { prompts } from "../prompts/mcprompts.js";
-import { objectiveContextGatheringSchema } from "../prompts/objectiveContextGatheringSchema.js";
-import { productContextGatheringSchema } from "../prompts/productContextGatheringSchema.js";
-import { metricAssetGenerationSchema } from "../prompts/metricAssetGenerationSchema.js";
+import { prompts } from "../contexts/mcprompts.js";
+import { objectiveContextGatheringSchema } from "../contexts/objectiveContextGatheringSchema.js";
+import { productContextGatheringSchema } from "../contexts/productContextGatheringSchema.js";
+import { metricAssetGenerationSchema } from "../contexts/metricAssetGenerationSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
 import {
   ObjectiveO as ObjectiveContext,
@@ -224,6 +224,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
     if(this.state !== "idle") {
       console.log(`ContextGatheringNode ${this.name} not in idle state, doing nothing for run call`);
     } else {
+      console.log(`Running the ContextGatheringNode ${this.name}`);
       //Update the context before the process
       this.updateMessagesContext(ctx);
       //Trigger a pre-defined response here by asking the LLM to summarise it.
@@ -253,10 +254,11 @@ class ContextGatheringNode<T> extends WorkflowNode {
 
   scrapeContext(gatheredContext: any) {
     if(this.schemaValidation(gatheredContext)) {
-      let vgc = gatheredContext.contexts as Contexts<T>;
+      let vgc = gatheredContext.contexts as T[];
+      console.debug("DEBUG: VGC = ",vgc);
       //TODO: Possible accumulation of duplicates here,
       // Should we override duplicates?
-      this.gatheredContext.contexts.push(...vgc.contexts);
+      this.gatheredContext.contexts = this.gatheredContext.contexts.concat(vgc);
     } else {
       console.log("Schema validation did not pass when trying to scrape LLM provided gathered context");
     }
@@ -267,6 +269,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
     // msg here should conform to the ModelMessage schema.
     //Check the workflow node state here before proceeding
     // If the user has provided the needed context, set it up
+    console.log("Got LLM output: ", msg);
     if(this.state === "idle") {
       //TODO: Do nothing, but something might be wrong here
     } else if(this.state === "waiting_on_user") {
@@ -277,9 +280,10 @@ class ContextGatheringNode<T> extends WorkflowNode {
       // context has been added by the user
       // or if the LLM wants this node to stop or
       // if any message needs to be surfaced to the user
+      console.log("Processing LLM output while waiting on LLM");
       if(msg.role && msg.role === "assistant" && msg.messages) {
         ctx.messages.push(msg);
-        for(let m of msg.messages) {
+        for(const m of msg.messages) {
           if(m.workflowContent && m.workflowContent.type === "workflow_context") {
             //Add to the context if available
             //TODO: Validation of provided context here
@@ -363,6 +367,7 @@ class AssetGenerationNode<T> extends WorkflowNode {
   neededAssetsSchema: JSONSchemaType<Assets<T>>;
   generatedAssets: Assets<T>;
   neededAssetsSchemaValidator: any;
+  finaliseGeneratedAssetCb?: (asset: Assets<T>) => Promise<void>;
 
   constructor(name: string,
     needed: JSONSchemaType<Assets<T>>,
@@ -417,7 +422,7 @@ class AssetGenerationNode<T> extends WorkflowNode {
       // Should we override duplicates?
       this.generatedAssets.assets.push(...vga.assets);
     } else {
-      console.log("Schema validation did not pass when trying to scrape LLM provided generated assets");
+      console.log("Error: Schema validation did not pass when trying to scrape LLM provided generated assets");
     }
   }
 
@@ -425,6 +430,7 @@ class AssetGenerationNode<T> extends WorkflowNode {
     if(this.state !== "idle") {
       console.log(`AssetGenerationNode ${this.name} not in idle state, doing nothing for run call`);
     } else {
+      console.log(`Running the AssetGenerationNode ${this.name}`);
       //Update the context before the process
       this.updateMessagesContext(ctx);
       //Trigger a pre-defined response here by asking the LLM to summarise it.
@@ -485,6 +491,9 @@ class AssetGenerationNode<T> extends WorkflowNode {
                 nodeName: this.name,
                 asset: this.generatedAssets
               });
+              if(this.finaliseGeneratedAssetCb) {
+                this.finaliseGeneratedAssetCb(this.generatedAssets);
+              }
               //TODO: Implement branching workflows:
               if(this.children.length > 0) {
                 ctx.currentNode = this.children[0];
