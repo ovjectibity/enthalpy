@@ -13,12 +13,13 @@ export interface UseContextResult {
   error: string | null;
 }
 
-interface UseContextParams {
+export interface UseContextParams {
   userId: number;
   projectId: number;
+  updateIndex: number;
 }
 
-const useContext = ({ userId, projectId }: UseContextParams): UseContextResult => {
+const useContext = ({ userId, projectId, updateIndex }: UseContextParams): UseContextResult => {
   const [contextData, setContextData] = useState<ContextData>({
     objective: null,
     productName: "",
@@ -92,7 +93,7 @@ const useContext = ({ userId, projectId }: UseContextParams): UseContextResult =
     };
 
     fetchContext();
-  }, [userId, projectId]);
+  }, [userId, projectId, updateIndex]);
 
   return { contextData, loading, error };
 };

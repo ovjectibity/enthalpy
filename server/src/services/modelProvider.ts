@@ -105,16 +105,20 @@ export class ClaudeIntf implements LLMIntf {
       contents.forEach((content: ContentBlock) => {
         if(content.type === "text") {
           if (content.text) {
+            try {
             let modified = content.text.replace(/^```json|```$/g,"");
-            // console.log(modified);
-            let modifiedp: any = JSON.parse(modified);
-            if(this.validate(modifiedp)) {
-              // console.log("Model output conforms to the schema, got this messages array: ", 
-                // modifiedp.messages);
-              let modifiedpv: ModelMessage = modifiedp as ModelMessage;
-              msg.messages = msg.messages.concat(modifiedpv.messages);
-            } else {
-              console.log("Model output message does not conform to the schema");
+              let modifiedp: any = JSON.parse(modified);
+              if(this.validate(modifiedp)) {
+                // console.log("Model output conforms to the schema, got this messages array: ", 
+                  // modifiedp.messages);
+                let modifiedpv: ModelMessage = modifiedp as ModelMessage;
+                msg.messages = msg.messages.concat(modifiedpv.messages);
+              } else {
+                console.log("Model output message does not conform to the schema");
+              }
+            } catch(e) {
+              console.log(`Got LLM output ${content.text}`);
+              console.log("Error when processing LLM response", e);
             }
           }
         }

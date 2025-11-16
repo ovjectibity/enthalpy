@@ -2,16 +2,10 @@ import React, { useState } from "react";
 import MasterDetail from "./MasterDetail";
 import InlineEditableText from "./InlineEditableText";
 import TableView from "./TableView";
-import useContext from "../hooks/useContext";
+import useContext, {UseContextParams} from "../hooks/useContext";
 
-interface ContextViewProps {
-  userId: number;
-  projectId: number;
-  updateIndex: number;
-}
-
-const ContextView: React.FC<ContextViewProps> = ({ userId, projectId }) => {
-  const { contextData, loading, error } = useContext({ userId, projectId });
+const ContextView: React.FC<UseContextParams> = ({ userId, projectId, updateIndex }) => {
+  const { contextData, loading, error } = useContext({ userId, projectId, updateIndex });
 
   // Local state for product context (editable)
   const [productName, setProductName] = useState("");
