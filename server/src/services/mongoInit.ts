@@ -17,7 +17,7 @@ export class MongoDBInitializer {
         {
           index: 0,
           user_id: 1,
-          project_id: 1,
+          project_id: 7,
           created_at: new Date('2024-01-10T09:00:00Z'),
           type: 'product-name',
           content: 'Enthalpy Analytics Platform',
@@ -27,7 +27,7 @@ export class MongoDBInitializer {
         {
           index: 1,
           user_id: 1,
-          project_id: 1,
+          project_id: 7,
           created_at: new Date('2024-01-10T09:15:00Z'),
           type: 'product-page-url',
           content: 'https://enthalpy.example.com',
@@ -37,7 +37,7 @@ export class MongoDBInitializer {
         {
           index: 2,
           user_id: 1,
-          project_id: 1,
+          project_id: 7,
           created_at: new Date('2024-01-10T10:00:00Z'),
           type: 'product-documentation',
           content: 'https://docs.enthalpy.example.com',
@@ -47,7 +47,7 @@ export class MongoDBInitializer {
         {
           index: 3,
           user_id: 1,
-          project_id: 1,
+          project_id: 7,
           created_at: new Date('2024-01-10T11:00:00Z'),
           type: 'product-context-document',
           content: 'Enthalpy is designed to help data scientists and product teams run experiments, generate hypotheses, and track metrics efficiently. The platform integrates with various data sources and provides AI-powered insights.',
