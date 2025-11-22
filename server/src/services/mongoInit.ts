@@ -49,7 +49,7 @@ export class MongoDBInitializer {
           user_id: 1,
           project_id: 7,
           created_at: new Date('2024-01-10T11:00:00Z'),
-          type: 'product-context-document',
+          type: 'product-context',
           content: 'Enthalpy is designed to help data scientists and product teams run experiments, generate hypotheses, and track metrics efficiently. The platform integrates with various data sources and provides AI-powered insights.',
           description: 'Product overview and key features',
           format: 'text'

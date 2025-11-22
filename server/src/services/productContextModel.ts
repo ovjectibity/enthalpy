@@ -8,7 +8,7 @@ export interface IProductContextDocument extends Document {
   user_id: number;
   project_id: number;
   created_at: Date;
-  type: "product-page-url" | "product-documentation" | "product-context-document" | "product-name";
+  type: "product-page-url" | "product-documentation" | "product-context" | "product-name";
   content: string;
   description?: string;
   format: "url" | "text" | "doc";
@@ -41,7 +41,7 @@ const ProductContextSchema = new Schema<IProductContextDocument>({
   },
   type: {
     type: String,
-    enum: ['product-page-url', 'product-documentation', 'product-context-document', 'product-name'],
+    enum: ["product-page-url", "product-documentation", "product-context", "product-name"],
     required: true
   },
   content: {

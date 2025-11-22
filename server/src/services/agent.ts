@@ -1,7 +1,4 @@
 import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
-// Workflows are defined by 2 loops -
-// L0 loop - workflow progress nodes, with each having a specific end output
-// L1 loop - with multiple LLM iterations towards achieving that output
 import { prompts } from "../contexts/mcprompts.js";
 import { objectiveContextGatheringSchema } from "../contexts/objectiveContextGatheringSchema.js";
 import { productContextGatheringSchema } from "../contexts/productContextGatheringSchema.js";
