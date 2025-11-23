@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import "./App.css";
-import { HypothesesView, Terminal } from "./components";
+import { HypothesesView, TableView, Terminal } from "./components";
 import ContextView from "./components/ContextView";
 import useThreads from "./hooks/useThreads";
+import useMetrics from "./hooks/useMetrics";
+import MetricsView from "./components/MetricsView";
 import { 
   Agent, 
   AgentServerToClientEvents, 
@@ -186,6 +188,8 @@ const App: React.FC = () => {
               <HypothesesView />
             ) : activeContext === "Context" ? (
               <ContextView userId={1} projectId={1} updateIndex={contextUpdateIndex} />
+            ) : activeContext === "Metrics" ? (
+              <MetricsView metrics={[]}/>
             ) : (
               <div className="placeholder-text">{activeContext} Canvas</div>
             )}
