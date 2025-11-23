@@ -4,6 +4,7 @@ import { objectiveContextGatheringSchema } from "../contexts/objectiveContextGat
 import { productContextGatheringSchema } from "../contexts/productContextGatheringSchema.js";
 import { metricAssetGenerationSchema } from "../contexts/metricAssetGenerationSchema.js";
 import Ajv, { JSONSchemaType } from "ajv";
+import util from 'util';
 import {
   ObjectiveO as ObjectiveContext,
   ProductContextO as ProductContext,
@@ -133,9 +134,9 @@ class MCAgent extends Agent {
   static createMetricsGenerationNode(parent: WorkflowNode): 
   AssetGenerationNode<Metric> {
     const schema: JSONSchemaType<Assets<Metric>> = metricAssetGenerationSchema;
-    let prdCtxNode = new AssetGenerationNode<Metric>(
+    let metricsGenNode = new AssetGenerationNode<Metric>(
       "metrics-generation",schema,parent);
-    return prdCtxNode;
+    return metricsGenNode;
   }
 
   registerFinaliseProductContext(cb: (productContexts: Contexts<ProductContext>) => Promise<void>): void {
@@ -276,7 +277,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
     // msg here should conform to the ModelMessage schema.
     //Check the workflow node state here before proceeding
     // If the user has provided the needed context, set it up
-    console.log("Got LLM output: ", msg);
+    console.log("Got LLM output: ", util.inspect(msg, { depth: null, colors: true }));
     if(this.state === "idle") {
       //TODO: Do nothing, but something might be wrong here
     } else if(this.state === "waiting_on_user") {
@@ -321,7 +322,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
               }
               if(this.children.length > 0) {
                 ctx.currentNode = this.children[0];
-                this.children[0].run(ctx);
+                ctx.currentNode.run(ctx);
               }
             }
           }
@@ -505,7 +506,7 @@ class AssetGenerationNode<T> extends WorkflowNode {
               //TODO: Implement branching workflows:
               if(this.children.length > 0) {
                 ctx.currentNode = this.children[0];
-                this.children[0].run(ctx);
+                ctx.currentNode.run(ctx);
               }
             }
           }
