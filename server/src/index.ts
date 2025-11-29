@@ -20,7 +20,6 @@ import {
   Contexts,
   ProductContextO,
   ObjectiveO,
-  Objective,
   ProductContext
 } from "@enthalpy/shared";
 import http from "http";

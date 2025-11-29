@@ -3,7 +3,6 @@ import "./App.css";
 import { HypothesesView, TableView, Terminal } from "./components";
 import ContextView from "./components/ContextView";
 import useThreads from "./hooks/useThreads";
-import useMetrics from "./hooks/useMetrics";
 import MetricsView from "./components/MetricsView";
 import { 
   Agent, 

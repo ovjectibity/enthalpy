@@ -46,7 +46,7 @@ const TableView: React.FC<TableViewProps> = ({ data, columns }) => {
       <table className="table-view">
         <thead>
           <tr className="table-view-header-row">
-            {hasAnyExpandableRows && <th className="table-view-header-cell" style={{ width: '40px' }}></th>}
+            {hasAnyExpandableRows && <th className="table-view-header-cell" style={{ width: '2px' }}></th>}
             {columns.map((column, index) => (
               <th key={index} className="table-view-header-cell">
                 {column.header}
@@ -67,14 +67,14 @@ const TableView: React.FC<TableViewProps> = ({ data, columns }) => {
                   style={isExpandable ? { cursor: 'pointer' } : undefined}
                 >
                   {hasAnyExpandableRows && (
-                    <td className="table-view-cell" style={{ width: '40px', textAlign: 'center' }}>
+                    <td className="table-view-cell" style={{ paddingLeft: "0px", paddingRight: "0px", width: '2px', textAlign: 'center' }}>
                       {isExpandable && (
                         <img
                           src={ChevronDownIcon}
                           alt="expand"
                           style={{
-                            width: '16px',
-                            height: '16px',
+                            width: '14px',
+                            height: '14px',
                             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                             transition: 'transform 0.2s'
                           }}

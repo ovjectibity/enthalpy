@@ -1,14 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import {
-  ContentBlock,
   MessageParam,
   ContentBlockParam,
 } from "@anthropic-ai/sdk/resources";
 import Ajv, { JSONSchemaType } from 'ajv';
 import { ModelMessage } from "./agent";
-import { prompts } from "../contexts/mcprompts.js";
 import { modelMessageSchema } from "../contexts/modelMessageSchema.js";
-import util from 'util';
 
 export interface LLMIntf {
   providerName: string,
