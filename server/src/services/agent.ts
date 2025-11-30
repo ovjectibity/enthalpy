@@ -446,7 +446,8 @@ class AssetGenerationNode<T> extends WorkflowNode {
 
   scrapeAssets(generatedAssets: any) {
     if(this.neededAssetsSchemaValidator(generatedAssets)) {
-      let vga = generatedAssets.assets as Assets<T>;
+      let vga = generatedAssets as Assets<T>;
+      console.debug(`Scraping the following assets: ${util.inspect(generatedAssets, false, null, true)}`);
       //TODO: Possible accumulation of duplicates here,
       // Should we override duplicates?
       this.generatedAssets.assets.push(...vga.assets);
@@ -507,7 +508,8 @@ class AssetGenerationNode<T> extends WorkflowNode {
             } catch(error) {
               console.log("Failure when processing the LLM generated assets",error);
             }
-          } else if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
+          } 
+          if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
             //TODO: The stop condition is expected to be the last block, add this to prompt
             let stopCondition = JSON.parse(m.workflowContent.content);
             if(stopCondition.stop && stopCondition.stopReason) {

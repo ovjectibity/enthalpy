@@ -208,7 +208,7 @@ agentchat.on("connection", (socket) => {
         });
       aserv.registerModelProvidedMetricsCallback(agentName,
         async (metrics: Assets<MetricO>): Promise<void> => {
-          console.log("Storing generated assets provided by the agent");
+          console.log("Storing generated metrics provided by the agent");
           let toAddMetrics: Metric[] = 
           metrics.assets.map((metric: MetricO) => {
             return {
