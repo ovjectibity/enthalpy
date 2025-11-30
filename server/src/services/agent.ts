@@ -60,6 +60,12 @@ class AgentService {
     cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>) {
     this.agentMap.get(agentName)?.registerFinaliseObjectiveContext(cb);
   }
+
+  public registerModelProvidedMetricsCallback(
+    agentName: string, 
+    cb: (metrics: Assets<Metric>) => Promise<void>) {
+    this.agentMap.get(agentName)?.registerModelProvidedMetricsCallback(cb);
+  }
 }
 
 abstract class Agent {
@@ -86,6 +92,11 @@ abstract class Agent {
 
   public registerFinaliseObjectiveContext(cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>): void {
     //This needs to be handled by the specific agent
+  }
+
+  public registerModelProvidedMetricsCallback(
+    cb: (metrics: Assets<Metric>) => Promise<void>) {
+      //This needs to be handled by the specific agent 
   }
 
   abstract initAgentWorkflow(): void;
@@ -145,6 +156,11 @@ class MCAgent extends Agent {
 
   registerFinaliseObjectiveContext(cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>): void {
     this.objNode.finaliseContextCb = cb;
+  }
+
+  public registerModelProvidedMetricsCallback(
+    cb: (metrics: Assets<Metric>) => Promise<void>) {
+      this.metricsGenNode.finaliseGeneratedAssetCb = cb;
   }
 
   initAgentWorkflow() {

@@ -19,12 +19,16 @@ import {
   ThreadActivation,
   AppendMessageData,
   Contexts,
+  Assets,
   ProductContextO,
   ObjectiveO,
+  MetricO,
+  Metric,
   ProductContext
 } from "@enthalpy/shared";
 import http from "http";
 import { ObjectivesService } from "./services/objectivesService.js";
+import { ormUtilities, queryUtilities } from "./services/orm.js";
 
 const app = express();
 const port = process.env.APP_PORT;
@@ -201,6 +205,28 @@ agentchat.on("connection", (socket) => {
           });
           await ProductContextService.addProductContexts(toAddContexts);
           socket.emit("update_state","contexts");
+        });
+      aserv.registerModelProvidedMetricsCallback(agentName,
+        async (metrics: Assets<MetricO>): Promise<void> => {
+          console.log("Storing generated assets provided by the agent");
+          let toAddMetrics: Metric[] = 
+          metrics.assets.map((metric: MetricO) => {
+            return {
+              id: -1, //index will be ignore here anyway
+              userId: 1,
+              projectId: 1,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              name: metric.name,
+              formula: metric.formula,
+              description: metric.description,
+              metricTimeframe: metric.metricTimeframe,
+              priority: metric.priority,
+              retrievalPolicy: metric.retrievalPolicy
+            };
+          });
+          await queryUtilities.addMetrics(toAddMetrics);
+          socket.emit("update_state","metrics");
         });
       aserv.initAgentWorkflow(agentName);
   })

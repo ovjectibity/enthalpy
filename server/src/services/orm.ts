@@ -382,6 +382,59 @@ export const queryUtilities = {
     }
   },
 
+  /**
+   * Add multiple metrics in a single transaction
+   * Ignores IDs in input objects and returns newly created metrics with database-assigned IDs
+   */
+  async addMetrics(metrics: Metric[]): Promise<Metric[]> {
+    const client = await commonPool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const insertedMetrics: Metric[] = [];
+
+      for (const metric of metrics) {
+        const result = await client.query(
+          `
+          INSERT INTO assets.metrics (
+            user_id,
+            project_id,
+            title,
+            description,
+            formula,
+            priority,
+            metric_timeframe,
+            retrieval_policy
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          RETURNING *
+          `,
+          [
+            metric.userId,
+            metric.projectId,
+            metric.name, // interface uses 'name', db uses 'title'
+            metric.description,
+            metric.formula,
+            metric.priority,
+            metric.metricTimeframe,
+            metric.retrievalPolicy,
+          ],
+        );
+
+        insertedMetrics.push(ormUtilities.toMetric(result.rows[0]));
+      }
+
+      await client.query('COMMIT');
+      return insertedMetrics;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error("Error adding metrics:", error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  },
+
   // ==========================================
   // HYPOTHESIS FUNCTIONS
   // ==========================================

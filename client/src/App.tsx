@@ -33,6 +33,7 @@ const App: React.FC = () => {
   const [activeThread, setActiveThread] = useState(1); //TODO: Handle initiation
   const [activeContext, setActiveContext] = useState("Context");
   const [contextUpdateIndex, setContextUpdateIndex] = useState(0);
+  const [metricsUpdateIndex, setMetricsUpdateIndex] = useState(0);
   const [currentThreadState, setCurrentThreadState] = useState<"running" | "ready-for-input">("ready-for-input");
   const { threads, loading, error } = useThreads({
     projectId: 1, //TODO: Handle different projects
@@ -118,6 +119,8 @@ const App: React.FC = () => {
     const updateCB = (msg: string) => {
       if(msg === "contexts") {
         setContextUpdateIndex(contextUpdateIndex+1);
+      } else if(msg === "assets") {
+        setMetricsUpdateIndex(metricsUpdateIndex+1);
       }
     }
 
@@ -190,7 +193,7 @@ const App: React.FC = () => {
             ) : activeContext === "Context" ? (
               <ContextView userId={1} projectId={1} updateIndex={contextUpdateIndex} />
             ) : activeContext === "Metrics" ? (
-              <MetricsView metrics={metricsList}/>
+              <MetricsView metrics={metricsList} updateIndex={metricsUpdateIndex}/>
             ) : (
               <div className="placeholder-text">{activeContext} Canvas</div>
             )}

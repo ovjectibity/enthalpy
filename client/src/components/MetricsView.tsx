@@ -67,7 +67,8 @@ const tableColumns = [
 ];
 
 interface MetricsProp {
-  metrics: Metric[]
+  metrics: Metric[],
+  updateIndex: number
 }
 
 const MetricsView: React.FC<MetricsProp> = ({ metrics }) => {
