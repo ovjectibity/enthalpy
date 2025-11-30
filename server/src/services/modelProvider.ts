@@ -2,10 +2,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import {
   MessageParam,
   ContentBlockParam,
+  ContentBlock
 } from "@anthropic-ai/sdk/resources";
 import Ajv, { JSONSchemaType } from 'ajv';
 import { ModelMessage } from "./agent";
 import { modelMessageSchema } from "../contexts/modelMessageSchema.js";
+import { prompts } from "../contexts/mcprompts.js";
+import util from 'util';
 
 export interface LLMIntf {
   providerName: string,
@@ -15,8 +18,8 @@ export interface LLMIntf {
 
 export class ClaudeIntf implements LLMIntf {
   providerName: string = "claude";
-  model: string = "claude-haiku-4-5-20251001";
-  // model: string = "claude-sonnet-4-5-20250929";
+  // model: string = "claude-haiku-4-5-20251001";
+  model: string = "claude-sonnet-4-5-20250929";
   maxTokens: number = 1024;
   client: Anthropic;
   validate: any;
@@ -75,62 +78,63 @@ export class ClaudeIntf implements LLMIntf {
   }
 
   async input(msgs: Array<ModelMessage>): Promise<ModelMessage> {
-    return this.input_test();
-    // console.log("Sending these input messages: ",msgs);
-    // const mModelMessageSchema = JSON.parse(JSON.stringify(modelMessageSchema));
-    // delete mModelMessageSchema.properties.messages.items.properties.userContent.nullable;
-    // delete mModelMessageSchema.properties.messages.items.properties.workflowContent.nullable;
+    // return this.input_test();
+    console.log("Sending these input messages: ",msgs);
+    const mModelMessageSchema = JSON.parse(JSON.stringify(modelMessageSchema));
+    delete mModelMessageSchema.properties.messages.items.properties.userContent.nullable;
+    delete mModelMessageSchema.properties.messages.items.properties.workflowContent.nullable;
     // const message = await this.client.messages
-    //   .create({
-    //     max_tokens: this.maxTokens,
-    //     // betas: ["structured-outputs-2025-11-13"],
-    //     messages: ClaudeIntf.translateToAnthropicMessages(msgs),
-    //     model: this.model,
-    //     system: prompts["system-prompt"],
-    //     // output_format: {
-    //     //   type: "json_schema",
-    //     //   schema: mModelMessageSchema
-    //     // }
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //   });
-    // // console.log("Got this message from the claude model", message);
-    // //TODO: translate the content blocks to ModelMessage format
-    // if (message === undefined || message === null) {
-    //   return Promise.resolve({
-    //     role: "assistant",
-    //     messages: []
-    //   });
-    // } else {
-    //   let msg: ModelMessage = {
-    //     role: "assistant",
-    //     messages: []
-    //   };
-    //   let contents = message.content as Array<ContentBlock>;
-    //   contents.forEach((content: ContentBlock) => {
-    //     if(content.type === "text") {
-    //       if (content.text) {
-    //         try {
-    //         let modified = content.text.replace(/^```json|```$/g,"");
-    //           let modifiedp: any = JSON.parse(modified);
-    //           if(this.validate(modifiedp)) {
-    //             // console.log("Model output conforms to the schema, got this messages array: ", 
-    //               // modifiedp.messages);
-    //             let modifiedpv: ModelMessage = modifiedp as ModelMessage;
-    //             msg.messages = msg.messages.concat(modifiedpv.messages);
-    //           } else {
-    //             console.log("Model output message does not conform to the schema",
-    //               util.inspect(modifiedp, { depth: null, colors: true }));
-    //           }
-    //         } catch(e) {
-    //           console.log(`Got LLM output ${content.text}`);
-    //           console.log("Error when processing LLM response", e);
-    //         }
-    //       }
-    //     }
-    //   });
-    //   return msg;
-    // }
+    const message = await this.client.beta.messages
+      .create({
+        max_tokens: this.maxTokens,
+        betas: ["structured-outputs-2025-11-13"],
+        messages: ClaudeIntf.translateToAnthropicMessages(msgs),
+        model: this.model,
+        system: prompts["system-prompt"],
+        output_format: {
+          type: "json_schema",
+          schema: mModelMessageSchema
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    // console.log("Got this message from the claude model", message);
+    //TODO: translate the content blocks to ModelMessage format
+    if (message === undefined || message === null) {
+      return Promise.resolve({
+        role: "assistant",
+        messages: []
+      });
+    } else {
+      let msg: ModelMessage = {
+        role: "assistant",
+        messages: []
+      };
+      let contents = message.content as Array<ContentBlock>;
+      contents.forEach((content: ContentBlock) => {
+        if(content.type === "text") {
+          if (content.text) {
+            try {
+            let modified = content.text.replace(/^```json|```$/g,"");
+              let modifiedp: any = JSON.parse(modified);
+              if(this.validate(modifiedp)) {
+                // console.log("Model output conforms to the schema, got this messages array: ", 
+                  // modifiedp.messages);
+                let modifiedpv: ModelMessage = modifiedp as ModelMessage;
+                msg.messages = msg.messages.concat(modifiedpv.messages);
+              } else {
+                console.log("Model output message does not conform to the schema",
+                util.inspect(modifiedp, { depth: null, colors: true }));
+              }
+            } catch(e) {
+              console.log(`Parsing model output as JSON probably failed. Got LLM output ${content.text}`);
+              console.log("Error when processing LLM response", e);
+            }
+          }
+        }
+      });
+      return msg;
+    }
   }
 }

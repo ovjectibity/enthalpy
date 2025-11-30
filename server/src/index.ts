@@ -28,7 +28,7 @@ import {
 } from "@enthalpy/shared";
 import http from "http";
 import { ObjectivesService } from "./services/objectivesService.js";
-import { ormUtilities, queryUtilities } from "./services/orm.js";
+import { queryUtilities } from "./services/orm.js";
 
 const app = express();
 const port = process.env.APP_PORT;

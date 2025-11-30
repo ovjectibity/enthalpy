@@ -334,11 +334,15 @@ class ContextGatheringNode<T> extends WorkflowNode {
               });
               if(this.finaliseContextCb) {
                 console.log(`Finalising gathered context for the ${this.name} node`);
-                this.finaliseContextCb(this.gatheredContext);
+                await this.finaliseContextCb(this.gatheredContext);
               }
               if(this.children.length > 0) {
                 ctx.currentNode = this.children[0];
                 ctx.currentNode.run(ctx);
+              } else if(this.children) {
+                console.log(`Warning: No children work node found for ${this.name} 2`)
+              } else {
+                console.log(`Warning: No children work node found for ${this.name} 3`)
               }
             }
           }
@@ -396,8 +400,8 @@ class AssetGenerationNode<T> extends WorkflowNode {
 
   constructor(name: string,
     needed: JSONSchemaType<Assets<T>>,
-    dependentContexts: any,
-    parent?: WorkflowNode) {
+    parent?: WorkflowNode,
+    dependentContexts?: any) {
     super(name,parent);
     this.neededAssetsSchema = needed;
     this.generatedAssets = {
@@ -424,18 +428,18 @@ class AssetGenerationNode<T> extends WorkflowNode {
             type: "workflow_instruction"
           }
         },
-        {
-          workflowContent: {
-            content: prompts["assets-gen-available-context-meta-instruction"],
-            type: "workflow_instruction"
-          }
-        },
-        {
-          workflowContent: {
-            content: JSON.stringify(this.dependentContexts),
-            type: "workflow_instruction"
-          }
-        },
+        // {
+        //   workflowContent: {
+        //     content: prompts["assets-gen-available-context-meta-instruction"],
+        //     type: "workflow_instruction"
+        //   }
+        // },
+        // {
+        //   workflowContent: {
+        //     content: JSON.stringify(this.dependentContexts),
+        //     type: "workflow_instruction"
+        //   }
+        // },
       ]
     });
   }
