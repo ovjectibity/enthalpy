@@ -34,7 +34,8 @@ export interface Metric {
   createdAt: Date;
   updatedAt: Date;
   priority: string;
-  metricTimeframe: string;
+  metricTimeframe?: string;
+  retrievalPolicy?: string;
 }
 
 export interface Feedback {

@@ -19,10 +19,15 @@ export const metricAssetGenerationSchema = {
                         "type": "string" 
                     },
                     "metricTimeframe": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "retrievalPolicy": {
+                        "type": "string",
+                        "nullable": true
                     }
                 },
-                "required": ["name","formula","description","priority","metricTimeframe"],
+                "required": ["name","formula","description","priority"],
                 "additionalProperties": false
             }   
         }

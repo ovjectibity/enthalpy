@@ -68,19 +68,19 @@ INSERT INTO assets.objectives (user_id, project_id, title, description) VALUES
 -- (4, 1, 'Improve App Performance', 'Reduce app load time by 30% and crash rate by 50%'),
 -- (5, 1, 'Expand Market Reach', 'Enter two new geographic markets and acquire 10,000 new users'),
 -- (6, 1, 'Enhance Customer Satisfaction', 'Achieve Net Promoter Score of 8.0 or higher'),
-(7, 2, 'Streamline User Onboarding', 'Reduce onboarding completion time by 40% while maintaining quality'),
+(7, 2, 'Streamline User Onboarding', 'Reduce onboarding completion time by 40% while maintaining quality');
 -- (8, 1, 'Increase Revenue Per User', 'Improve average revenue per user (ARPU) by 20% through upselling');
 
 -- Insert dummy metrics data
-INSERT INTO assets.metrics (user_id, project_id, title, description, formula) VALUES
-(1, 1, 'Daily Active Users', 'Number of unique users who engage with the platform daily', 'COUNT(DISTINCT user_id WHERE last_activity >= CURRENT_DATE)'),
-(1, 1, 'Monthly Recurring Revenue', 'Predictable revenue generated from subscriptions each month', 'SUM(subscription_amount WHERE status = active)'),
-(2, 3, 'Customer Acquisition Cost', 'Average cost to acquire a new paying customer', 'total_marketing_spend / new_customers_acquired'),
-(3, 4, 'Lifetime Value', 'Predicted net profit from entire relationship with customer', 'average_revenue_per_month * average_customer_lifespan_months'),
-(1, 2, 'Conversion Rate', 'Percentage of visitors who complete desired action', '(conversions / total_visitors) * 100'),
-(4, 1, 'App Store Rating', 'Average user rating across all app stores', 'AVG(rating) FROM app_reviews WHERE review_date >= CURRENT_DATE - 30'),
-(5, 1, 'Feature Adoption Rate', 'Percentage of users who use a specific feature', '(feature_users / total_active_users) * 100'),
-(6, 1, 'Customer Satisfaction Score', 'Average satisfaction rating from customer surveys', 'AVG(satisfaction_rating) FROM customer_surveys');
+INSERT INTO assets.metrics (user_id, project_id, title, description, formula, metric_timeframe, retrieval_policy) VALUES
+(1, 1, 'Daily Active Users', 'Number of unique users who engage with the platform daily', 'COUNT(DISTINCT user_id WHERE last_activity >= CURRENT_DATE)', 'Last 24 hours', 'Real-time from analytics database'),
+(1, 1, 'Monthly Recurring Revenue', 'Predictable revenue generated from subscriptions each month', 'SUM(subscription_amount WHERE status = active)', 'Current month', 'Daily batch update at midnight'),
+(2, 4, 'Customer Acquisition Cost', 'Average cost to acquire a new paying customer', 'total_marketing_spend / new_customers_acquired', 'Last 30 days', 'Weekly aggregation on Mondays'),
+(3, 3, 'Lifetime Value', 'Predicted net profit from entire relationship with customer', 'average_revenue_per_month * average_customer_lifespan_months', 'All-time', 'Monthly recalculation'),
+(1, 2, 'Conversion Rate', 'Percentage of visitors who complete desired action', '(conversions / total_visitors) * 100', 'Last 7 days', 'Real-time from tracking events'),
+(1, 1, 'App Store Rating', 'Average user rating across all app stores', 'AVG(rating) FROM app_reviews WHERE review_date >= CURRENT_DATE - 30', 'Last 30 days', 'Daily sync from app store APIs'),
+(1, 1, 'Feature Adoption Rate', 'Percentage of users who use a specific feature', '(feature_users / total_active_users) * 100', 'Last 90 days', 'Weekly calculation on Sundays'),
+(1, 1, 'Customer Satisfaction Score', 'Average satisfaction rating from customer surveys', 'AVG(satisfaction_rating) FROM customer_surveys', 'Last 60 days', 'On-demand when survey responses received');
 
 -- Insert dummy hypotheses data
 INSERT INTO assets.hypotheses (user_id, project_id, title, action, expected_outcome, rationale, user_target, linked_experiments, linked_context, linked_objectives, linked_metrics) VALUES

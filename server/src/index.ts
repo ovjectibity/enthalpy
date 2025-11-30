@@ -6,6 +6,7 @@ import { fileURLToPath } from "url"; // Import for ES Modules
 import hypothesesRoutes from "./routes/hypotheses.js";
 import { threadsRouter } from "./routes/threads.js";
 import contextRoutes from "./routes/context.js";
+import metricsRoutes from "./routes/metrics.js";
 import { MongoDBConnections } from "./services/mongoConnect.js";
 import { MongoDBInitializer } from "./services/mongoInit.js";
 import { Namespace, Server } from 'socket.io';
@@ -69,6 +70,7 @@ const __dirname = path.dirname(__filename);
 app.use("/api/hypotheses", hypothesesRoutes);
 app.use("/api/threads", threadsRouter);
 app.use("/api/context", contextRoutes);
+app.use("/api/metrics", metricsRoutes);
 
 app.use(express.static(path.join(__dirname, '../client_dist/build')));
 

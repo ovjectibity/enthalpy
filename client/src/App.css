@@ -353,6 +353,7 @@ body {
     border-radius: 5px;
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     border: 2px dashed rgba(148, 163, 184, 0.3);
+    overflow-y: auto;
 }
 
 .placeholder-text {
@@ -368,7 +369,6 @@ body {
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 5px;
-    overflow: hidden;
     margin-top: 16px;
 }
 

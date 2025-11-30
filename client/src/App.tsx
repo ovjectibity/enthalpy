@@ -3,6 +3,7 @@ import "./App.css";
 import { HypothesesView, TableView, Terminal } from "./components";
 import ContextView from "./components/ContextView";
 import useThreads from "./hooks/useThreads";
+import useMetrics from "./hooks/useMetrics";
 import MetricsView from "./components/MetricsView";
 import { 
   Agent, 
@@ -37,6 +38,7 @@ const App: React.FC = () => {
     projectId: 1, //TODO: Handle different projects
     userId: 1 //TODO: Handle different user IDs
   });
+  const { metricsList, loading: metricsLoading, error: metricsError } = useMetrics(1, 1);
   const [chatWidth, setChatWidth] = useState(500);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -188,7 +190,7 @@ const App: React.FC = () => {
             ) : activeContext === "Context" ? (
               <ContextView userId={1} projectId={1} updateIndex={contextUpdateIndex} />
             ) : activeContext === "Metrics" ? (
-              <MetricsView metrics={[]}/>
+              <MetricsView metrics={metricsList}/>
             ) : (
               <div className="placeholder-text">{activeContext} Canvas</div>
             )}

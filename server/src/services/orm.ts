@@ -83,7 +83,8 @@ export const ormUtilities = {
       description: row.description ? String(row.description) : "",
       hypothesesId: "", // SQL schema doesn't have direct hypothesis link
       priority: String(row.priority),
-      metricTimeframe: String(row.metricTimeframe),
+      metricTimeframe: String(row.metric_timeframe),
+      retrievalPolicy: String(row.retrieval_policy),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.last_updated_at),
 
@@ -356,6 +357,27 @@ export const queryUtilities = {
       return ormUtilities.toMetrics(result.rows);
     } catch (error) {
       console.error("Error fetching metrics by user ID:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch metrics by project ID
+   */
+  async getMetricsByProjectId(projectId: number): Promise<Metric[]> {
+    try {
+      const result = await commonPool.query(
+        `
+        SELECT * FROM assets.metrics
+        WHERE project_id = $1
+        ORDER BY created_at DESC
+      `,
+        [projectId],
+      );
+
+      return ormUtilities.toMetrics(result.rows);
+    } catch (error) {
+      console.error("Error fetching metrics by project ID:", error);
       throw error;
     }
   },

@@ -108,7 +108,8 @@ CREATE TABLE assets.metrics (
     description TEXT NOT NULL,
     formula TEXT NOT NULL,
     priority TEXT,
-    metricTimeframe TEXT,
+    metric_timeframe TEXT,
+    retrieval_policy TEXT,
     CONSTRAINT fk_metrics_user FOREIGN KEY (user_id) REFERENCES common.users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_metrics_project FOREIGN KEY (project_id) REFERENCES assets.projects(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
