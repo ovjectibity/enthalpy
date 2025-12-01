@@ -45,26 +45,26 @@ class AgentService {
   }
 
   //Callback independent of the user input cb needed to handle independent output from the agent
-  public registerOutputCallback(agentName: string, cb: (msg: string) => Promise<void>) {
+  public registerUserOutputCallback(agentName: string, cb: (msg: string) => Promise<void>) {
     this.agentMap.get(agentName)?.registerUserOutputCallback(cb);
   }
 
-  public registerModelProvidedProductContextCallback(
+  public registerFinalisedProductContextCallback(
     agentName: string, 
     cb: (productContexts: Contexts<ProductContext>) => Promise<void>) {
-    this.agentMap.get(agentName)?.registerFinaliseProductContext(cb);
+    this.agentMap.get(agentName)?.registerFinalisedProductContextCallback(cb);
   }
 
-  public registerModelProvidedObjectiveCallback(
+  public registerFinalisedObjContextCallback(
     agentName: string, 
     cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>) {
-    this.agentMap.get(agentName)?.registerFinaliseObjectiveContext(cb);
+    this.agentMap.get(agentName)?.registerFinalisedObjContextCallback(cb);
   }
 
-  public registerModelProvidedMetricsCallback(
+  public registerFinalisedMetricsCallback(
     agentName: string, 
     cb: (metrics: Assets<Metric>) => Promise<void>) {
-    this.agentMap.get(agentName)?.registerModelProvidedMetricsCallback(cb);
+    this.agentMap.get(agentName)?.registerFinalisedMetricsCallback(cb);
   }
 }
 
@@ -72,6 +72,7 @@ abstract class Agent {
   name: string;
   workNodes = new Array<WorkflowNode>();
   ctx: WorkflowContext;
+  currentNode?: WorkflowNode;
 
   constructor(name: string) {
     this.name = name;
@@ -79,27 +80,27 @@ abstract class Agent {
   }
 
   ingestUserInput(msg: string) {
-    this.ctx.currentNode?.ingestUserInput(this.ctx,msg);
-  }
-
-  public registerUserOutputCallback(cb: (msg: string) => Promise<void>) {
-    this.ctx.userOutputCb = cb;
-  }
-
-  public registerFinaliseProductContext(cb: (productContexts: Contexts<ProductContext>) => Promise<void>): void {
-    //This needs to be handled by the specific agent
-  }
-
-  public registerFinaliseObjectiveContext(cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>): void {
-    //This needs to be handled by the specific agent
-  }
-
-  public registerModelProvidedMetricsCallback(
-    cb: (metrics: Assets<Metric>) => Promise<void>) {
-      //This needs to be handled by the specific agent 
+    this.currentNode?.ingestUserInput(this.ctx,msg);
   }
 
   abstract initAgentWorkflow(): void;
+
+  //Callback independent of the user input cb needed to handle independent output from the agent
+  registerUserOutputCallback(cb: (msg: string) => Promise<void>) {
+    this.ctx.userOutputCb = cb;
+  }
+
+  registerFinalisedProductContextCallback(
+    cb: (productContexts: Contexts<ProductContext>) => Promise<void>) {
+  }
+
+  registerFinalisedObjContextCallback(
+    cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>) {
+  }
+
+  registerFinalisedMetricsCallback(
+    cb: (metrics: Assets<Metric>) => Promise<void>) {
+  }
 }
 
 class MCAgent extends Agent { 
@@ -107,6 +108,9 @@ class MCAgent extends Agent {
   objNode: ContextGatheringNode<ObjectiveContext>;
   prdCtxNode: ContextGatheringNode<ProductContext>;
   metricsGenNode: AssetGenerationNode<Metric>;
+  productCtxCb?: (productContexts: Contexts<ProductContext>) => Promise<void>;
+  objCtxCb?: (productContexts: Contexts<ObjectiveContext>) => Promise<void>;
+  meticsAssetCb?: (metrics: Assets<Metric>) => Promise<void>;
 
   constructor() {
     super("mc");
@@ -118,7 +122,6 @@ class MCAgent extends Agent {
     this.workNodes.push(this.objNode);
     this.workNodes.push(this.prdCtxNode);
     this.workNodes.push(this.metricsGenNode);
-    this.ctx.currentNode = this.introNode;
   }
 
   static createIntroNode(): SimpleOutputNode {
@@ -150,23 +153,41 @@ class MCAgent extends Agent {
     return metricsGenNode;
   }
 
-  registerFinaliseProductContext(cb: (productContexts: Contexts<ProductContext>) => Promise<void>): void {
-    this.prdCtxNode.finaliseContextCb = cb;
-  }
-
-  registerFinaliseObjectiveContext(cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>): void {
-    this.objNode.finaliseContextCb = cb;
-  }
-
-  public registerModelProvidedMetricsCallback(
-    cb: (metrics: Assets<Metric>) => Promise<void>) {
-      this.metricsGenNode.finaliseGeneratedAssetCb = cb;
-  }
-
   initAgentWorkflow() {
-    if(this.ctx.currentNode) {
-      this.ctx.currentNode.run(this.ctx);
-    }
+    this.currentNode = this.introNode;
+    this.introNode.run(this.ctx).then(async () => {
+      this.currentNode = this.objNode;
+      let finalisedObj = await this.objNode.run(this.ctx);
+      this.objCtxCb?.(finalisedObj);
+      return finalisedObj;
+    }).then(async (finalisedObj: Contexts<ObjectiveContext>) => {
+      this.currentNode = this.prdCtxNode;
+      let finalisedPrdCtx = await this.prdCtxNode.run(this.ctx);
+      this.productCtxCb?.(finalisedPrdCtx);
+      return finalisedPrdCtx;
+    }).then(async (finalisedPrdCtx: Contexts<ProductContext>) => {
+      this.currentNode = this.metricsGenNode;
+      let finalisedMetrics = await this.metricsGenNode.run(this.ctx);
+      this.meticsAssetCb?.(finalisedMetrics);
+      return finalisedMetrics;
+    }).catch(err => {
+      console.log(`Agent workflow error: ${err}`);
+    });
+  }
+
+  registerFinalisedProductContextCallback(
+    cb: (productContexts: Contexts<ProductContext>) => Promise<void>) {
+      this.productCtxCb = cb;
+  }
+
+  registerFinalisedObjContextCallback(
+    cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>) {
+      this.objCtxCb = cb;
+  }
+
+  registerFinalisedMetricsCallback(
+    cb: (metrics: Assets<Metric>) => Promise<void>) {
+      this.meticsAssetCb = cb;
   }
 }
 
@@ -190,7 +211,7 @@ abstract class WorkflowNode {
     this.children.push(child);
   }
 
-  abstract run(state: WorkflowContext): void;
+  abstract run(state: WorkflowContext): Promise<any>;
 
   abstract ingestUserInput(ctx: WorkflowContext, msg: string): void;
 }
@@ -202,23 +223,27 @@ abstract class WorkflowNode {
 // Once it is obtained, proceed to the next node by adding it to the context
 class ContextGatheringNode<T> extends WorkflowNode {
   neededContextSchema: JSONSchemaType<Contexts<T>>;
-  gatheredContext: Contexts<T>;
+  gatheredContext: {
+    actual: Contexts<T>,
+    finalise?: (actual: Contexts<T>) => void;
+    abort?: (err: any) => void;
+  };
   schemaValidation: any;
-  finaliseContextCb?: (productContexts: Contexts<T>) => Promise<void>;
+  
 
   constructor(
     name: string, 
     needed: JSONSchemaType<Contexts<T>>, 
-    parent?: WorkflowNode,
-    finaliseContextCb?: (productContexts: Contexts<T>) => Promise<void>) {
+    parent?: WorkflowNode) {
     super(name, parent);
     this.neededContextSchema = needed;
     this.gatheredContext = {
-      contexts: []
+      actual: {
+        contexts: []
+      }
     };
     const ajv = new Ajv();
     this.schemaValidation = ajv.compile(needed);
-    this.finaliseContextCb = finaliseContextCb;
   }
 
   updateMessagesContext(ctx: WorkflowContext) {
@@ -244,9 +269,10 @@ class ContextGatheringNode<T> extends WorkflowNode {
     });
   }
 
-  async run(ctx: WorkflowContext) {
+  async run(ctx: WorkflowContext): Promise<Contexts<T>> {
     if(this.state !== "idle") {
       console.log(`ContextGatheringNode ${this.name} not in idle state, doing nothing for run call`);
+      return Promise.reject(new Error(`ContextGatheringNode ${this.name} not in idle state`));
     } else {
       console.log(`Running the ContextGatheringNode ${this.name}`);
       //Update the context before the process
@@ -272,6 +298,10 @@ class ContextGatheringNode<T> extends WorkflowNode {
         this.state = "waiting_on_llm";
         let modelResponse = await ctx.model?.input(ctx.messages);
         await this.processLLMOutput(ctx, modelResponse);
+        return new Promise((res,rej) => {
+          this.gatheredContext.finalise = res;
+          this.gatheredContext.abort = rej;
+        });
       }
     }
   }
@@ -282,7 +312,7 @@ class ContextGatheringNode<T> extends WorkflowNode {
       console.debug("DEBUG: VGC = ",vgc);
       //TODO: Possible accumulation of duplicates here,
       // Should we override duplicates?
-      this.gatheredContext.contexts = this.gatheredContext.contexts.concat(vgc);
+      this.gatheredContext.actual.contexts = this.gatheredContext.actual.contexts.concat(vgc);
     } else {
       console.log("Schema validation did not pass when trying to scrape LLM provided gathered context");
     }
@@ -327,23 +357,8 @@ class ContextGatheringNode<T> extends WorkflowNode {
               //TODO: Handle changing of active node here
               // Surface gathered context + record stopReason
               console.log(`Exiting the ContextGatheringNode ${this.name} due to ${stopCondition.stopReason}`);
-              ctx.gatheredContexts.push({
-                nodeType: "ContextGatheringNode",
-                nodeName: this.name,
-                context: this.gatheredContext
-              });
-              if(this.finaliseContextCb) {
-                console.log(`Finalising gathered context for the ${this.name} node`);
-                await this.finaliseContextCb(this.gatheredContext);
-              }
-              if(this.children.length > 0) {
-                ctx.currentNode = this.children[0];
-                ctx.currentNode.run(ctx);
-              } else if(this.children) {
-                console.log(`Warning: No children work node found for ${this.name} 2`)
-              } else {
-                console.log(`Warning: No children work node found for ${this.name} 3`)
-              }
+              if(this.gatheredContext.finalise)
+                this.gatheredContext.finalise(this.gatheredContext.actual);
             }
           }
           if(m.userContent && ctx.userOutputCb) {
@@ -394,9 +409,12 @@ class ContextGatheringNode<T> extends WorkflowNode {
 class AssetGenerationNode<T> extends WorkflowNode {
   dependentContexts: any;
   neededAssetsSchema: JSONSchemaType<Assets<T>>;
-  generatedAssets: Assets<T>;
+  generatedAssets: {
+    actual: Assets<T>,
+    finalise?: (actual: Assets<T>) => void,
+    abort?: (err: any) => void
+  }
   neededAssetsSchemaValidator: any;
-  finaliseGeneratedAssetCb?: (asset: Assets<T>) => Promise<void>;
 
   constructor(name: string,
     needed: JSONSchemaType<Assets<T>>,
@@ -405,7 +423,9 @@ class AssetGenerationNode<T> extends WorkflowNode {
     super(name,parent);
     this.neededAssetsSchema = needed;
     this.generatedAssets = {
-      assets: []
+      actual: {
+        assets: []
+      }
     };
     this.dependentContexts = dependentContexts;
     const ajv = new Ajv();
@@ -450,15 +470,16 @@ class AssetGenerationNode<T> extends WorkflowNode {
       console.debug(`Scraping the following assets: ${util.inspect(generatedAssets, false, null, true)}`);
       //TODO: Possible accumulation of duplicates here,
       // Should we override duplicates?
-      this.generatedAssets.assets.push(...vga.assets);
+      this.generatedAssets.actual.assets.push(...vga.assets);
     } else {
       console.log("Error: Schema validation did not pass when trying to scrape LLM provided generated assets");
     }
   }
 
-  async run(ctx: WorkflowContext) {
+  async run(ctx: WorkflowContext): Promise<Assets<T>> {
     if(this.state !== "idle") {
       console.log(`AssetGenerationNode ${this.name} not in idle state, doing nothing for run call`);
+      return Promise.reject(new Error(`AssetGenerationNode ${this.name} not in idle state`));
     } else {
       console.log(`Running the AssetGenerationNode ${this.name}`);
       //Update the context before the process
@@ -484,6 +505,10 @@ class AssetGenerationNode<T> extends WorkflowNode {
         this.state = "waiting_on_llm";
         let modelResponse = await ctx.model?.input(ctx.messages);
         await this.processLLMOutput(ctx, modelResponse);
+        return new Promise((res,rej) => {
+          this.generatedAssets.finalise = res;
+          this.generatedAssets.abort = rej;
+        });
       }
     }
   }
@@ -517,19 +542,8 @@ class AssetGenerationNode<T> extends WorkflowNode {
               //TODO: Handle changing of active node here
               // Surface gathered context + record stopReason
               console.log(`Exiting the AssetGenerationNode ${this.name} due to ${stopCondition.stopReason}`);
-              ctx.generatedAssets.push({
-                nodeType: "AssetGenerationNode",
-                nodeName: this.name,
-                asset: this.generatedAssets
-              });
-              if(this.finaliseGeneratedAssetCb) {
-                this.finaliseGeneratedAssetCb(this.generatedAssets);
-              }
-              //TODO: Implement branching workflows:
-              if(this.children.length > 0) {
-                ctx.currentNode = this.children[0];
-                ctx.currentNode.run(ctx);
-              }
+              if(this.generatedAssets.finalise)
+                this.generatedAssets.finalise(this.generatedAssets.actual);
             }
           }
           if(m.userContent && ctx.userOutputCb) {
@@ -580,10 +594,10 @@ class SimpleOutputNode extends WorkflowNode {
     this.output = output;
   }
 
-  async run(ctx: WorkflowContext) {
+  async run(ctx: WorkflowContext): Promise<any> {
     if(this.state !== "idle") {
-      console.log("SimpleOutputNode ${this.name} not in idle state, doing nothing for run call");
-      return;
+      console.log(`SimpleOutputNode ${this.name} not in idle state, doing nothing for run call`);
+      return Promise.reject(`SimpleOutputNode ${this.name} not in idle state, doing nothing for run call`);
     }
     if(ctx.userOutputCb) {
       await ctx.userOutputCb(this.output);
@@ -600,12 +614,7 @@ class SimpleOutputNode extends WorkflowNode {
       }]
     });
     this.state = "closed";
-    if(this.children.length > 0) {
-      console.log("Running the next node after the intro node: ", this.children[0].name);
-      //Just run for the first next node
-      ctx.currentNode = this.children[0];
-      this.children[0].run(ctx);
-    }
+    return Promise.resolve();
   }
 
   ingestUserInput(ctx: WorkflowContext, msg: string) {
@@ -614,22 +623,9 @@ class SimpleOutputNode extends WorkflowNode {
 }
 
 class WorkflowContext {
-  systemPrompt: string = "";
   messages: Array<ModelMessage> = new Array<ModelMessage>();
-  numIterations: number = 5;
   model?: LLMIntf;
   userOutputCb?: (msg: string) => Promise<void>;
-  currentNode?: WorkflowNode;
-  gatheredContexts: {
-    nodeType: string,
-    nodeName: string,
-    context: any
-    }[] = [];
-  generatedAssets: {
-    nodeType: string,
-    nodeName: string,
-    asset: any
-    }[] = [];
 
   constructor() {
     this.model = new ClaudeIntf();

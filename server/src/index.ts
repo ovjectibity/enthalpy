@@ -160,7 +160,7 @@ agentchat.on("connection", (socket) => {
     let threadId = msg.threadId;
     //TODO: Handle projects & users here
     await ThreadsService.initializeActiveThreads(1,1);
-    aserv.registerOutputCallback(agentName,
+    aserv.registerUserOutputCallback(agentName,
       async (msg: string) => {
           // console.log("Sending agent message: ",msg);
           let wrappedMsg = await ThreadsService.appendMessageToThread(threadId,
@@ -178,7 +178,7 @@ agentchat.on("connection", (socket) => {
             console.log("Error inserting agent thread message to mongo DB", wrappedMsg);
           }
       });
-      aserv.registerModelProvidedObjectiveCallback(agentName, 
+      aserv.registerFinalisedObjContextCallback(agentName, 
         async (objectiveContext: Contexts<ObjectiveO>): Promise<void> => {
           console.log("Storing objective context provided by the agent");
           objectiveContext.contexts.map(async (obj: ObjectiveO) => {
@@ -187,7 +187,7 @@ agentchat.on("connection", (socket) => {
           socket.emit("update_state","contexts");
         }
       );
-      aserv.registerModelProvidedProductContextCallback(agentName,
+      aserv.registerFinalisedProductContextCallback(agentName,
         async (productContexts: Contexts<ProductContextO>): Promise<void> => {
           console.log("Storing product context provided by the agent");
           let toAddContexts: ProductContext[] = 
@@ -206,7 +206,7 @@ agentchat.on("connection", (socket) => {
           await ProductContextService.addProductContexts(toAddContexts);
           socket.emit("update_state","contexts");
         });
-      aserv.registerModelProvidedMetricsCallback(agentName,
+      aserv.registerFinalisedMetricsCallback(agentName,
         async (metrics: Assets<MetricO>): Promise<void> => {
           console.log("Storing generated metrics provided by the agent");
           let toAddMetrics: Metric[] = 
