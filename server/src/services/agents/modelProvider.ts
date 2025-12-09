@@ -11,13 +11,12 @@ import {
   modelMessageZodSchema
 } from "../../schemas/modelMessageSchemaUpdated.js";
 import { prompts } from "../../schemas/mcprompts.js";
-import { computerUseToolInputSchema } from "../../schemas/toolSchemas.js";
 import util from 'util';
 
 export interface LLMIntf {
   providerName: string,
   model: string;
-  input: (msg: Array<ModelMessage>) => Promise<ModelMessage>
+  input: (msg: Array<ModelMessage>,tools?: Map<string,any>) => Promise<ModelMessage>
 }
 
 export class ClaudeIntf implements LLMIntf {
@@ -60,24 +59,16 @@ export class ClaudeIntf implements LLMIntf {
     return anthMsgs;
   }
 
-  static getToolSchemas(t: Tool): any {
-    if(t.name === "computer_use") {
-      return computerUseToolInputSchema;
-    } else {
-      return {};
-    }
-  }
-
-  static translateToAnthropicTool(tools: Array<Tool>):
+  static translateToAnthropicTool(toolSchemas: Map<string, any>):
     Array<AnthropicTool> {
     let anthTools = Array<AnthropicTool>();
-    tools.forEach((tool: Tool) => {
+    toolSchemas.forEach((name: string, toolSchema: any) => {
       // console.log("DEBUGGING: model message2: ",  JSON.stringify(msg2));
       anthTools.push({
         type: "custom",
-        description: tool.description,
-        input_schema: ClaudeIntf.getToolSchemas(tool),
-        name: tool.name
+        description: toolSchema.description,
+        input_schema: toolSchema,
+        name: name
       });
     });
     return anthTools;
@@ -99,7 +90,7 @@ export class ClaudeIntf implements LLMIntf {
       };
   }
 
-  async input(msgs: Array<ModelMessage>,tools?: Map<string,Tool>): Promise<ModelMessage> {
+  async input(msgs: Array<ModelMessage>,toolSchemas?: Map<string,any>): Promise<ModelMessage> {
     // return this.input_test();
     console.log("Sending these input messages: ",msgs);
     // const message = await this.client.messages
@@ -110,7 +101,7 @@ export class ClaudeIntf implements LLMIntf {
         messages: ClaudeIntf.translateToAnthropicMessages(msgs),
         model: this.model,
         system: prompts["system-prompt"],
-        tools: ClaudeIntf.translateToAnthropicTool(tools ? Array.from(tools.values()) : []),
+        tools: ClaudeIntf.translateToAnthropicTool(toolSchemas ? toolSchemas : new Map()),
         output_format: {
           type: "json_schema",
           schema: modelMessageSchema
@@ -138,10 +129,8 @@ export class ClaudeIntf implements LLMIntf {
             try {
               let modified = content.text.replace(/^```json|```$/g,"");
               let modifiedp: any = JSON.parse(modified);
-
               // Validate using Zod
               const validationResult = modelMessageZodSchema.safeParse(modifiedp);
-
               if(validationResult.success) {
                 // console.log("Model output conforms to the schema, got this messages array: ",
                   // modifiedp.messages);
@@ -157,11 +146,11 @@ export class ClaudeIntf implements LLMIntf {
               console.log("Error when processing LLM response", e);
             }
           }
-        } else if(content.type === "tool_use" && tools) {
+        } else if(content.type === "tool_use" && toolSchemas) {
           const toolId = content.id; 
           const toolName = content.name; 
           const input = content.input; 
-          if(tools.has(toolName)) {
+          if(toolSchemas.has(toolName)) {
             if(toolName === "computer_use") {
               const computerUseInput = input as ComputerToolInput;
               msg.contents = msg.contents.concat([{

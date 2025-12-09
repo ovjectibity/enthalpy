@@ -1,4 +1,4 @@
-import { WorkflowNode, WorkflowContext, Agent, WorkflowNodeState } from "./core.js";
+import { WorkflowNode, WorkflowContext, Agent } from "./core.js";
 import {
   ObjectiveO as ObjectiveContext,
   ProductContextO as ProductContext,
@@ -6,6 +6,7 @@ import {
   Contexts,
   Assets
 } from "@enthalpy/shared";
+import { computerUseToolInputSchema } from "../../schemas/toolSchemas.js";
 
 interface ComputerUseService {
     getScreenshot(): string;
@@ -14,7 +15,7 @@ interface ComputerUseService {
     performScroll(x: number,y: number): string;
 }
 
-interface FGContext {
+interface FlowGraphContext {
     productName: string, 
     url: string,
     scope: string,
@@ -28,10 +29,10 @@ interface FlowGraphNode {
 }
 
 class FGAgent extends Agent<FlowGraphNode> {
-  flowContext: FGContext;
+  flowContext: FlowGraphContext;
   pathsNode: Pathways;
 
-  constructor(name: string, flowContext: FGContext) {
+  constructor(name: string, flowContext: FlowGraphContext) {
     super(name,[]);
     this.flowContext = flowContext;
     this.pathsNode = new Pathways("");
@@ -69,19 +70,43 @@ class FGAgent extends Agent<FlowGraphNode> {
 }
 
 class Pathways extends WorkflowNode {
+  finalisedFlow: {
+    actual?: FlowGraphNode,
+    finalise?: (actual: FlowGraphNode) => void;
+    abort?: (err: any) => void;
+  }
+
   constructor(name: string,parent?: WorkflowNode) {
     super(name,parent);
+    this.finalisedFlow = {
+    }
   }
 
   async run(state: WorkflowContext): Promise<any> {
     if(this.state === "idle") {
-        console.log(`Running the Pathways node ${this.name}`);
-        // state.model?.input();
+      console.log(`Running the Pathways node ${this.name}`);
+      state.messages.push({
+        role: "user",
+        contents: [
+          {
+            type: "workflow_instruction",
+            content: ""
+          }
+        ]
+      });
+      await state.model?.input(state.messages,
+        new Map([
+        ["computer_use",computerUseToolInputSchema]
+      ]));
+      return new Promise((res,rej) => {
+        this.finalisedFlow.finalise = res;
+        this.finalisedFlow.abort = rej;
+      });
     } else return Promise.reject(new Error(`WorkflowNode Pathways ${this.name} not in idle state`));
   }
 
   async processModelOutput() {
-
+    
   }
 
   ingestUserInput(ctx: WorkflowContext, msg: string): void {
