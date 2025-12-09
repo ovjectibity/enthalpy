@@ -40,55 +40,6 @@ export class ComputerTool implements AnthTool, Tool {
       `taking a screenshot of the current view, ` +
       `scrolling up or down or left-clicking or right-clicking on a particular coordinate (x,y). ` +
       `All coordinates should be within the screen bounds (0,0) to (${this.display_width_px},${this.display_height_px}).`;
-    this.input_schema = {
-      type: "object",
-      properties: {
-        action: {
-          type: "string",
-          description:
-            "Possible actions: screenshot, left_click, right_click, scroll, type",
-        },
-        coordinates: {
-          type: "object",
-          description:
-            "X & Y screen coordinates over which the click needs to be made.",
-          properties: {
-            x: {
-              type: "number",
-              description:
-                "The X coordinate over which a click needs to be made.",
-            },
-            y: {
-              type: "number",
-              description:
-                "The Y coordinate over which a click needs to be made.",
-            },
-          },
-        },
-        scroll_distance: {
-          type: "object",
-          description:
-            "dX & dY distances in screen coordinates over which the scroll needs to be made.",
-          properties: {
-            dx: {
-              type: "number",
-              description:
-                "The dX distance in the horizontal axis over which scroll needs to be made. While this can be any real value, but it is strongly suggested to not use values whose absolute figures are larger than the X screen dimension.",
-            },
-            dy: {
-              type: "number",
-              description:
-                "The dY distance in the vertical axis over which scroll needs to be made. While this can be any real value, but it is strongly suggested to not use values whose absolute figures are larger than the Y screen dimension.",
-            },
-          },
-        },
-        key_input: {
-          type: "string",
-          description: "The Unicode string that needs to be typed.",
-        },
-      },
-      required: ["action"],
-    };
   }
 
   getScreenDimensions(): { width: number; height: number } {

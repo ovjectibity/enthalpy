@@ -1,28 +1,24 @@
-import { ClaudeIntf, LLMIntf } from "./modelProvider.js";
-import { prompts } from "../contexts/mcprompts.js";
-import { objectiveContextGatheringSchema } from "../contexts/objectiveContextGatheringSchema.js";
-import { productContextGatheringSchema } from "../contexts/productContextGatheringSchema.js";
-import { metricAssetGenerationSchema } from "../contexts/metricAssetGenerationSchema.js";
-import Ajv, { JSONSchemaType } from "ajv";
+import { prompts } from "../../schemas/mcprompts.js";
+import { objectiveContextGatheringZodSchema } from "../../schemas/objectiveContextGatheringSchema.js";
+import { productContextGatheringZodSchema } from "../../schemas/productContextGatheringSchema.js";
+import { metricAssetGenerationZodSchema } from "../../schemas/metricAssetGenerationSchema.js";
 import util from 'util';
+import { z } from 'zod';
 import {
   ObjectiveO as ObjectiveContext,
   ProductContextO as ProductContext,
   MetricO as Metric,
   Contexts,
-  Assets
+  Assets,
+  ModelMessage
 } from "@enthalpy/shared";
-
-type WorkflowNodeState = "waiting_on_llm" |
-                          "waiting_on_user" |
-                          "idle" |
-                          "closed";
+import { Agent, WorkflowNode, WorkflowContext } from "./core.js";
 
 class AgentService {
-  agentMap: Map<string,Agent>;
+  agentMap: Map<string,Agent<any>>;
 
   public constructor() {
-    this.agentMap = new Map<string,Agent>();
+    this.agentMap = new Map<string,Agent<any>>();
     this.initiateAgents();
   }
 
@@ -30,8 +26,8 @@ class AgentService {
     this.agentMap.set("mc", new MCAgent());
   }
 
-  initAgentWorkflow(agentName: string) {
-    this.agentMap.get(agentName)?.initAgentWorkflow();
+  runAgentWorkflow(agentName: string) {
+    this.agentMap.get(agentName)?.runAgentWorkflow();
   }
 
   public ingestUserInput(msg: any) {
@@ -68,42 +64,7 @@ class AgentService {
   }
 }
 
-abstract class Agent {
-  name: string;
-  workNodes = new Array<WorkflowNode>();
-  ctx: WorkflowContext;
-  currentNode?: WorkflowNode;
-
-  constructor(name: string) {
-    this.name = name;
-    this.ctx = new WorkflowContext();
-  }
-
-  ingestUserInput(msg: string) {
-    this.currentNode?.ingestUserInput(this.ctx,msg);
-  }
-
-  abstract initAgentWorkflow(): void;
-
-  //Callback independent of the user input cb needed to handle independent output from the agent
-  registerUserOutputCallback(cb: (msg: string) => Promise<void>) {
-    this.ctx.userOutputCb = cb;
-  }
-
-  registerFinalisedProductContextCallback(
-    cb: (productContexts: Contexts<ProductContext>) => Promise<void>) {
-  }
-
-  registerFinalisedObjContextCallback(
-    cb: (productContexts: Contexts<ObjectiveContext>) => Promise<void>) {
-  }
-
-  registerFinalisedMetricsCallback(
-    cb: (metrics: Assets<Metric>) => Promise<void>) {
-  }
-}
-
-class MCAgent extends Agent { 
+class MCAgent extends Agent<void> { 
   introNode: SimpleOutputNode;
   objNode: ContextGatheringNode<ObjectiveContext>;
   prdCtxNode: ContextGatheringNode<ProductContext>;
@@ -113,7 +74,10 @@ class MCAgent extends Agent {
   meticsAssetCb?: (metrics: Assets<Metric>) => Promise<void>;
 
   constructor() {
-    super("mc");
+    super("mc",[
+      prompts["base-workflow-instruction"],
+      prompts["model-message-schema"]
+    ]);
     this.introNode = MCAgent.createIntroNode();
     this.objNode = MCAgent.createObjectiveGatheringNode(this.introNode);
     this.prdCtxNode = MCAgent.createProductGatheringNode(this.objNode);
@@ -131,31 +95,28 @@ class MCAgent extends Agent {
 
   static createObjectiveGatheringNode(parent: WorkflowNode): 
   ContextGatheringNode<ObjectiveContext> {
-    const schema: JSONSchemaType<Contexts<ObjectiveContext>> = objectiveContextGatheringSchema;
     let objNode = new ContextGatheringNode<ObjectiveContext>(
-      "objective-gathering",schema,parent);
+      "objective-gathering",objectiveContextGatheringZodSchema,parent);
     return objNode;
   }
 
   static createProductGatheringNode(parent: WorkflowNode): 
   ContextGatheringNode<ProductContext> {
-    const schema: JSONSchemaType<Contexts<ProductContext>> = productContextGatheringSchema;
     let prdCtxNode = new ContextGatheringNode<ProductContext>(
-      "product-context-gathering",schema,parent);
+      "product-context-gathering",productContextGatheringZodSchema,parent);
     return prdCtxNode;
   }
 
   static createMetricsGenerationNode(parent: WorkflowNode): 
   AssetGenerationNode<Metric> {
-    const schema: JSONSchemaType<Assets<Metric>> = metricAssetGenerationSchema;
     let metricsGenNode = new AssetGenerationNode<Metric>(
-      "metrics-generation",schema,parent);
+      "metrics-generation",metricAssetGenerationZodSchema,parent);
     return metricsGenNode;
   }
 
-  initAgentWorkflow() {
+  runAgentWorkflow(): Promise<void> {
     this.currentNode = this.introNode;
-    this.introNode.run(this.ctx).then(async () => {
+    return this.introNode.run(this.ctx).then(async () => {
       this.currentNode = this.objNode;
       let finalisedObj = await this.objNode.run(this.ctx);
       this.objCtxCb?.(finalisedObj);
@@ -169,9 +130,11 @@ class MCAgent extends Agent {
       this.currentNode = this.metricsGenNode;
       let finalisedMetrics = await this.metricsGenNode.run(this.ctx);
       this.meticsAssetCb?.(finalisedMetrics);
-      return finalisedMetrics;
+      // return finalisedMetrics;
+      return Promise.resolve();
     }).catch(err => {
       console.log(`Agent workflow error: ${err}`);
+      return Promise.reject(new Error(`Agent workflow error: ${err}`));
     });
   }
 
@@ -191,59 +154,30 @@ class MCAgent extends Agent {
   }
 }
 
-abstract class WorkflowNode {
-  name: string = "";
-  state: WorkflowNodeState = "idle";
-  //TODO: Workflow nodes should be able to define their own
-  // input & output mandates here via some schema - but how??
-  children = new Array<WorkflowNode>();
-  parent?: WorkflowNode;
-
-  constructor(name: string,parent?: WorkflowNode) {
-    this.name = name;
-    if(parent) {
-      this.parent = parent;
-      this.parent.addChild(this);
-    }
-  }
-
-  public addChild(child: WorkflowNode) {
-    this.children.push(child);
-  }
-
-  abstract run(state: WorkflowContext): Promise<any>;
-
-  abstract ingestUserInput(ctx: WorkflowContext, msg: string): void;
-}
-
 // This state is responsible for obtaining some context
 // Anything asked to the agent at this state basically
 // results in the agent should result in it asking for this context
 // Context is gathered in some specified order
 // Once it is obtained, proceed to the next node by adding it to the context
 class ContextGatheringNode<T> extends WorkflowNode {
-  neededContextSchema: JSONSchemaType<Contexts<T>>;
+  neededContextSchema: any;
   gatheredContext: {
     actual: Contexts<T>,
     finalise?: (actual: Contexts<T>) => void;
     abort?: (err: any) => void;
   };
-  schemaValidation: any;
   
-
   constructor(
     name: string, 
-    needed: JSONSchemaType<Contexts<T>>, 
+    neededContextSchema: any, 
     parent?: WorkflowNode) {
     super(name, parent);
-    this.neededContextSchema = needed;
     this.gatheredContext = {
       actual: {
         contexts: []
       }
     };
-    const ajv = new Ajv();
-    this.schemaValidation = ajv.compile(needed);
+    this.neededContextSchema = neededContextSchema;
   }
 
   updateMessagesContext(ctx: WorkflowContext) {
@@ -252,19 +186,15 @@ class ContextGatheringNode<T> extends WorkflowNode {
     // the llm about the context gathering process
     ctx.messages.push({
       role: "user",
-      messages: [
+      contents: [
         {
-          workflowContent: {
-            content: prompts["context-gathering-meta-instruction"],
-            type: "workflow_instruction"
-          }
+          type: "workflow_instruction",
+          content: prompts["context-gathering-meta-instruction"],
         },
         {
-          workflowContent: {
-            content: JSON.stringify(this.neededContextSchema),
-            type: "workflow_instruction"
-          }
-        }
+          type: "workflow_instruction",
+          content: JSON.stringify(z.toJSONSchema(this.neededContextSchema)),
+        },
       ]
     });
   }
@@ -282,11 +212,9 @@ class ContextGatheringNode<T> extends WorkflowNode {
       // the user output without LLM call
       ctx.messages.push({
         role: "user",
-        messages: [{
-          workflowContent: {
-            content: prompts["prompt-user-to-gather-context-from-user"],
-            type: "workflow_instruction"
-          }
+        contents: [{
+          type: "workflow_instruction",
+          content: prompts["prompt-user-to-gather-context-from-user"]
         }]
       });
       if(!ctx.model) {
@@ -307,7 +235,8 @@ class ContextGatheringNode<T> extends WorkflowNode {
   }
 
   scrapeContext(gatheredContext: any) {
-    if(this.schemaValidation(gatheredContext)) {
+    let parsedContext = this.neededContextSchema.safeParse(gatheredContext);
+    if(parsedContext.success) {
       let vgc = gatheredContext.contexts as T[];
       console.debug("DEBUG: VGC = ",vgc);
       //TODO: Possible accumulation of duplicates here,
@@ -335,23 +264,22 @@ class ContextGatheringNode<T> extends WorkflowNode {
       // or if the LLM wants this node to stop or
       // if any message needs to be surfaced to the user
       console.log("Processing LLM output while waiting on LLM");
-      if(msg.role && msg.role === "assistant" && msg.messages) {
+      if(msg.role && msg.role === "assistant" && msg.contents) {
         ctx.messages.push(msg);
-        for(const m of msg.messages) {
-          if(m.workflowContent && m.workflowContent.type === "workflow_context") {
+        for(const m of msg.contents) {
+          if(m.type === "workflow_context") {
             //Add to the context if available
             //TODO: Validation of provided context here
             try {
-              let gatheredContext = JSON.parse(m.workflowContent.content);
+              let gatheredContext = JSON.parse(m.content);
               this.scrapeContext(gatheredContext);
               //TODO: Add context items to the DB
             } catch(error) {
               console.log("Failure when processing the LLM gathered context",error);
             }
-          }
-          if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
+          } else if(m.type === "workflow_instruction") {
             //TODO: The stop condition is expected to be the last block, add this to prompt
-            let stopCondition = JSON.parse(m.workflowContent.content);
+            let stopCondition = JSON.parse(m.content);
             if(stopCondition.stop && stopCondition.stopReason) {
               this.state = "closed";
               //TODO: Handle changing of active node here
@@ -360,10 +288,9 @@ class ContextGatheringNode<T> extends WorkflowNode {
               if(this.gatheredContext.finalise)
                 this.gatheredContext.finalise(this.gatheredContext.actual);
             }
-          }
-          if(m.userContent && ctx.userOutputCb) {
+          } else if(m.type === "output_to_user" && ctx.userOutputCb) {
             //Surface message to the user:
-            await ctx.userOutputCb(m.userContent);
+            await ctx.userOutputCb(m.content);
             //Assume that if a message is surfaced to the user
             //then we're now waiting on them
             this.state = "waiting_on_user"
@@ -384,8 +311,9 @@ class ContextGatheringNode<T> extends WorkflowNode {
     } else if(this.state === "waiting_on_user") {
       ctx.messages.push({
         role: "user",
-        messages: [{
-          userContent: msg
+        contents: [{
+          type: "input_from_user",
+          content: msg
         }]
       });
       if(!ctx.model) {
@@ -408,45 +336,38 @@ class ContextGatheringNode<T> extends WorkflowNode {
 
 class AssetGenerationNode<T> extends WorkflowNode {
   dependentContexts: any;
-  neededAssetsSchema: JSONSchemaType<Assets<T>>;
+  neededAssetsSchema: any;
   generatedAssets: {
     actual: Assets<T>,
     finalise?: (actual: Assets<T>) => void,
     abort?: (err: any) => void
   }
-  neededAssetsSchemaValidator: any;
 
   constructor(name: string,
-    needed: JSONSchemaType<Assets<T>>,
+    neededAssetsSchema: any,
     parent?: WorkflowNode,
     dependentContexts?: any) {
     super(name,parent);
-    this.neededAssetsSchema = needed;
     this.generatedAssets = {
       actual: {
         assets: []
       }
     };
+    this.neededAssetsSchema = neededAssetsSchema;
     this.dependentContexts = dependentContexts;
-    const ajv = new Ajv();
-    this.neededAssetsSchemaValidator = ajv.compile(needed);
   }
 
   updateMessagesContext(ctx: WorkflowContext) {
     ctx.messages.push({
       role: "user",
-      messages: [
+      contents: [
         {
-          workflowContent: {
-            content: prompts["assets-gen-meta-instruction"],
-            type: "workflow_instruction"
-          }
+          type: "workflow_instruction",
+          content: prompts["assets-gen-meta-instruction"]
         },
         {
-          workflowContent: {
-            content: JSON.stringify(this.neededAssetsSchema),
-            type: "workflow_instruction"
-          }
+          type: "workflow_instruction",
+          content: JSON.stringify(z.toJSONSchema(this.neededAssetsSchema))
         },
         // {
         //   workflowContent: {
@@ -465,7 +386,8 @@ class AssetGenerationNode<T> extends WorkflowNode {
   }
 
   scrapeAssets(generatedAssets: any) {
-    if(this.neededAssetsSchemaValidator(generatedAssets)) {
+    let parsedAssets = this.neededAssetsSchema.safeParse(generatedAssets);
+    if(parsedAssets.success) {
       let vga = generatedAssets as Assets<T>;
       console.debug(`Scraping the following assets: ${util.inspect(generatedAssets, false, null, true)}`);
       //TODO: Possible accumulation of duplicates here,
@@ -489,11 +411,9 @@ class AssetGenerationNode<T> extends WorkflowNode {
       // the user output without LLM call
       ctx.messages.push({
         role: "user",
-        messages: [{
-          workflowContent: {
-            content: prompts["prompt-asset-gen"],
-            type: "workflow_instruction"
-          }
+        contents: [{
+          type: "workflow_instruction",
+          content: prompts["prompt-asset-gen"]  
         }]
       });
       if(!ctx.model) {
@@ -521,22 +441,21 @@ class AssetGenerationNode<T> extends WorkflowNode {
       //TODO: this shouldn't happen, throw error
       throw new Error("Waiting on user in ContextGatheringNode ${this.name}.");
     } else if(this.state === "waiting_on_llm") {
-      if(msg.role && msg.role === "assistant" && msg.messages) {
+      if(msg.role && msg.role === "assistant" && msg.contents) {
         ctx.messages.push(msg);
-        for(let m of msg.messages) {
-          if(m.workflowContent && m.workflowContent.type === "workflow_gen_asset") {
+        for(let m of msg.contents) {
+          if(m.type === "workflow_gen_asset") {
             //Add to the context if available
             //TODO: Validation of provided context here
             try {
-              let generatedAssets = JSON.parse(m.workflowContent.content);
+              let generatedAssets = JSON.parse(m.content);
               this.scrapeAssets(generatedAssets);
             } catch(error) {
               console.log("Failure when processing the LLM generated assets",error);
             }
-          } 
-          if(m.workflowContent && m.workflowContent.type === "workflow_instruction") {
+          } else if(m.type === "workflow_instruction") {
             //TODO: The stop condition is expected to be the last block, add this to prompt
-            let stopCondition = JSON.parse(m.workflowContent.content);
+            let stopCondition = JSON.parse(m.content);
             if(stopCondition.stop && stopCondition.stopReason) {
               this.state = "closed";
               //TODO: Handle changing of active node here
@@ -545,10 +464,9 @@ class AssetGenerationNode<T> extends WorkflowNode {
               if(this.generatedAssets.finalise)
                 this.generatedAssets.finalise(this.generatedAssets.actual);
             }
-          }
-          if(m.userContent && ctx.userOutputCb) {
+          } else if(m.type === "output_to_user" && ctx.userOutputCb) {
             //Surface message to the user:
-             await ctx.userOutputCb(m.userContent);
+             await ctx.userOutputCb(m.content);
             //Assume that if a message is surfaced to the user
             //then we're waiting on them
             this.state = "waiting_on_user"
@@ -567,8 +485,9 @@ class AssetGenerationNode<T> extends WorkflowNode {
     } else if(this.state === "waiting_on_user") {
       ctx.messages.push({
         role: "user",
-        messages: [{
-          userContent: msg
+        contents: [{
+          type: "input_from_user",
+          content: msg
         }]
       });
       if(!ctx.model) {
@@ -606,11 +525,9 @@ class SimpleOutputNode extends WorkflowNode {
     // so that it can be traced later by the LLM if needed
     ctx.messages.push({
       role: "user",
-      messages: [{
-        workflowContent: {
-          content: this.output,
-          type: "output_to_user"
-        }
+      contents: [{
+        type: "output_to_user",
+        content: this.output
       }]
     });
     this.state = "closed";
@@ -622,56 +539,4 @@ class SimpleOutputNode extends WorkflowNode {
   }
 }
 
-class WorkflowContext {
-  messages: Array<ModelMessage> = new Array<ModelMessage>();
-  model?: LLMIntf;
-  userOutputCb?: (msg: string) => Promise<void>;
-
-  constructor() {
-    this.model = new ClaudeIntf();
-    //Add base instructions
-    this.addContextOnWorkflows();
-  }
-
-  addContextOnWorkflows() {
-    this.messages.push(
-      {
-        role: "user",
-        messages: [
-          {
-            workflowContent: {
-              content: prompts["base-workflow-instruction"],
-              type: "workflow_instruction"
-            }
-          },
-          {
-            workflowContent: {
-              content: prompts["model-message-schema"],
-              type: "workflow_instruction"
-            }
-          }
-        ]
-      }
-    )
-  }
-}
-
-// Same schema to be used for both input to the LLM
-// and for the output the LLM generates
-interface ModelMessage {
-  role: "user" | "assistant";
-  messages: {
-      //TODO: Extra info here as a JSON??
-      // TODO: Rich text support
-      userContent?: string,
-      workflowContent?: {
-        type: "output_to_user" | "workflow_context" |
-              "workflow_instruction" | "workflow_gen_asset",
-        // TODO: Rich text support
-        // TODO: Add further structure here, to be handled by the provider.
-        content: string
-      }
-    }[]
-};
-
-export {AgentService, ModelMessage};
+export { AgentService };

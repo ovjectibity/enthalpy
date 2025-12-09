@@ -10,7 +10,7 @@ import metricsRoutes from "./routes/metrics.js";
 import { MongoDBConnections } from "./services/mongoConnect.js";
 import { MongoDBInitializer } from "./services/mongoInit.js";
 import { Namespace, Server } from 'socket.io';
-import { AgentService } from "./services/agent.js";
+import { AgentService } from "./services/agents/agent.js";
 import { ThreadsService } from "./services/threadsService.js";
 import { ProductContextService } from "./services/productContextService.js";
 import {
@@ -228,7 +228,7 @@ agentchat.on("connection", (socket) => {
           await queryUtilities.addMetrics(toAddMetrics);
           socket.emit("update_state","metrics");
         });
-      aserv.initAgentWorkflow(agentName);
+      aserv.runAgentWorkflow(agentName);
   })
 
   socket.on("user_message", async (msg: AppendMessageData) => {

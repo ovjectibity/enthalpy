@@ -3,15 +3,12 @@ import {
   ToolUseBlock,
   ContentBlock,
 } from "@anthropic-ai/sdk/resources";
-import { Model, ContextManager } from "./model.js";
 import { Tool } from "./tools.js";
 
 export class FlowGraphGenerator {
   iterationCap: number;
   basePrompt: string;
   tools: Map<string, Tool>;
-  model: Model;
-  ctxManager: ContextManager;
 
   constructor(tools: Map<string, Tool>) {
     const prompts = require("./prompts/prompts.json");
@@ -36,12 +33,6 @@ export class FlowGraphGenerator {
       config.productScope;
 
     this.tools = tools;
-    this.model = new Model();
-    this.ctxManager = new ContextManager();
-    this.ctxManager.context_chain.push({
-      content: this.basePrompt,
-      role: "user",
-    });
   }
 
   getSerialisedTools(): AnthTool[] {
@@ -116,23 +107,3 @@ export class FlowNode {
     this.inAction = action;
   }
 }
-
-//Handles construction of the actions taken by the comp agent;
-export class FlowGraph {
-  nodeChain: FlowNode[];
-
-  constructor() {
-    this.nodeChain = [];
-  }
-
-  addNode(node: FlowNode) {
-    if (this.nodeChain.length > 0) {
-      this.nodeChain[this.nodeChain.length - 1]?.nextNode?.push(node);
-    }
-    this.nodeChain.push(node);
-  }
-}
-
-// The action graph to be used for any agent's active
-// work,
-export class AgentActionGraph {}
