@@ -5,7 +5,7 @@ import {
   ContentBlock,
   Tool as AnthropicTool
 } from "@anthropic-ai/sdk/resources";
-import { ModelMessage, Tool, AssistantModelMessage, ComputerTool, ComputerToolInput } from "@enthalpy/shared";
+import { ModelMessage, AssistantModelMessage, CTInput } from "@enthalpy/shared";
 import {
   modelMessageSchemaUpdated as modelMessageSchema,
   modelMessageZodSchema
@@ -37,12 +37,50 @@ export class ClaudeIntf implements LLMIntf {
 
   static translateToAnthropicMessage(msg: ModelMessage): MessageParam {
     let blocks = Array<ContentBlockParam>();
-    msg.contents.forEach(m => {
-      blocks.push({
-        type: "text",
-        text: JSON.stringify(m)
+    if(msg.role === "assistant") {
+      msg.contents.forEach(m => {
+        if(m.type === "tool_use") {
+          blocks.push({
+            type: "tool_use",
+            id: m.content.id,
+            input: m.content.input,
+            name: m.content.name
+          })
+        } else {
+          blocks.push({
+            type: "text",
+            text: JSON.stringify(m)
+          });
+        }
       });
-    })
+    } else if(msg.role === "user") {
+      msg.contents.forEach(m => {
+        if(m.type === "tool_use_result") {
+          if(m.content.name === "computer_use") {
+            blocks.push({
+              type: "tool_result",
+              tool_use_id: m.content.id,
+              content: m.content.error && m.content.screengrab ? 
+                JSON.stringify(m.content.error) : 
+                [{
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: "image/png",
+                    data: m.content.screengrab ? m.content.screengrab : "" 
+                  }
+                }]
+            });
+          }
+        } else {
+          blocks.push({
+            type: "text",
+            text: JSON.stringify(m)
+          });
+        }
+      });
+    } 
+    
     return {
       role: msg.role,
       content: blocks
@@ -152,10 +190,14 @@ export class ClaudeIntf implements LLMIntf {
           const input = content.input; 
           if(toolSchemas.has(toolName)) {
             if(toolName === "computer_use") {
-              const computerUseInput = input as ComputerToolInput;
+              const cuInput = input as CTInput;
               msg.contents = msg.contents.concat([{
                 type: "tool_use",
-                content: new ComputerTool(toolId,computerUseInput)
+                content: {
+                  name: "computer_use",
+                  id: toolId,
+                  input: cuInput
+                }
               }]);
             }
           }

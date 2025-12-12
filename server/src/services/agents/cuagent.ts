@@ -4,16 +4,11 @@ import {
   ProductContextO as ProductContext,
   MetricO as Metric,
   Contexts,
-  Assets
+  Assets,
+  ModelMessage
 } from "@enthalpy/shared";
 import { computerUseToolInputSchema } from "../../schemas/toolSchemas.js";
-
-interface ComputerUseService {
-    getScreenshot(): string;
-    performLeftClick(x: number,y: number): string;
-    performRightClick(x: number,y: number): string; 
-    performScroll(x: number,y: number): string;
-}
+import { ComputerUseService } from "../cuservice.js";
 
 interface FlowGraphContext {
     productName: string, 
@@ -35,7 +30,7 @@ class FGAgent extends Agent<FlowGraphNode> {
   constructor(name: string, flowContext: FlowGraphContext) {
     super(name,[]);
     this.flowContext = flowContext;
-    this.pathsNode = new Pathways("");
+    this.pathsNode = new Pathways("User journey mapper");
   }
 
   ingestUserInput(msg: string) {
@@ -70,22 +65,22 @@ class FGAgent extends Agent<FlowGraphNode> {
 }
 
 class Pathways extends WorkflowNode {
+  cuService: ComputerUseService;
   finalisedFlow: {
     actual?: FlowGraphNode,
     finalise?: (actual: FlowGraphNode) => void;
     abort?: (err: any) => void;
   }
 
-  constructor(name: string,parent?: WorkflowNode) {
+  constructor(name: string, cuService: ComputerUseService, parent?: WorkflowNode) {
     super(name,parent);
     this.finalisedFlow = {
     }
+    this.cuService = cuService;
   }
 
-  async run(state: WorkflowContext): Promise<any> {
-    if(this.state === "idle") {
-      console.log(`Running the Pathways node ${this.name}`);
-      state.messages.push({
+  addWorkflowContext(state: WorkflowContext) {
+    state.messages.push({
         role: "user",
         contents: [
           {
@@ -94,10 +89,20 @@ class Pathways extends WorkflowNode {
           }
         ]
       });
-      await state.model?.input(state.messages,
+  }
+
+  run(state: WorkflowContext): Promise<any> {
+    if(this.state === "idle") {
+      console.log(`Running the Pathways node ${this.name}`);
+      this.addWorkflowContext(state);
+      this.state = "waiting_on_llm";
+      state.model?.input(state.messages,
         new Map([
         ["computer_use",computerUseToolInputSchema]
-      ]));
+      ])).then(
+        (modelResponse: ModelMessage) => {
+        this.processModelOutput(state, modelResponse);
+      });
       return new Promise((res,rej) => {
         this.finalisedFlow.finalise = res;
         this.finalisedFlow.abort = rej;
@@ -105,8 +110,47 @@ class Pathways extends WorkflowNode {
     } else return Promise.reject(new Error(`WorkflowNode Pathways ${this.name} not in idle state`));
   }
 
-  async processModelOutput() {
-    
+  async processModelOutput(state: WorkflowContext,modelResponse: ModelMessage) {
+    if(this.state === "waiting_on_llm" && modelResponse.role === "assistant") {
+      for(let content of modelResponse.contents) {
+        if(content.type === "tool_use" && content.content.name === "computer_use") {
+          if(content.content.name === "computer_use") {
+            let screengrab;
+            if(content.content.input.action === "right_click") {
+              screengrab = this.cuService.performRightClick(content.content.input.x,content.content.input.y);
+            } else if(content.content.input.action === "left_click") {
+              screengrab = this.cuService.performLeftClick(content.content.input.x,content.content.input.y);
+            } else if(content.content.input.action === "type") {
+              screengrab = this.cuService.performKeyInput(content.content.input.input);
+            } else if(content.content.input.action === "scroll") {
+              screengrab = this.cuService.performScroll(content.content.input.x,content.content.input.y);
+            } else if(content.content.input.action === "screenshot") {
+              screengrab = this.cuService.getScreenshot();
+            }
+            state.messages.push({
+              role: "user",
+              contents: [
+                {
+                  type: "tool_use_result",
+                  content: {
+                    name: "computer_use",
+                    id: content.content.id,
+                    screengrab: screengrab
+                  }
+                }
+              ]
+            });
+            state.model?.input(state.messages,new Map([
+              ["computer_use",computerUseToolInputSchema]
+            ]));
+          }
+        } else {
+          console.log(`Got unexpected content block from computer use agent ${content.content}`)
+        }
+      }
+    } else {
+      console.warn(`Did not find the Pathways node ${this.name} in waiting_on_llm state when running porcessModelOutput`);
+    }
   }
 
   ingestUserInput(ctx: WorkflowContext, msg: string): void {

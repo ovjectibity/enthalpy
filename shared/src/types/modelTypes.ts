@@ -1,9 +1,14 @@
 interface Tool {
   id: string, 
-  input: ComputerToolInput,
-  description: string,
-  name: string
+  name: string;
 }
+
+interface ComputerTool extends Tool {
+  input: CTInput,
+  name: "computer_use"
+}
+
+type CTInput = CTLeftClick | CTRightClick | CTScroll | CTType | CTScreenshot;
 
 interface CTLeftClick {
   action: "left_click",
@@ -32,37 +37,25 @@ interface CTScreenshot {
   action: "screenshot"
 }
 
-type ComputerToolInput = CTLeftClick | CTRightClick | CTScroll | CTType | CTScreenshot;
-
-class ComputerTool implements Tool {
-  name = "computer_use_tool";
-  description = "";
-  input: ComputerToolInput;
-  id: string;
-
-  constructor(id: string, input: ComputerToolInput) {
-    this.input = input;
-    this.id = id;
-  }
-}
-
-interface CTResult {
-  screengrab: string,
-  error?: string
-}
-
 interface ToolResult {
-  result: CTResult
+  name: string,
+  id: string,
+}
+
+interface CTResult extends ToolResult {
+  name: "computer_use",
+  screengrab?: string,
+  error?: string
 }
 
 interface ToolUseResult {
   type: "tool_use_result",
-  content: ToolResult
+  content: CTResult
 }
 
 interface ToolUse {
   type: "tool_use",
-  content: Tool
+  content: ComputerTool
 }
 
 interface AssistantRoleWorkflowContentSimpleTypes {
@@ -97,4 +90,5 @@ interface UserModelMessage {
 
 type ModelMessage = AssistantModelMessage | UserModelMessage;
 
-export { ModelMessage, Tool, ComputerTool, ComputerToolInput, AssistantModelMessage, UserModelMessage }
+export { ModelMessage, Tool, ToolUse, ComputerTool, AssistantModelMessage, UserModelMessage, CTInput };
+export { CTLeftClick, CTRightClick, CTResult, ToolUseResult, ToolResult, CTScroll, CTType, CTScreenshot };

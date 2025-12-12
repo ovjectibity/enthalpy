@@ -224,8 +224,10 @@ class ContextGatheringNode<T> extends WorkflowNode {
         // Once the output from the user is available,
         // TODO: the LLM should be able to help this node proceed (even this can be perhaps optimised)
         this.state = "waiting_on_llm";
-        let modelResponse = await ctx.model?.input(ctx.messages);
-        await this.processLLMOutput(ctx, modelResponse);
+        ctx.model?.input(ctx.messages).then(
+          (modelResponse: ModelMessage) => {
+          this.processLLMOutput(ctx, modelResponse);
+        });
         return new Promise((res,rej) => {
           this.gatheredContext.finalise = res;
           this.gatheredContext.abort = rej;
@@ -423,8 +425,10 @@ class AssetGenerationNode<T> extends WorkflowNode {
         // Once the output from the user is available,
         // TODO: the LLM should be able to help this node proceed (even this can be perhaps optimised)
         this.state = "waiting_on_llm";
-        let modelResponse = await ctx.model?.input(ctx.messages);
-        await this.processLLMOutput(ctx, modelResponse);
+        ctx.model?.input(ctx.messages).then(
+          (modelResponse: ModelMessage) => {
+          this.processLLMOutput(ctx, modelResponse);
+        });
         return new Promise((res,rej) => {
           this.generatedAssets.finalise = res;
           this.generatedAssets.abort = rej;
