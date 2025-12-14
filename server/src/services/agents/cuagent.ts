@@ -6,7 +6,7 @@ import {
   Contexts,
   Assets,
 } from "@enthalpy/shared";
-import { cuConnector } from "../cuservice.js";
+import { cuInstance } from "../cuservice.js";
 import { FlowGraphNode, CuNode } from "./cuworkflow.js"
 
 interface FlowGraphContext {
@@ -23,7 +23,7 @@ class FGAgent extends Agent<FlowGraphNode> {
   constructor(name: string, flowContext: FlowGraphContext) {
     super(name,[]);
     this.flowContext = flowContext;
-    this.pathsNode = new CuNode("User journey mapper", cuConnector);
+    this.pathsNode = new CuNode("User journey mapper", cuInstance);
   }
 
   ingestUserInput(msg: string) {
