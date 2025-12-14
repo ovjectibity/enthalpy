@@ -4,17 +4,17 @@ FROM computer-use-base:latest
 WORKDIR /app
 
 # Step 1: Build shared package
-COPY ../shared /app/shared
+COPY shared /app/shared
 WORKDIR /app/shared
 RUN npm install && npm run build
 
 # Step 2: Build computer-use-service
 WORKDIR /app/computer-use-service
-COPY package*.json ./
+COPY computer-use-service/package*.json ./
 RUN npm install
 
-COPY src/ ./src/
-COPY tsconfig.json* ./
+COPY computer-use-service/src/ ./src/
+COPY computer-use-service/tsconfig.json* ./
 RUN npm run build
 
 # Remove dev dependencies to reduce image size
