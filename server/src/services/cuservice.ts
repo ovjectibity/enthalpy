@@ -10,7 +10,8 @@ const execAsync = promisify(exec);
 
 interface ComputerUseService {
     initiateInstance(onExpiry?: (notification: CuExpiryNotification) => void): Promise<CuInitiationRequestResult>;
-    performAction(actionId: string, input: CTInput): Promise<string>
+    performAction(actionId: string, input: CTInput): Promise<string>;
+    closeInstance(): void;
 }
 
 class CuInstance implements ComputerUseService {
@@ -20,6 +21,26 @@ class CuInstance implements ComputerUseService {
 
     constructor() {
         this.cuServerId = crypto.randomBytes(16).toString('hex');
+    }
+
+    closeInstance(): void {
+        // Close websocket connection
+        if (this.cuInstanceSocket) {
+            this.cuInstanceSocket.disconnect();
+            this.cuInstanceSocket = undefined;
+        }
+
+        // Stop and remove Docker container
+        if (this.cuServerId) {
+            execAsync(`docker stop ${this.cuServerId}`)
+                .then(() => execAsync(`docker rm ${this.cuServerId}`))
+                .then(() => {
+                    console.log(`Docker container ${this.cuServerId} stopped and removed`);
+                })
+                .catch((error) => {
+                    console.error(`Failed to stop/remove container ${this.cuServerId}:`, error);
+                });
+        }
     }
 
     async initiateInstance(onExpiry?: (notification: CuExpiryNotification) => void): 
@@ -64,6 +85,8 @@ class CuInstance implements ComputerUseService {
                             reason: 'failure'
                         });
                     }
+                    // Automatically close the instance on unexpected disconnect
+                    this.closeInstance();
                 });
                 // Set a timeout for connection
                 setTimeout(() => {
@@ -80,6 +103,8 @@ class CuInstance implements ComputerUseService {
                         reason: 'time_expired'
                     });
                 }
+                // Automatically close the instance after expiry
+                this.closeInstance();
             }, 60 * 60 * 1000); // 1 hour
 
             return {
