@@ -11,6 +11,7 @@ RUN npm install && npm run build
 # Step 2: Build computer-use-service
 WORKDIR /app/computer-use-service
 COPY computer-use-service/package*.json ./
+RUN npm install file:/app/shared
 RUN npm install
 
 COPY computer-use-service/src/ ./src/
