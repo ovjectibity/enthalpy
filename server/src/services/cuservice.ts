@@ -1,14 +1,10 @@
 import { 
     CUServerToClientEvents, CUClientToServerEvents, 
-    CuInitiationRequestResult } from "@enthalpy/shared";
+    CuInitiationRequestResult, CTInput } from "@enthalpy/shared";
 import { io, Socket } from "socket.io-client";
 
 interface ComputerUseService {
-    getScreenshot(actionId: string): Promise<string>;
-    performLeftClick(actionId: string, x: number,y: number): Promise<string>;
-    performRightClick(actionId: string, x: number,y: number): Promise<string>; 
-    performScroll(actionId: string, x: number, y: number): Promise<string>;
-    performKeyInput(actionId: string, input: string): Promise<string>;
+    performAction(actionId: string, input: CTInput): Promise<string>
 }
 
 class CuConnector implements ComputerUseService {
@@ -35,117 +31,26 @@ class CuConnector implements ComputerUseService {
         });
     }
 
-    async getScreenshot(actionId: string): Promise<string> {
+    async performAction(actionId: string, input: CTInput): Promise<string> {
         if(this.cuServerSocket && this.cuServerToken) {
             let res = await this.cuServerSocket.emitWithAck("perform_action",{
-                action: {
-                    action: "screenshot"
-                },
                 token: this.cuServerToken,
-                actionId: actionId
+                actionId: actionId,
+                action: input
             });
             if(res.result === "success" && res.screengrab) {
                 return Promise.resolve(res.screengrab);
             } else {
                 return Promise.reject(
-                    new Error(`Failure to getScreenshot`));
+                    new Error(`Failure to performAction ${input}`));
             }
         } else {
             return Promise.reject(
-                new Error(`CuConnector not initialised, skipping getScreenshot`));
-        }
-    }
-
-    async performLeftClick(actionId: string, x: number, y: number): Promise<string> {
-        if(this.cuServerSocket && this.cuServerToken) {
-            let res = await this.cuServerSocket.emitWithAck("perform_action",{
-                action: {
-                    action: "left_click",
-                    x: x,
-                    y: y
-                },
-                token: this.cuServerToken,
-                actionId: actionId
-            });
-            if(res.result === "success" && res.screengrab) {
-                return Promise.resolve(res.screengrab);
-            } else {
-                return Promise.reject(
-                    new Error(`Failure to performLeftClick`));
-            }
-        } else {
-            return Promise.reject(
-                new Error(`CuConnector not initialised, skipping getScreenshot`));
-        }
-    }
-
-    async performRightClick(actionId: string, x: number, y: number): Promise<string> {
-        if(this.cuServerSocket && this.cuServerToken) {
-            let res = await this.cuServerSocket.emitWithAck("perform_action",{
-                action: {
-                    action: "right_click",
-                    x: x,
-                    y: y
-                },
-                token: this.cuServerToken,
-                actionId: actionId
-            });
-            if(res.result === "success" && res.screengrab) {
-                return Promise.resolve(res.screengrab);
-            } else {
-                return Promise.reject(
-                    new Error(`Failure to performRightClick`));
-            }
-        } else {
-            return Promise.reject(
-                new Error(`CuConnector not initialised, skipping getScreenshot`));
-        }
-    }
-
-    async performScroll(actionId: string, x: number, y: number): Promise<string> {
-        if(this.cuServerSocket && this.cuServerToken) {
-            let res = await this.cuServerSocket.emitWithAck("perform_action",{
-                action: {
-                    action: "scroll",
-                    x: x,
-                    y: y
-                },
-                token: this.cuServerToken,
-                actionId: actionId
-            });
-            if(res.result === "success" && res.screengrab) {
-                return Promise.resolve(res.screengrab);
-            } else {
-                return Promise.reject(
-                    new Error(`Failure to performScroll`));
-            }
-        } else {
-            return Promise.reject(
-                new Error(`CuConnector not initialised, skipping getScreenshot`));
-        }
-    }
-
-    async performKeyInput(actionId: string, input: string): Promise<string> {
-        if(this.cuServerSocket && this.cuServerToken) {
-            let res = await this.cuServerSocket.emitWithAck("perform_action",{
-                action: {
-                    action: "type",
-                    input: input
-                },
-                token: this.cuServerToken,
-                actionId: actionId
-            });
-            if(res.result === "success" && res.screengrab) {
-                return Promise.resolve(res.screengrab);
-            } else {
-                return Promise.reject(
-                    new Error(`Failure to performKeyInput`));
-            }
-        } else {
-            return Promise.reject(
-                new Error(`CuConnector not initialised, skipping getScreenshot`));
+                new Error(`CuConnector not initialised, skipping performAction ${input}`));
         }
     }
 }
 
-export { ComputerUseService };
+const cuConnector: ComputerUseService = new CuConnector();
+
+export { cuConnector, ComputerUseService };

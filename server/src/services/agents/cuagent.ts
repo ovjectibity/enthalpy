@@ -8,7 +8,7 @@ import {
   ModelMessage
 } from "@enthalpy/shared";
 import { computerUseToolInputSchema } from "../../schemas/toolSchemas.js";
-import { ComputerUseService } from "../cuservice.js";
+import { cuConnector, ComputerUseService } from "../cuservice.js";
 
 interface FlowGraphContext {
     productName: string, 
@@ -30,7 +30,7 @@ class FGAgent extends Agent<FlowGraphNode> {
   constructor(name: string, flowContext: FlowGraphContext) {
     super(name,[]);
     this.flowContext = flowContext;
-    this.pathsNode = new Pathways("User journey mapper");
+    this.pathsNode = new Pathways("User journey mapper", cuConnector);
   }
 
   ingestUserInput(msg: string) {
@@ -115,31 +115,25 @@ class Pathways extends WorkflowNode {
       for(let content of modelResponse.contents) {
         if(content.type === "tool_use" && content.content.name === "computer_use") {
           if(content.content.name === "computer_use") {
-            let screengrab;
-            if(content.content.input.action === "right_click") {
-              screengrab = this.cuService.performRightClick(content.content.input.x,content.content.input.y);
-            } else if(content.content.input.action === "left_click") {
-              screengrab = this.cuService.performLeftClick(content.content.input.x,content.content.input.y);
-            } else if(content.content.input.action === "type") {
-              screengrab = this.cuService.performKeyInput(content.content.input.input);
-            } else if(content.content.input.action === "scroll") {
-              screengrab = this.cuService.performScroll(content.content.input.x,content.content.input.y);
-            } else if(content.content.input.action === "screenshot") {
-              screengrab = this.cuService.getScreenshot();
-            }
-            state.messages.push({
-              role: "user",
-              contents: [
-                {
-                  type: "tool_use_result",
-                  content: {
-                    name: "computer_use",
-                    id: content.content.id,
-                    screengrab: screengrab
+            try {
+              let screengrab = await this.cuService.performAction(content.content.id,
+                                                content.content.input);
+              state.messages.push({
+                role: "user",
+                contents: [
+                  {
+                    type: "tool_use_result",
+                    content: {
+                      name: "computer_use",
+                      id: content.content.id,
+                      screengrab: screengrab
+                    }
                   }
-                }
-              ]
-            });
+                ]
+              });
+            } catch(error) {
+              console.error(error);
+            }
             state.model?.input(state.messages,new Map([
               ["computer_use",computerUseToolInputSchema]
             ]));
@@ -155,5 +149,6 @@ class Pathways extends WorkflowNode {
 
   ingestUserInput(ctx: WorkflowContext, msg: string): void {
     //Do nothing; no user input can be accepted at this stage
+    console.log(`Not user input supported for Pathways node, ${this.name}`);
   }
 }

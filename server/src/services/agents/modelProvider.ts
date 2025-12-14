@@ -35,6 +35,8 @@ export class ClaudeIntf implements LLMIntf {
     });
   }
 
+  //TODO: Cache Anthropic messages directly in this 
+  // instance instead of constructing them everytime
   static translateToAnthropicMessage(msg: ModelMessage): MessageParam {
     let blocks = Array<ContentBlockParam>();
     if(msg.role === "assistant") {
