@@ -13,6 +13,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "socket.io": "^4.8.1",
+    "@enthalpy/shared": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.8.3"
   },

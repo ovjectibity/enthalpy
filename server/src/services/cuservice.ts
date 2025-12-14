@@ -22,7 +22,8 @@ class CuInstance implements ComputerUseService {
         this.cuServerId = crypto.randomBytes(16).toString('hex');
     }
 
-    async initiateInstance(onExpiry?: (notification: CuExpiryNotification) => void): Promise<CuInitiationRequestResult> {
+    async initiateInstance(onExpiry?: (notification: CuExpiryNotification) => void): 
+    Promise<CuInitiationRequestResult> {
         try {
             // Step 1: Launch Docker container
             const dockerCommand = `docker run -d \
