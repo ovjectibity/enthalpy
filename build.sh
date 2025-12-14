@@ -61,7 +61,7 @@ if [ "$BUILD_MODE" = "local" ]; then
   # Step 3: Build CU service image remotely
   echo "Step 3: Building computer-use-service image on remote host..."
   echo "----------------------------------------"
-  ssh ${CU_REMOTE_USER}@${CU_REMOTE_HOST} "cd ${CU_REMOTE_PATH}/enthalpy/computer-use-service && docker build -t computer-use-service:latest ."
+  ssh ${CU_REMOTE_USER}@${CU_REMOTE_HOST} "cd ${CU_REMOTE_PATH}/enthalpy && docker build -f computer-use-service/Dockerfile -t computer-use-service:latest ."
   echo "✓ Remote computer-use-service image built successfully"
   echo ""
 
@@ -101,9 +101,7 @@ else
   # Step 2: Build CU service image
   echo "Step 2: Building computer-use-service Docker image..."
   echo "----------------------------------------"
-  cd computer-use-service
-  docker build -t computer-use-service:latest .
-  cd ..
+  docker build -f computer-use-service/Dockerfile -t computer-use-service:latest .
   echo "✓ Computer-use-service image built successfully"
   echo ""
 

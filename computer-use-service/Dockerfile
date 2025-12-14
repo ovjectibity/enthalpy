@@ -1,20 +1,20 @@
 # Use pre-built base image with GUI dependencies
 FROM computer-use-base:latest
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Step 1: Build shared package
+COPY ../shared /app/shared
+WORKDIR /app/shared
+RUN npm install && npm run build
 
-# Install all dependencies (including dev dependencies for build)
+# Step 2: Build computer-use-service
+WORKDIR /app/computer-use-service
+COPY package*.json ./
 RUN npm install
 
-# Copy source code
 COPY src/ ./src/
 COPY tsconfig.json* ./
-
-# Build TypeScript
 RUN npm run build
 
 # Remove dev dependencies to reduce image size
@@ -44,7 +44,7 @@ sleep 8\n\
 x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -verbose &\n\
 \n\
 # Start the application\n\
-cd /app && npm start' > /app/start.sh && chmod +x /app/start.sh
+cd /app/computer-use-service && npm start' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose application port
 EXPOSE 3000
