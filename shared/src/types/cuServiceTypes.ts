@@ -11,6 +11,10 @@ export interface CuInitiationRequestResult {
   expiry?: Date
 }
 
+export interface CuCloseRequest {
+    token: string
+}
+
 export interface CuAction {
   action: CTInput,
   token: string,
@@ -33,7 +37,10 @@ export interface CUServerToClientEvents {
   instance_expired: (note: CuExpiryNotification) => void;
 }
 
-export interface CUClientToServer {
-  initiate_instance: (req: CuInitiationRequest) => CuInitiationRequestResult;
-  perform_action: (act: CuAction) => CuActionResult;
+export interface CUClientToServerEvents {
+  initiate_instance: (req: CuInitiationRequest, 
+                      ack: (res: CuInitiationRequestResult) => void) => void;
+  perform_action: (act: CuAction,
+                   ack: (res: CuActionResult) => void) => void;
+  close_instance: (req: CuCloseRequest) => void;
 }
