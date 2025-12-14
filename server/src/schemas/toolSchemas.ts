@@ -1,18 +1,42 @@
 import { z } from 'zod';
+import { CTInput } from '@enthalpy/shared';
 
-// Define the Zod schema for computer use tool input
-export const ComputerUseToolInputZodSchema = z.object({
-  action: z.string().describe("Possible actions: screenshot, left_click, right_click, scroll, type"),
-  coordinates: z.object({
-    x: z.number().describe("The X coordinate over which a click needs to be made."),
-    y: z.number().describe("The Y coordinate over which a click needs to be made.")
-  }).describe("X & Y screen coordinates over which the click needs to be made.").optional(),
-  scroll_distance: z.object({
-    dx: z.number().describe("The dX distance in the horizontal axis over which scroll needs to be made. While this can be any real value, but it is strongly suggested to not use values whose absolute figures are larger than the X screen dimension."),
-    dy: z.number().describe("The dY distance in the vertical axis over which scroll needs to be made. While this can be any real value, but it is strongly suggested to not use values whose absolute figures are larger than the Y screen dimension.")
-  }).describe("dX & dY distances in screen coordinates over which the scroll needs to be made.").optional(),
-  key_input: z.string().describe("The Unicode string that needs to be typed.").optional()
-}).describe("Directly interact with a standlone computer system with this tool.");
+// Computer Tool Input schemas matching CTInput type
+const CTLeftClickSchema = z.object({
+  action: z.literal("left_click"),
+  x: z.number().describe("X coordinate"),
+  y: z.number().describe("Y coordinate")
+}).describe("Perform a left mouse click at coordinates");
+
+const CTRightClickSchema = z.object({
+  action: z.literal("right_click"),
+  x: z.number().describe("X coordinate"),
+  y: z.number().describe("Y coordinate")
+}).describe("Perform a right mouse click at coordinates");
+
+const CTScrollSchema = z.object({
+  action: z.literal("scroll"),
+  x: z.number().describe("Horizontal scroll amount"),
+  y: z.number().describe("Vertical scroll amount")
+}).describe("Perform a scroll action");
+
+const CTTypeSchema = z.object({
+  action: z.literal("type"),
+  input: z.string().describe("Text to type")
+}).describe("Type text input");
+
+const CTScreenshotSchema = z.object({
+  action: z.literal("screenshot")
+}).describe("Take a screenshot");
+
+// CTInput union type
+export const CTInputZodSchema = z.union([
+  CTLeftClickSchema,
+  CTRightClickSchema,
+  CTScrollSchema,
+  CTTypeSchema,
+  CTScreenshotSchema
+]) satisfies z.ZodType<CTInput>;
 
 // Export JSON Schema for Anthropic API
-export const computerUseToolInputSchema = z.toJSONSchema(ComputerUseToolInputZodSchema);
+export const computerUseToolInputSchema = z.toJSONSchema(CTInputZodSchema as any) as any;

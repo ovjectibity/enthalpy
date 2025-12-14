@@ -1,6 +1,22 @@
 # Use Node.js 18 LTS as the base image
 FROM node:18-slim
 
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY src/ ./src/
+COPY tsconfig.json* ./
+
+# Build TypeScript (if tsconfig exists)
+RUN npm run build || true
+
 # Conditionally install GUI dependencies and set up XFCE configuration
 # This block will only execute if COMPUTER_USE_SETUP is explicitly '1'.
 RUN if [ "$COMPUTER_USE_SETUP" = "1" ]; then \
@@ -56,8 +72,11 @@ RUN if [ "$COMPUTER_USE_SETUP" = "1" ]; then \
     x11vnc -display :99 -forever -nopw -listen 0.0.0.0 -xkb -verbose &\n\
     \n\
     # Start the application\n\
-    cd /app/server && npm start' > /app/start.sh && chmod +x /app/start.sh; \
+    cd /app && npm start' > /app/start.sh && chmod +x /app/start.sh; \
     fi
+
+# Expose application port
+EXPOSE 3000
 
 # Expose VNC port for x11vnc (only relevant if GUI setup is enabled)
 EXPOSE $VNC_PORT

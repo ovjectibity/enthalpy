@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { ModelMessage } from '@enthalpy/shared';
 
-// Computer Tool Input schemas
+// Computer Tool Input schemas (CTInput)
 const CTLeftClickSchema = z.object({
   action: z.literal("left_click"),
   x: z.number().describe("X coordinate"),
@@ -28,7 +29,7 @@ const CTScreenshotSchema = z.object({
   action: z.literal("screenshot")
 }).describe("Take a screenshot");
 
-const ComputerToolInputSchema = z.union([
+const CTInputSchema = z.union([
   CTLeftClickSchema,
   CTRightClickSchema,
   CTScrollSchema,
@@ -36,13 +37,12 @@ const ComputerToolInputSchema = z.union([
   CTScreenshotSchema
 ]).describe("The specific computer action to perform");
 
-// Tool schema
-const ToolSchema = z.object({
+// Computer Tool schema
+const ComputerToolSchema = z.object({
   id: z.string().describe("Unique identifier for this tool use"),
-  input: ComputerToolInputSchema,
-  description: z.string().describe("Description of what this tool does"),
-  name: z.string().describe("Name of the tool (typically 'computer_use_tool')")
-}).describe("Computer use tool details");
+  name: z.literal("computer_use").describe("Name of the tool"),
+  input: CTInputSchema
+}).describe("Computer use tool");
 
 // Assistant content types
 const AssistantSimpleWorkflowContentSchema = z.object({
@@ -53,7 +53,7 @@ const AssistantSimpleWorkflowContentSchema = z.object({
 
 const ToolUseSchema = z.object({
   type: z.literal("tool_use").describe("Indicates this content is a tool use request"),
-  content: ToolSchema
+  content: ComputerToolSchema
 }).describe("Tool invocation from the assistant");
 
 const AssistantRoleWorkflowContentTypeSchema = z.union([
@@ -63,17 +63,15 @@ const AssistantRoleWorkflowContentTypeSchema = z.union([
 
 // User content types
 const CTResultSchema = z.object({
-  screengrab: z.string().describe("Base64 encoded screenshot image from the computer use action"),
-  error: z.string().optional().describe("Error message if the tool execution failed (optional)")
+  name: z.literal("computer_use").describe("Tool name"),
+  id: z.string().describe("Tool use ID"),
+  screengrab: z.string().optional().describe("Base64 encoded screenshot image from the computer use action"),
+  error: z.string().optional().describe("Error message if the tool execution failed")
 }).describe("Result of the computer tool action");
-
-const ToolResultSchema = z.object({
-  result: CTResultSchema
-}).describe("Result data from the tool execution");
 
 const ToolUseResultSchema = z.object({
   type: z.literal("tool_use_result").describe("Indicates this content is a tool use result"),
-  content: ToolResultSchema
+  content: CTResultSchema
 }).describe("Result of a computer use tool invocation");
 
 const UserSimpleWorkflowContentSchema = z.object({
@@ -102,10 +100,10 @@ const UserModelMessageSchema = z.object({
 export const ModelMessageSchema = z.union([
   AssistantModelMessageSchema,
   UserModelMessageSchema
-]);
+]) satisfies z.ZodType<ModelMessage>;
 
 // Export the Zod schema for validation
 export const modelMessageZodSchema = ModelMessageSchema;
 
 // Export JSON Schema for Anthropic API
-export const modelMessageSchemaUpdated = z.toJSONSchema(ModelMessageSchema);
+export const modelMessageSchemaUpdated = z.toJSONSchema(ModelMessageSchema as any) as any;
