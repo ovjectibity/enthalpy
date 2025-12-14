@@ -29,30 +29,13 @@ export class ComputerTool {
   }
 
   getScreenDimensions(): { width: number; height: number } {
-    const platform = process.env.PLATFORM || "macos";
-    let cmd: string;
-
-    if (platform === "linux") {
-      // Linux implementation using xdpyinfo
-      cmd = "xdpyinfo | grep dimensions | awk '{print $2}'";
-    } else {
-      // macOS implementation using system_profiler
-      cmd =
-        "system_profiler SPDisplaysDataType | grep Resolution | awk '{print $2, $4}' | head -1";
-    }
+    const cmd = "xdpyinfo | grep dimensions | awk '{print $2}'";
 
     try {
       const output = execSync(cmd, { encoding: "utf8" }).trim();
-
-      if (platform === "linux") {
-        // Output format: "1920x1080"
-        const [width, height] = output.split("x").map(Number);
-        return { width, height };
-      } else {
-        // macOS output format: "1920 1080" (space separated)
-        const [width, height] = output.split(" ").map(Number);
-        return { width, height };
-      }
+      // Output format: "1920x1080"
+      const [width, height] = output.split("x").map(Number);
+      return { width, height };
     } catch (error) {
       console.warn(`Failed to get screen dimensions: ${error}`);
       // Fallback to common defaults
@@ -61,24 +44,15 @@ export class ComputerTool {
   }
 
   async getScreenshot(): Promise<string> {
-    const platform = process.env.PLATFORM || "macos";
-    let file = "./tmp/abc.png";
-    let file2 = "./tmp/abc2.jpg";
-    let cmd: string;
-
-    if (platform === "linux") {
-      // Linux implementation using scrot
-      cmd = `scrot "${file}"`;
-    } else {
-      // macOS implementation using screencapture
-      cmd = `screencapture -tpng "${file}"`;
-    }
+    const file = "./tmp/abc.png";
+    const file2 = "./tmp/abc2.jpg";
+    const cmd = `scrot "${file}"`;
 
     return new Promise((res, rej) => {
       exec(cmd, (error, stdout, stderr) => {
-        console.log(`Running screenshot on ${platform}`, error, stdout, stderr);
+        console.log(`Running screenshot`, error, stdout, stderr);
         if (error) {
-          rej(`Error taking screenshot on ${platform}: ${error.message}`);
+          rej(`Error taking screenshot: ${error.message}`);
         } else {
           this.optimizeScreenshot(file, file2)
             .then((base64encoded) => {
@@ -171,23 +145,13 @@ export class ComputerTool {
     y: number,
     clickType: "left" | "right" = "left",
   ): Promise<string> {
-    const platform = process.env.PLATFORM || "macos";
-    let cmd: string;
+    const button = clickType === "right" ? "3" : "1";
+    const cmd = `xdotool mousemove ${x} ${y} click ${button}`;
 
-    if (platform === "linux") {
-      // Linux implementation using xdotool
-      const button = clickType === "right" ? "3" : "1";
-      cmd = `xdotool mousemove ${x} ${y} click ${button}`;
-    } else {
-      // macOS implementation using osascript
-      const clickCommand = clickType === "right" ? "right click" : "click";
-      cmd = `osascript -e 'tell application "System Events" to ${clickCommand} at {${x}, ${y}}'`;
-    }
-
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       exec(cmd, (error, stdout, stderr) => {
         console.log(
-          `Executing ${clickType} click at (${x}, ${y}) on ${platform}`,
+          `Executing ${clickType} click at (${x}, ${y})`,
           error,
           stdout,
           stderr,
@@ -196,7 +160,7 @@ export class ComputerTool {
           resolve(`Error executing ${clickType} click: ${error.message}`);
         } else {
           resolve(
-            `Successfully ${clickType} clicked at coordinates (${x}, ${y}) on ${platform}`,
+            `Successfully ${clickType} clicked at coordinates (${x}, ${y})`,
           );
         }
       });
@@ -204,25 +168,14 @@ export class ComputerTool {
   }
 
   async executeType(text: string): Promise<string> {
-    const platform = process.env.PLATFORM || "macos";
-    let cmd: string;
+    // Escape special characters for shell
+    const escapedText = text.replace(/'/g, "'\"'\"'");
+    const cmd = `xdotool type '${escapedText}'`;
 
-    if (platform === "linux") {
-      // Linux implementation using xdotool
-      // Escape special characters for shell
-      const escapedText = text.replace(/'/g, "'\"'\"'");
-      cmd = `xdotool type '${escapedText}'`;
-    } else {
-      // macOS implementation using osascript
-      // Escape special characters for AppleScript
-      const escapedText = text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-      cmd = `osascript -e 'tell application "System Events" to keystroke "${escapedText}"'`;
-    }
-
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       exec(cmd, (error, stdout, stderr) => {
         console.log(
-          `Executing type: "${text}" on ${platform}`,
+          `Executing type: "${text}"`,
           error,
           stdout,
           stderr,
@@ -230,49 +183,39 @@ export class ComputerTool {
         if (error) {
           resolve(`Error executing type: ${error.message}`);
         } else {
-          resolve(`Successfully typed: "${text}" on ${platform}`);
+          resolve(`Successfully typed: "${text}"`);
         }
       });
     });
   }
 
   async executeScroll(dx: number, dy: number): Promise<string> {
-    const platform = process.env.PLATFORM || "macos";
-    let cmd: string;
+    // xdotool uses button 4/5 for vertical scroll (up/down) and 6/7 for horizontal
+    // Positive dy means scroll down, negative means scroll up
+    // Positive dx means scroll right, negative means scroll left
+    const scrollCommands: string[] = [];
 
-    if (platform === "linux") {
-      // Linux implementation using xdotool
-      // xdotool uses button 4/5 for vertical scroll (up/down) and 6/7 for horizontal
-      // Positive dy means scroll down, negative means scroll up
-      // Positive dx means scroll right, negative means scroll left
-      const scrollCommands: string[] = [];
-
-      // Handle vertical scrolling
-      if (dy !== 0) {
-        const scrollButton = dy > 0 ? "5" : "4"; // 5 = down, 4 = up
-        const scrollCount = Math.abs(Math.round(dy / 100)); // Convert pixels to scroll steps
-        for (let i = 0; i < scrollCount; i++) {
-          scrollCommands.push(`xdotool click ${scrollButton}`);
-        }
+    // Handle vertical scrolling
+    if (dy !== 0) {
+      const scrollButton = dy > 0 ? "5" : "4"; // 5 = down, 4 = up
+      const scrollCount = Math.abs(Math.round(dy / 100)); // Convert pixels to scroll steps
+      for (let i = 0; i < scrollCount; i++) {
+        scrollCommands.push(`xdotool click ${scrollButton}`);
       }
-
-      // Handle horizontal scrolling
-      if (dx !== 0) {
-        const scrollButton = dx > 0 ? "7" : "6"; // 7 = right, 6 = left
-        const scrollCount = Math.abs(Math.round(dx / 100)); // Convert pixels to scroll steps
-        for (let i = 0; i < scrollCount; i++) {
-          scrollCommands.push(`xdotool click ${scrollButton}`);
-        }
-      }
-
-      cmd = scrollCommands.join(" && ");
-    } else {
-      // macOS implementation using osascript
-      // macOS uses negative values for up/left scrolling
-      cmd = `osascript -e 'tell application "System Events" to scroll {${-dx}, ${-dy}}'`;
     }
 
-    return new Promise((resolve, reject) => {
+    // Handle horizontal scrolling
+    if (dx !== 0) {
+      const scrollButton = dx > 0 ? "7" : "6"; // 7 = right, 6 = left
+      const scrollCount = Math.abs(Math.round(dx / 100)); // Convert pixels to scroll steps
+      for (let i = 0; i < scrollCount; i++) {
+        scrollCommands.push(`xdotool click ${scrollButton}`);
+      }
+    }
+
+    const cmd = scrollCommands.join(" && ");
+
+    return new Promise((resolve) => {
       if (!cmd) {
         resolve("No scroll action needed (dx=0, dy=0)");
         return;
@@ -280,7 +223,7 @@ export class ComputerTool {
 
       exec(cmd, (error, stdout, stderr) => {
         console.log(
-          `Executing scroll: dx=${dx}, dy=${dy} on ${platform}`,
+          `Executing scroll: dx=${dx}, dy=${dy}`,
           error,
           stdout,
           stderr,
@@ -288,7 +231,7 @@ export class ComputerTool {
         if (error) {
           resolve(`Error executing scroll: ${error.message}`);
         } else {
-          resolve(`Successfully scrolled: dx=${dx}, dy=${dy} on ${platform}`);
+          resolve(`Successfully scrolled: dx=${dx}, dy=${dy}`);
         }
       });
     });

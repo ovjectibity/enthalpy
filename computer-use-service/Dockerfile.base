@@ -1,0 +1,29 @@
+# Base image with GUI dependencies pre-installed
+# Build once: docker build -f Dockerfile.base -t computer-use-base:latest .
+FROM node:18-slim
+
+# Install GUI dependencies and set up XFCE configuration
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    scrot \
+    xvfb \
+    x11vnc \
+    xfce4-session \
+    xfce4-panel \
+    xfce4-terminal \
+    xfwm4 \
+    xfdesktop4 \
+    xfce4-settings \
+    dbus \
+    dbus-x11 \
+    systemd \
+    xdotool \
+    firefox-esr \
+    thunar \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create minimal XFCE configuration to disable unnecessary services
+RUN mkdir -p /etc/xdg/autostart && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xfce4-power-manager.desktop && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/light-locker.desktop && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/polkit-gnome-authentication-agent-1.desktop && \
+    echo "[Desktop Entry]\nHidden=true" > /etc/xdg/autostart/xiccd.desktop

@@ -50,10 +50,9 @@ class CuInstance implements ComputerUseService {
             const dockerCommand = `docker run -d \
                 -p 0:3000 \
                 --name ${this.cuServerId} \
-                -e COMPUTER_USE_SETUP=${process.env.COMPUTER_USE_SETUP || '0'} \
                 -e VNC_PORT=${process.env.VNC_PORT || '5900'} \
                 -e CU_SECRET=${process.env.CU_SECRET} \
-                computer-use-service`;
+                computer-use-service:latest`;
 
             await execAsync(dockerCommand);
 

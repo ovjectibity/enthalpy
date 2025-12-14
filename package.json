@@ -5,7 +5,8 @@
   "workspaces": [
     "client",
     "server",
-    "shared"
+    "shared",
+    "computer-use-service"
   ],
   "scripts": {
     "build": "npm run build:shared && npm run build:client && npm run build:server",

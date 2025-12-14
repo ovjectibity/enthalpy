@@ -5,9 +5,19 @@ import {
     CuAction,
     CuActionResult
 } from "@enthalpy/shared";
+import { ComputerTool } from "./tools.js";
+import * as fs from "fs";
 
 const PORT = 3000;
 const CU_SECRET = process.env.CU_SECRET;
+
+// Create tmp directory for screenshots
+if (!fs.existsSync("./tmp")) {
+    fs.mkdirSync("./tmp");
+}
+
+// Initialize ComputerTool
+const computerTool = new ComputerTool();
 
 // Create Socket.IO server
 const io = new Server<CUClientToServerEvents, CUServerToClientEvents>(PORT, {
@@ -42,19 +52,55 @@ cuNamespace.on("connection", (socket) => {
 
     // Handle perform_action event
     socket.on("perform_action", async (action: CuAction, ack) => {
-        console.log(`Received perform_action: actionId=${action.actionId}, token=${action.token}`);
+        console.log(`Received perform_action: actionId=${action.actionId}, " + 
+            "token=${action.token}, action=${action.action.action}`);
 
         try {
-            // TODO: Implement actual computer use actions here
-            // For now, return a placeholder response
+            let responseMessage: string;
+
+            switch (action.action.action) {
+                case "screenshot":
+                    responseMessage = "Screenshot captured successfully";
+                    break;
+                case "left_click":
+                    responseMessage = await computerTool.executeClick(
+                        action.action.x,
+                        action.action.y,
+                        "left"
+                    );
+                    break;
+                case "right_click":
+                    responseMessage = await computerTool.executeClick(
+                        action.action.x,
+                        action.action.y,
+                        "right"
+                    );
+                    break;
+                case "scroll":
+                    responseMessage = await computerTool.executeScroll(
+                        action.action.x,
+                        action.action.y
+                    );
+                    break;
+                case "type":
+                    responseMessage = 
+                        await computerTool.executeType(action.action.input);
+                    break;
+                default:
+                    throw new Error(`Unknown action: ${(action.action as any).action}`);
+            }
+
+            // Take screenshot after every action
+            const screengrab = await computerTool.getScreenshot();
 
             const result: CuActionResult = {
                 actionId: action.actionId,
                 token: action.token,
-                result: "error",
-                errorReason: "Action implementation pending"
+                result: "success",
+                screengrab: screengrab
             };
 
+            console.log(`Action completed: ${responseMessage}`);
             ack(result);
         } catch (error) {
             const errorResult: CuActionResult = {
@@ -64,6 +110,7 @@ cuNamespace.on("connection", (socket) => {
                 errorReason: error instanceof Error ? error.message : String(error)
             };
 
+            console.error(`Action failed:`, error);
             ack(errorResult);
         }
     });
