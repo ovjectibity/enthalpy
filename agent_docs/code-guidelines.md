@@ -1,0 +1,2 @@
+1. Do not add empty lines in code. While it may help with readability in cases, the general aesthetic choice in this repo is to have the code look compact. 
+2. Automatically break long lines of code into newlines to enhance readability in a narrow column tab without horizontal scrolling.

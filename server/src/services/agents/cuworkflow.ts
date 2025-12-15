@@ -4,24 +4,43 @@ import {
 } from "@enthalpy/shared";
 import { computerUseToolInputSchema } from "../../schemas/toolSchemas.js";
 import { ComputerUseService } from "../cuservice.js";
+import Graph from "graphology";
 
 export interface FlowGraphNode {
     screngrab: string,
-    description?: string,
-    next?: FlowGraphNode
+    description?: string
+}
+
+export class FlowGraph {
+  graph: Graph;
+  fgNodeMap: Map<number,FlowGraphNode>;
+
+  constructor() {
+    this.graph = new Graph({type: "directed"});
+    this.fgNodeMap = new Map();
+  }
+
+  addNode(node: FlowGraphNode) {
+    this.fgNodeMap.keys
+  }
+
+  connectEdge(node1: FlowGraphNode, node2: FlowGraphNode) {
+
+  }
 }
 
 export class CuNode extends WorkflowNode {
   cuService: ComputerUseService;
   finalisedFlow: {
-    actual?: FlowGraphNode,
-    finalise?: (actual: FlowGraphNode) => void;
+    actual: FlowGraph,
+    finalise?: (actual: FlowGraph) => void;
     abort?: (err: any) => void;
   }
 
   constructor(name: string, cuService: ComputerUseService, parent?: WorkflowNode) {
     super(name,parent);
     this.finalisedFlow = {
+      actual: new FlowGraph()
     }
     this.cuService = cuService;
   }
@@ -38,7 +57,7 @@ export class CuNode extends WorkflowNode {
       });
   }
 
-  run(state: WorkflowContext): Promise<any> {
+  run(state: WorkflowContext): Promise<FlowGraph> {
     if(this.state === "idle") {
       console.log(`Running the Pathways node ${this.name}`);
       this.addWorkflowContext(state);
@@ -57,6 +76,7 @@ export class CuNode extends WorkflowNode {
     } else return Promise.reject(new Error(`WorkflowNode Pathways ${this.name} not in idle state`));
   }
 
+  //TODO: add stop condition + finalise
   async processModelOutput(state: WorkflowContext,modelResponse: ModelMessage) {
     if(this.state === "waiting_on_llm" && modelResponse.role === "assistant") {
       for(let content of modelResponse.contents) {
@@ -65,6 +85,7 @@ export class CuNode extends WorkflowNode {
             try {
               let screengrab = await this.cuService.performAction(content.content.id,
                                                 content.content.input);
+              
               state.messages.push({
                 role: "user",
                 contents: [
@@ -85,8 +106,18 @@ export class CuNode extends WorkflowNode {
               ["computer_use",computerUseToolInputSchema]
             ]));
           }
+        } else if(content.type === "workflow_instruction" && content.content === "stop") {
+          let stopCondition = JSON.parse(content.content);
+            if(stopCondition.stop && stopCondition.stopReason) {
+              this.state = "closed";
+              //TODO: Handle changing of active node here
+              // Surface gathered context + record stopReason
+              console.log(`Exiting the CuNode ${this.name} due to ${stopCondition.stopReason}`);
+              if(this.finalisedFlow.finalise)
+                this.finalisedFlow.finalise(this.finalisedFlow.actual);
+            }
         } else {
-          console.log(`Got unexpected content block from computer use agent ${content.content}`)
+          console.warn(`Got unexpected content block from computer use agent ${content.content}`)
         }
       }
     } else {

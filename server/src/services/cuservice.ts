@@ -33,7 +33,6 @@ class CuInstance implements ComputerUseService {
         this.remoteHost = process.env.CU_REMOTE_HOST;
         this.remoteUser = process.env.CU_REMOTE_USER || 'ubuntu';
         this.sshKeyPath = process.env.CU_SSH_KEY_PATH || path.join(os.homedir(), '.ssh', 'id_rsa');
-
         // Validate remote mode configuration
         if (this.cuMode === 'remote' && !this.remoteHost) {
             throw new Error('CU_REMOTE_HOST must be set when CU_MODE=remote');
@@ -46,7 +45,6 @@ class CuInstance implements ComputerUseService {
             this.cuInstanceSocket.disconnect();
             this.cuInstanceSocket = undefined;
         }
-
         // Stop and remove Docker container
         if (this.cuServerId) {
             if (this.cuMode === 'remote') {
@@ -76,7 +74,6 @@ class CuInstance implements ComputerUseService {
                 username: this.remoteUser,
                 privateKeyPath: this.sshKeyPath
             });
-
             await ssh.execCommand(`docker stop ${this.cuServerId} && docker rm ${this.cuServerId}`);
             console.log(`Remote Docker container ${this.cuServerId} stopped and removed`);
             ssh.dispose();
@@ -104,9 +101,7 @@ class CuInstance implements ComputerUseService {
                 -e VNC_PORT=${process.env.VNC_PORT || '5900'} \
                 -e CU_SECRET=${process.env.CU_SECRET} \
                 computer-use-service:latest`;
-
             await execAsync(dockerCommand);
-
             // Step 2: Get the assigned port
             const { stdout: portOutput} = await execAsync(`docker port ${this.cuServerId} 3000`);
             const assignedPort = portOutput.trim().split(':')[1];
@@ -114,13 +109,10 @@ class CuInstance implements ComputerUseService {
             if (!assignedPort) {
                 throw new Error('Failed to retrieve assigned port from Docker');
             }
-
             // Step 3: Connect to the websocket server
             await this.connectToWebSocket('localhost', assignedPort, onExpiry);
-
             // Set expiry time and timer
             this.setupExpiryTimer(onExpiry);
-
             return {
                 result: "success",
                 token: this.cuServerId,
@@ -144,7 +136,6 @@ class CuInstance implements ComputerUseService {
                 username: this.remoteUser,
                 privateKeyPath: this.sshKeyPath
             });
-
             // Step 2: Launch Docker container on remote host
             const dockerCommand = `docker run -d -p 0:3000 --name ${this.cuServerId} \
                 -e VNC_PORT=${process.env.VNC_PORT || '5900'} \
@@ -152,23 +143,17 @@ class CuInstance implements ComputerUseService {
                 computer-use-service:latest`;
 
             await ssh.execCommand(dockerCommand);
-
             // Step 3: Get the assigned port from remote host
             const portResult = await ssh.execCommand(`docker port ${this.cuServerId} 3000`);
             const assignedPort = portResult.stdout.trim().split(':')[1];
-
             if (!assignedPort) {
                 throw new Error('Failed to retrieve assigned port from remote Docker');
             }
-
             ssh.dispose();
-
             // Step 4: Connect to the remote websocket server
             await this.connectToWebSocket(this.remoteHost!, assignedPort, onExpiry);
-
             // Set expiry time and timer
             this.setupExpiryTimer(onExpiry);
-
             return {
                 result: "success",
                 token: this.cuServerId,

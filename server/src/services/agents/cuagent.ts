@@ -7,7 +7,7 @@ import {
   Assets,
 } from "@enthalpy/shared";
 import { cuInstance } from "../cuservice.js";
-import { FlowGraphNode, CuNode } from "./cuworkflow.js"
+import { CuNode, FlowGraph } from "./cuworkflow.js"
 
 interface FlowGraphContext {
     productName: string, 
@@ -16,7 +16,7 @@ interface FlowGraphContext {
     testAccountCredentials: string
 }
 
-class FGAgent extends Agent<FlowGraphNode> {
+class FGAgent extends Agent<FlowGraph> {
   flowContext: FlowGraphContext;
   pathsNode: CuNode;
 
@@ -30,10 +30,10 @@ class FGAgent extends Agent<FlowGraphNode> {
     this.currentNode?.ingestUserInput(this.ctx,msg);
   }
 
-  async runAgentWorkflow(): Promise<FlowGraphNode> {
+  async runAgentWorkflow(): Promise<FlowGraph> {
     this.currentNode = this.pathsNode;
     return this.pathsNode.run(this.ctx).then(
-    async (fg: FlowGraphNode) => {
+    async (fg: FlowGraph) => {
         return Promise.resolve(fg);
     }).catch(err => {
     console.log(`Agent workflow error: ${err}`);
